@@ -11,7 +11,7 @@
             activeAuthTab === 'login' ? 'border-[#111111] text-[#111111]' : 'border-transparent text-[#A89B8A] hover:text-[#111111]'
           ]"
         >
-          Sign In
+          লগইন
         </button>
         <button
           type="button"
@@ -21,14 +21,14 @@
             activeAuthTab === 'register' ? 'border-[#111111] text-[#111111]' : 'border-transparent text-[#A89B8A] hover:text-[#111111]'
           ]"
         >
-          Create Account
+          নতুন অ্যাকাউন্ট
         </button>
       </div>
 
       <!-- Login Form -->
       <form v-if="activeAuthTab === 'login'" @submit.prevent="handleLogin" class="space-y-4 text-xs">
         <div>
-          <label class="block font-semibold uppercase tracking-wider mb-1">Email Address</label>
+          <label class="block font-semibold uppercase tracking-wider mb-1">ইমেইল ঠিকানা</label>
           <input
             type="email"
             v-model="loginForm.email"
@@ -38,12 +38,12 @@
           />
         </div>
         <div>
-          <label class="block font-semibold uppercase tracking-wider mb-1">Password</label>
+          <label class="block font-semibold uppercase tracking-wider mb-1">পাসওয়ার্ড</label>
           <input
             type="password"
             v-model="loginForm.password"
             required
-            placeholder="password"
+            placeholder="পাসওয়ার্ড লিখুন"
             class="w-full px-4 py-2.5 bg-[#F7F5F0] border border-[#D8CCBC]"
           />
         </div>
@@ -53,30 +53,30 @@
           :disabled="authLoading"
           class="w-full py-3.5 bg-[#111111] text-white uppercase tracking-widest font-semibold hover:bg-black transition-colors"
         >
-          {{ authLoading ? 'Authenticating...' : 'Sign In to Account' }}
+          {{ authLoading ? 'লগইন হচ্ছে...' : 'লগইন করুন' }}
         </button>
       </form>
 
       <!-- Register Form -->
       <form v-else @submit.prevent="handleRegister" class="space-y-4 text-xs">
         <div>
-          <label class="block font-semibold uppercase tracking-wider mb-1">Full Name</label>
+          <label class="block font-semibold uppercase tracking-wider mb-1">সম্পূর্ণ নাম</label>
           <input type="text" v-model="registerForm.name" required class="w-full px-4 py-2.5 bg-[#F7F5F0] border border-[#D8CCBC]" />
         </div>
         <div>
-          <label class="block font-semibold uppercase tracking-wider mb-1">Email Address</label>
+          <label class="block font-semibold uppercase tracking-wider mb-1">ইমেইল ঠিকানা</label>
           <input type="email" v-model="registerForm.email" required class="w-full px-4 py-2.5 bg-[#F7F5F0] border border-[#D8CCBC]" />
         </div>
         <div>
-          <label class="block font-semibold uppercase tracking-wider mb-1">Phone (Optional)</label>
+          <label class="block font-semibold uppercase tracking-wider mb-1">মোবাইল নম্বর (ঐচ্ছিক)</label>
           <input type="tel" v-model="registerForm.phone" class="w-full px-4 py-2.5 bg-[#F7F5F0] border border-[#D8CCBC]" />
         </div>
         <div>
-          <label class="block font-semibold uppercase tracking-wider mb-1">Password</label>
+          <label class="block font-semibold uppercase tracking-wider mb-1">পাসওয়ার্ড</label>
           <input type="password" v-model="registerForm.password" required class="w-full px-4 py-2.5 bg-[#F7F5F0] border border-[#D8CCBC]" />
         </div>
         <div>
-          <label class="block font-semibold uppercase tracking-wider mb-1">Confirm Password</label>
+          <label class="block font-semibold uppercase tracking-wider mb-1">পাসওয়ার্ড নিশ্চিত করুন</label>
           <input type="password" v-model="registerForm.password_confirmation" required class="w-full px-4 py-2.5 bg-[#F7F5F0] border border-[#D8CCBC]" />
         </div>
         <p v-if="authError" class="text-rose-600">{{ authError }}</p>
@@ -85,7 +85,7 @@
           :disabled="authLoading"
           class="w-full py-3.5 bg-[#111111] text-white uppercase tracking-widest font-semibold hover:bg-black transition-colors"
         >
-          {{ authLoading ? 'Creating...' : 'Register Account' }}
+          {{ authLoading ? 'অ্যাকাউন্ট তৈরি হচ্ছে...' : 'অ্যাকাউন্ট খুলুন' }}
         </button>
       </form>
     </div>
@@ -94,9 +94,9 @@
     <div v-else class="space-y-10">
       <div class="flex flex-col sm:flex-row sm:items-baseline justify-between border-b border-[#D8CCBC]/40 pb-6 gap-4">
         <div>
-          <span class="text-xs uppercase tracking-[0.25em] text-[#A89B8A] font-medium block mb-1">Client Profile</span>
+          <span class="text-xs uppercase tracking-[0.25em] text-[#A89B8A] font-medium block mb-1">গ্রাহক প্রোফাইল</span>
           <h1 class="font-serif text-3xl sm:text-4xl text-[#111111]">
-            Welcome, {{ authStore.customerUser?.name }}
+            স্বাগতম, {{ authStore.customerUser?.name }}
           </h1>
         </div>
         <button
@@ -104,7 +104,7 @@
           @click="authStore.customerLogout()"
           class="text-xs uppercase tracking-wider text-[#A89B8A] hover:text-[#111111] underline"
         >
-          Sign Out
+          লগআউট
         </button>
       </div>
 
@@ -112,7 +112,7 @@
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         <!-- Order History (8 cols) -->
         <div class="lg:col-span-8 bg-white p-6 sm:p-8 border border-[#D8CCBC]/40 shadow-2xs space-y-6">
-          <h3 class="font-serif text-xl text-[#111111] border-b border-[#D8CCBC]/30 pb-3">Order History</h3>
+          <h3 class="font-serif text-xl text-[#111111] border-b border-[#D8CCBC]/30 pb-3">পূর্ববর্তী অর্ডারসমূহ</h3>
 
           <div v-if="customerStore.orders.length" class="divide-y divide-[#D8CCBC]/30">
             <div
@@ -123,7 +123,7 @@
               <div>
                 <span class="font-mono font-bold text-[#111111]">{{ order.order_number }}</span>
                 <p class="text-[#A89B8A] mt-0.5">
-                  Placed on {{ new Date(order.created_at).toLocaleDateString() }} • {{ order.items?.length || 0 }} items
+                  তারিখ: {{ new Date(order.created_at).toLocaleDateString() }} • {{ order.items?.length || 0 }} টি পোশাক
                 </p>
               </div>
 
@@ -135,28 +135,28 @@
                   {{ order.order_status }}
                 </span>
 
-                <span class="font-semibold text-sm text-[#111111]">${{ Number(order.total).toFixed(2) }}</span>
+                <span class="font-semibold text-sm text-[#111111]">৳ {{ Number(order.total).toLocaleString() }}</span>
               </div>
             </div>
           </div>
 
           <p v-else class="text-xs text-[#A89B8A] py-8 text-center">
-            You have not placed any orders with this client profile yet.
+            আপনার অ্যাকাউন্টে এখনো কোনো অর্ডারের তথ্য নেই।
           </p>
         </div>
 
         <!-- Address Book & Concierge Info (4 cols) -->
         <div class="lg:col-span-4 space-y-6">
           <div class="bg-white p-6 border border-[#D8CCBC]/40 shadow-2xs space-y-4">
-            <h4 class="font-serif text-lg text-[#111111] border-b border-[#D8CCBC]/30 pb-2">Client Details</h4>
+            <h4 class="font-serif text-lg text-[#111111] border-b border-[#D8CCBC]/30 pb-2">ব্যক্তিগত তথ্য</h4>
             <div class="text-xs text-[#111111] space-y-1">
-              <p><strong>Email:</strong> {{ authStore.customerUser?.email }}</p>
-              <p><strong>Phone:</strong> {{ authStore.customerUser?.phone || 'Not recorded' }}</p>
+              <p><strong>ইমেইল:</strong> {{ authStore.customerUser?.email }}</p>
+              <p><strong>ফোন:</strong> {{ authStore.customerUser?.phone || 'যুক্ত নেই' }}</p>
             </div>
           </div>
 
           <div class="bg-white p-6 border border-[#D8CCBC]/40 shadow-2xs space-y-4">
-            <h4 class="font-serif text-lg text-[#111111] border-b border-[#D8CCBC]/30 pb-2">Saved Addresses</h4>
+            <h4 class="font-serif text-lg text-[#111111] border-b border-[#D8CCBC]/30 pb-2">সংরক্ষিত ঠিকানা</h4>
             <div v-if="customerStore.addresses.length" class="space-y-3">
               <div
                 v-for="addr in customerStore.addresses"
@@ -169,7 +169,7 @@
                 <p>{{ addr.country }}</p>
               </div>
             </div>
-            <p v-else class="text-xs text-[#A89B8A]">No saved addresses found.</p>
+            <p v-else class="text-xs text-[#A89B8A]">কোনো সংরক্ষিত ঠিকানা পাওয়া যায়নি।</p>
           </div>
         </div>
       </div>
@@ -210,7 +210,7 @@ const handleLogin = async () => {
     customerStore.fetchOrders();
     customerStore.fetchAddresses();
   } catch (err) {
-    authError.value = err.response?.data?.message || 'Login failed';
+    authError.value = err.response?.data?.message || 'লগইন ব্যর্থ হয়েছে। ইমেইল ও পাসওয়ার্ড পুনরায় যাচাই করুন।';
   } finally {
     authLoading.value = false;
   }
@@ -222,7 +222,7 @@ const handleRegister = async () => {
   try {
     await authStore.customerRegister(registerForm);
   } catch (err) {
-    authError.value = err.response?.data?.message || 'Registration failed';
+    authError.value = err.response?.data?.message || 'অ্যাকাউন্ট তৈরি করতে সমস্যা হয়েছে। সঠিক তথ্য দিয়ে পুনরায় চেষ্টা করুন।';
   } finally {
     authLoading.value = false;
   }

@@ -17,8 +17,8 @@
           <!-- Drawer Header -->
           <div class="p-6 bg-white border-b border-[#D8CCBC]/40 flex items-center justify-between">
             <div class="flex items-baseline gap-2">
-              <h3 class="font-serif text-xl text-[#111111]">Shopping Bag</h3>
-              <span class="text-xs text-[#A89B8A]">({{ cartStore.itemCount }} {{ cartStore.itemCount === 1 ? 'item' : 'items' }})</span>
+              <h3 class="font-serif text-xl text-[#111111]">শপিং ব্যাগ</h3>
+              <span class="text-xs text-[#A89B8A]">({{ cartStore.itemCount }} টি পণ্য)</span>
             </div>
             <button
               type="button"
@@ -33,23 +33,23 @@
 
           <!-- Free Shipping Progress -->
           <div class="px-6 py-3 bg-[#EAE5DC] text-[11px] text-[#111111] border-b border-[#D8CCBC]/30">
-            <template v-if="cartStore.subtotal >= 150">
+            <template v-if="cartStore.subtotal >= 2500">
               <div class="flex items-center gap-1.5 text-emerald-800 font-medium">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                 </svg>
-                <span>You have unlocked complimentary worldwide shipping.</span>
+                <span>অভিনন্দন! আপনি ফ্রি ডেলিভারি সুবিধা উপভোগ করতে পারবেন।</span>
               </div>
             </template>
             <template v-else>
               <div class="flex justify-between mb-1.5 font-medium">
-                <span>Complimentary Shipping over $150</span>
-                <span>Add ${{ (150 - cartStore.subtotal).toFixed(2) }} more</span>
+                <span>২৫০০ টাকার বেশি অর্ডারে ফ্রি ডেলিভারি</span>
+                <span>আর ৳{{ Math.max(0, 2500 - cartStore.subtotal).toFixed(0) }} যোগ করুন</span>
               </div>
               <div class="w-full h-1 bg-white/70 rounded-full overflow-hidden">
                 <div
                   class="h-full bg-[#111111] transition-all duration-300"
-                  :style="{ width: `${Math.min(100, (cartStore.subtotal / 150) * 100)}%` }"
+                  :style="{ width: `${Math.min(100, (cartStore.subtotal / 2500) * 100)}%` }"
                 />
               </div>
             </template>
@@ -94,8 +94,8 @@
                     </div>
 
                     <div class="text-[11px] text-[#A89B8A] mt-1 space-x-2">
-                      <span v-if="item.color">Color: {{ item.color }}</span>
-                      <span v-if="item.size">Size: {{ item.size }}</span>
+                      <span v-if="item.color">রঙ: {{ item.color }}</span>
+                      <span v-if="item.size">সাইজ: {{ item.size }}</span>
                     </div>
                   </div>
 
@@ -119,8 +119,8 @@
                       </button>
                     </div>
 
-                    <span class="text-xs font-medium text-[#111111]">
-                      ${{ (item.price * item.quantity).toFixed(2) }}
+                    <span class="text-xs font-semibold text-[#111111]">
+                      ৳ {{ Number(item.price * item.quantity).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}
                     </span>
                   </div>
                 </div>
@@ -132,14 +132,14 @@
               <svg class="w-12 h-12 text-[#D8CCBC] mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
               </svg>
-              <h5 class="font-serif text-lg text-[#111111] mb-1">Your bag is empty</h5>
-              <p class="text-xs text-[#A89B8A] mb-6">Discover timeless essentials crafted from natural luxury fibers.</p>
+              <h5 class="font-serif text-lg text-[#111111] mb-1">আপনার শপিং ব্যাগটি খালি</h5>
+              <p class="text-xs text-[#A89B8A] mb-6">আমাদের প্রিমিয়াম কালেকশন থেকে আপনার পছন্দের পোশাক যুক্ত করুন।</p>
               <router-link
-                to="/collection/winter"
+                to="/clothing"
                 @click="cartStore.closeDrawer()"
                 class="px-6 py-2.5 bg-[#111111] text-white text-xs uppercase tracking-widest font-medium hover:bg-black/90 transition-colors"
               >
-                Explore Collection
+                পোশাক কালেকশন দেখুন
               </router-link>
             </div>
           </div>
@@ -148,10 +148,10 @@
           <div v-if="cartStore.items && cartStore.items.length" class="p-6 bg-white border-t border-[#D8CCBC]/40 space-y-4">
             <!-- Subtotal -->
             <div class="flex justify-between items-baseline">
-              <span class="text-xs uppercase tracking-wider text-[#A89B8A] font-medium">Estimated Subtotal</span>
-              <span class="font-serif text-xl font-medium text-[#111111]">${{ cartStore.subtotal.toFixed(2) }}</span>
+              <span class="text-xs uppercase tracking-wider text-[#A89B8A] font-medium">সাবটোটাল</span>
+              <span class="font-serif text-xl font-bold text-[#111111]">৳ {{ Number(cartStore.subtotal).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
             </div>
-            <p class="text-[11px] text-[#A89B8A]">Taxes and shipping calculated at checkout.</p>
+            <p class="text-[11px] text-[#A89B8A]">ডেলিভারি চার্জ চেকআউটের সময় যোগ করা হবে।</p>
 
             <!-- Action Buttons -->
             <div class="grid grid-cols-2 gap-3 pt-2">
@@ -160,14 +160,14 @@
                 @click="cartStore.closeDrawer()"
                 class="w-full text-center py-3.5 border border-[#111111] text-xs uppercase tracking-widest font-semibold hover:bg-[#111111] hover:text-white transition-colors"
               >
-                View Bag
+                ব্যাগ দেখুন
               </router-link>
               <router-link
                 to="/checkout"
                 @click="cartStore.closeDrawer()"
                 class="w-full text-center py-3.5 bg-[#111111] text-white text-xs uppercase tracking-widest font-semibold hover:bg-black/90 transition-colors shadow-sm"
               >
-                Checkout
+                চেকআউট
               </router-link>
             </div>
           </div>

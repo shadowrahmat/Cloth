@@ -2,12 +2,12 @@
   <section class="py-20 lg:py-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
     <!-- Section Heading -->
     <div class="text-center max-w-2xl mx-auto mb-14 space-y-3">
-      <span class="text-xs uppercase tracking-[0.25em] text-[#A89B8A] font-medium">Departments</span>
+      <span class="text-xs uppercase tracking-[0.25em] text-[#A89B8A] font-medium">ক্যাটাগরি</span>
       <h2 class="font-serif text-3xl sm:text-4xl text-[#111111] tracking-tight">
-        {{ content.heading || 'Curated Departments' }}
+        {{ content.heading || 'কিউরেটেড ক্যাটাগরি সমূহ' }}
       </h2>
       <p class="text-xs sm:text-sm text-[#A89B8A] leading-relaxed">
-        {{ content.description || 'Explore masterfully crafted garments structured around timeless silhouettes.' }}
+        {{ content.description || 'আপনার দৈনন্দিন রুচিশীল পোশাকের জন্য আধুনিক কাটের সমাহার অন্বেষণ করুন।' }}
       </p>
     </div>
 
@@ -31,13 +31,13 @@
 
         <!-- Card Content -->
         <div class="relative z-10 text-white space-y-1.5 transition-transform duration-300 group-hover:-translate-y-1">
-          <span class="text-[10px] tracking-[0.2em] uppercase text-[#D8CCBC] font-medium block">Department</span>
+          <span class="text-[10px] tracking-[0.2em] uppercase text-[#D8CCBC] font-medium block">ক্যাটাগরি</span>
           <h3 class="font-serif text-2xl text-white tracking-wide">{{ cat.name }}</h3>
           <p v-if="cat.description" class="text-xs text-white/70 line-clamp-2 font-light">
             {{ cat.description }}
           </p>
           <div class="pt-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[#D8CCBC] group-hover:text-white transition-colors">
-            <span>Discover {{ cat.name }}</span>
+            <span>{{ cat.name }} দেখুন</span>
             <span class="transition-transform group-hover:translate-x-1">→</span>
           </div>
         </div>

@@ -23,15 +23,15 @@
       <div class="absolute top-3 left-3 flex flex-col gap-1.5 z-10 pointer-events-none">
         <span
           v-if="product.is_on_sale"
-          class="px-2 py-0.5 bg-[#111111] text-white text-[10px] uppercase tracking-widest font-semibold"
+          class="px-2 py-0.5 bg-[#111111] text-white text-[10px] font-semibold"
         >
-          Sale
+          অফার
         </span>
         <span
           v-else-if="product.is_new"
-          class="px-2 py-0.5 bg-white text-[#111111] text-[10px] uppercase tracking-widest font-semibold shadow-xs"
+          class="px-2 py-0.5 bg-white text-[#111111] text-[10px] font-semibold shadow-xs"
         >
-          New
+          নতুন
         </span>
       </div>
 
@@ -45,7 +45,7 @@
             ? 'bg-[#111111] text-white'
             : 'bg-white/80 backdrop-blur-xs text-[#111111] hover:bg-white hover:scale-110 shadow-xs'
         ]"
-        :title="wishlistStore.isInWishlist(product.id) ? 'Remove from wishlist' : 'Add to wishlist'"
+        :title="wishlistStore.isInWishlist(product.id) ? 'উইশলিস্ট থেকে সরান' : 'উইশলিস্টে রাখুন'"
       >
         <svg
           class="w-4 h-4"
@@ -67,9 +67,9 @@
         <button
           type="button"
           @click.prevent="handleQuickAdd"
-          class="w-full py-2.5 bg-white/95 backdrop-blur-xs hover:bg-[#111111] text-[#111111] hover:text-white text-xs uppercase tracking-widest font-semibold transition-colors shadow-md"
+          class="w-full py-2.5 bg-white/95 backdrop-blur-xs hover:bg-[#111111] text-[#111111] hover:text-white text-xs font-semibold transition-colors shadow-md"
         >
-          Quick Add
+          ব্যাগে যোগ করুন
         </button>
       </div>
     </div>

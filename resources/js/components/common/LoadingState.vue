@@ -7,6 +7,6 @@
 
 <script setup>
 defineProps({
-  text: { type: String, default: 'Loading Drawer Clothing curation...' },
+  text: { type: String, default: 'লোড হচ্ছে...' },
 });
 </script>

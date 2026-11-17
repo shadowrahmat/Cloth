@@ -2,7 +2,7 @@
   <div class="py-12 sm:py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <!-- Header Banner / Title -->
     <div class="mb-12 border-b border-[#D8CCBC]/40 pb-8">
-      <span class="text-xs uppercase tracking-[0.25em] text-[#A89B8A] font-medium block mb-2">Curated Collection</span>
+      <span class="text-xs uppercase tracking-[0.25em] text-[#A89B8A] font-medium block mb-2">কিউরেটেড কালেকশন</span>
       <h1 class="font-serif text-3xl sm:text-5xl text-[#111111] capitalize">
         {{ currentCategoryName }}
       </h1>
@@ -34,26 +34,26 @@
       <aside class="hidden lg:block lg:col-span-3 space-y-8 pr-4">
         <!-- Sort By -->
         <div class="space-y-3">
-          <h5 class="text-xs uppercase tracking-widest text-[#111111] font-semibold">Sort Order</h5>
+          <h5 class="text-xs uppercase tracking-widest text-[#111111] font-semibold">সাজানোর ক্রম</h5>
           <select
             v-model="filters.sort"
             @change="applyFilters"
             class="w-full px-3 py-2 bg-white border border-[#D8CCBC] text-xs text-[#111111] focus:outline-none focus:border-[#111111]"
           >
-            <option value="newest">Newest Releases</option>
-            <option value="bestseller">Best Selling</option>
-            <option value="price_asc">Price: Low to High</option>
-            <option value="price_desc">Price: High to Low</option>
-            <option value="featured">Featured First</option>
+            <option value="newest">সর্বশেষ রিলিজ</option>
+            <option value="bestseller">সর্বাধিক বিক্রিত</option>
+            <option value="price_asc">দাম: কম থেকে বেশি</option>
+            <option value="price_desc">দাম: বেশি থেকে কম</option>
+            <option value="featured">নির্বাচিত পোশাক আগে</option>
           </select>
         </div>
 
         <!-- Size Filter -->
         <div class="space-y-3">
-          <h5 class="text-xs uppercase tracking-widest text-[#111111] font-semibold">Size</h5>
+          <h5 class="text-xs uppercase tracking-widest text-[#111111] font-semibold">সাইজ</h5>
           <div class="flex flex-wrap gap-2">
             <button
-              v-for="s in ['XS', 'S', 'M', 'L', 'XL', '38R', '40R', '42R']"
+              v-for="s in ['M', 'L', 'XL', 'XXL', '30', '32', '34', '36', '40', '42', '44']"
               :key="s"
               type="button"
               @click="toggleFilter('size', s)"
@@ -69,10 +69,10 @@
 
         <!-- Color Filter -->
         <div class="space-y-3">
-          <h5 class="text-xs uppercase tracking-widest text-[#111111] font-semibold">Color</h5>
+          <h5 class="text-xs uppercase tracking-widest text-[#111111] font-semibold">রঙ</h5>
           <div class="flex flex-wrap gap-2">
             <button
-              v-for="c in ['Black', 'Ivory', 'Sand', 'Taupe', 'Navy']"
+              v-for="c in ['Black', 'White', 'Navy', 'Olive', 'Beige', 'Maroon']"
               :key="c"
               type="button"
               @click="toggleFilter('color', c)"
@@ -88,13 +88,13 @@
 
         <!-- Price Range -->
         <div class="space-y-3">
-          <h5 class="text-xs uppercase tracking-widest text-[#111111] font-semibold">Price Range ($)</h5>
+          <h5 class="text-xs uppercase tracking-widest text-[#111111] font-semibold">মূল্য সীমা (টাকা)</h5>
           <div class="flex items-center gap-2">
             <input
               type="number"
               v-model.number="filters.min_price"
               @change="applyFilters"
-              placeholder="Min"
+              placeholder="সর্বনিম্ন"
               class="w-full px-3 py-1.5 bg-white border border-[#D8CCBC] text-xs"
             />
             <span class="text-[#A89B8A]">—</span>
@@ -102,7 +102,7 @@
               type="number"
               v-model.number="filters.max_price"
               @change="applyFilters"
-              placeholder="Max"
+              placeholder="সর্বোচ্চ"
               class="w-full px-3 py-1.5 bg-white border border-[#D8CCBC] text-xs"
             />
           </div>
@@ -117,7 +117,7 @@
               @change="applyFilters"
               class="rounded border-[#D8CCBC]"
             />
-            <span>On Sale Only</span>
+            <span>শুধুমাত্র অফারের পণ্য</span>
           </label>
           <label class="flex items-center gap-2.5 cursor-pointer text-xs text-[#111111]">
             <input
@@ -126,7 +126,7 @@
               @change="applyFilters"
               class="rounded border-[#D8CCBC]"
             />
-            <span>In Stock Only</span>
+            <span>শুধুমাত্র স্টকে থাকা পণ্য</span>
           </label>
         </div>
 
@@ -137,7 +137,7 @@
           @click="clearFilters"
           class="text-xs text-[#A89B8A] hover:text-[#111111] underline tracking-wider uppercase block"
         >
-          Reset All Filters
+          সব ফিল্টার রিসেট করুন
         </button>
       </aside>
 
@@ -145,17 +145,17 @@
       <div class="col-span-12 lg:col-span-9">
         <!-- Results Count & Mobile Sort -->
         <div class="flex items-center justify-between mb-8 pb-3 border-b border-[#D8CCBC]/30 text-xs text-[#A89B8A]">
-          <span>Displaying {{ products.length }} {{ products.length === 1 ? 'garment' : 'garments' }}</span>
+          <span>মোট {{ products.length }} টি পোশাক প্রদর্শিত হচ্ছে</span>
 
           <select
             v-model="filters.sort"
             @change="applyFilters"
             class="lg:hidden px-3 py-1.5 bg-white border border-[#D8CCBC] text-xs text-[#111111]"
           >
-            <option value="newest">Newest</option>
-            <option value="bestseller">Best Sellers</option>
-            <option value="price_asc">Price Low to High</option>
-            <option value="price_desc">Price High to Low</option>
+            <option value="newest">নতুন আগমন</option>
+            <option value="bestseller">সর্বাধিক বিক্রিত</option>
+            <option value="price_asc">দাম: কম থেকে বেশি</option>
+            <option value="price_desc">দাম: বেশি থেকে কম</option>
           </select>
         </div>
 
@@ -171,15 +171,15 @@
         <!-- Empty State -->
         <EmptyState
           v-else
-          title="No garments found"
-          description="There are currently no pieces in this category matching your selected filters."
+          title="কোনো পোশাক পাওয়া যায়নি"
+          description="আপনার নির্বাচিত ফিল্টারের সাথে মিলে এমন কোনো পোশাক এই মুহূর্তে পাওয়া যায়নি।"
         >
           <template #action>
             <button
               @click="clearFilters"
               class="px-6 py-2.5 bg-[#111111] text-white text-xs uppercase tracking-widest font-semibold"
             >
-              Reset Filters
+              ফিল্টার রিসেট করুন
             </button>
           </template>
         </EmptyState>
@@ -194,17 +194,17 @@
             @click="fetchProducts(meta.current_page - 1)"
             class="px-4 py-2 border border-[#D8CCBC] text-xs uppercase disabled:opacity-40"
           >
-            Previous
+            পূর্ববর্তী
           </button>
           <span class="px-4 py-2 text-xs font-semibold">
-            {{ meta.current_page }} of {{ meta.last_page }}
+            {{ meta.current_page }} এর {{ meta.last_page }}
           </span>
           <button
             :disabled="meta.current_page >= meta.last_page"
             @click="fetchProducts(meta.current_page + 1)"
             class="px-4 py-2 border border-[#D8CCBC] text-xs uppercase disabled:opacity-40"
           >
-            Next
+            পরবর্তী
           </button>
         </div>
       </div>
@@ -241,9 +241,9 @@ const filters = reactive({
 
 const currentCategoryName = computed(() => {
   const slug = route.params.slug;
-  if (!slug || slug === 'all') return 'All Garments & Silhouettes';
-  if (slug === 'new-arrivals') return 'New Season Arrivals';
-  if (slug === 'winter') return 'The Winter Collection';
+  if (!slug || slug === 'all') return 'সকল পোশাক সম্ভার';
+  if (slug === 'new-arrivals') return 'নতুন কালেকশন';
+  if (slug === 'winter') return 'উইন্টার কালেকশন';
   return currentCategory.value?.name || slug.replace('-', ' ');
 });
 

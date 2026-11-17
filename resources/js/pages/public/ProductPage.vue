@@ -2,7 +2,7 @@
   <div v-if="product" class="py-10 sm:py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <!-- Breadcrumb -->
     <nav class="flex items-center space-x-2 text-[11px] uppercase tracking-wider text-[#A89B8A] mb-8">
-      <router-link to="/" class="hover:text-[#111111]">Home</router-link>
+      <router-link to="/" class="hover:text-[#111111]">হোম</router-link>
       <span>/</span>
       <router-link
         v-if="product.category"
@@ -33,13 +33,13 @@
               v-if="product.is_on_sale"
               class="px-2.5 py-1 bg-[#111111] text-white text-[10px] uppercase tracking-widest font-semibold"
             >
-              Sale
+              অফার
             </span>
             <span
               v-else-if="product.is_new"
               class="px-2.5 py-1 bg-white text-[#111111] text-[10px] uppercase tracking-widest font-semibold shadow-xs"
             >
-              New Release
+              নতুন আগমন
             </span>
           </div>
         </div>
@@ -70,7 +70,7 @@
           <h1 class="font-serif text-3xl sm:text-4xl text-[#111111] leading-tight">
             {{ product.name }}
           </h1>
-          <p class="text-xs text-[#A89B8A] mt-1">SKU: {{ activeVariant?.sku || product.sku }}</p>
+          <p class="text-xs text-[#A89B8A] mt-1">কোড: {{ activeVariant?.sku || product.sku }}</p>
         </div>
 
         <!-- Price -->
@@ -92,7 +92,7 @@
         <div v-if="availableColors.length" class="space-y-2 pt-2">
           <div class="flex justify-between text-xs">
             <span class="uppercase tracking-wider font-semibold text-[#111111]">
-              Color: <strong class="font-normal text-[#A89B8A]">{{ selectedColor }}</strong>
+              রঙ: <strong class="font-normal text-[#A89B8A]">{{ selectedColor }}</strong>
             </span>
           </div>
           <div class="flex items-center gap-2">
@@ -117,14 +117,14 @@
         <div v-if="availableSizes.length" class="space-y-2 pt-2">
           <div class="flex justify-between items-center text-xs">
             <span class="uppercase tracking-wider font-semibold text-[#111111]">
-              Size: <strong class="font-normal text-[#A89B8A]">{{ selectedSize }}</strong>
+              সাইজ: <strong class="font-normal text-[#A89B8A]">{{ selectedSize }}</strong>
             </span>
             <button
               type="button"
               @click="sizeGuideOpen = true"
               class="text-[#A89B8A] hover:text-[#111111] underline tracking-wider uppercase text-[11px]"
             >
-              Size Guide
+              সাইজ চার্ট
             </button>
           </div>
           <div class="flex flex-wrap gap-2">
@@ -153,8 +153,8 @@
               inStock ? 'bg-emerald-600' : 'bg-rose-500'
             ]"
           />
-          <span v-if="inStock" class="text-emerald-800 font-medium">In Stock & Ready for Dispatch</span>
-          <span v-else class="text-rose-600 font-medium">Sold Out in this selection</span>
+          <span v-if="inStock" class="text-emerald-800 font-medium">স্টকে আছে • ডেলিভারির জন্য প্রস্তুত</span>
+          <span v-else class="text-rose-600 font-medium">এই ভ্যারিয়েন্টের স্টক শেষ</span>
         </div>
 
         <!-- Quantity & Add to Cart -->
@@ -186,7 +186,7 @@
               @click="handleAddToCart"
               class="flex-1 py-3.5 bg-[#111111] hover:bg-black text-white text-xs uppercase tracking-[0.2em] font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-md"
             >
-              {{ adding ? 'Adding...' : (inStock ? 'Add to Bag' : 'Sold Out') }}
+              {{ adding ? 'যোগ হচ্ছে...' : (inStock ? 'ব্যাগে যোগ করুন' : 'স্টক শেষ') }}
             </button>
 
             <!-- Wishlist Button -->
@@ -199,7 +199,7 @@
                   ? 'bg-[#111111] text-white border-[#111111]'
                   : 'bg-white border-[#D8CCBC] text-[#111111] hover:border-[#111111]'
               ]"
-              :title="wishlistStore.isInWishlist(product.id) ? 'In Wishlist' : 'Add to Wishlist'"
+              :title="wishlistStore.isInWishlist(product.id) ? 'পছন্দের তালিকায় যুক্ত' : 'পছন্দের তালিকায় রাখুন'"
             >
               <svg
                 class="w-5 h-5"
@@ -218,7 +218,7 @@
             @click="handleBuyNow"
             class="w-full py-3.5 border border-[#111111] hover:bg-[#111111] hover:text-white text-[#111111] text-xs uppercase tracking-[0.2em] font-semibold transition-colors disabled:opacity-40"
           >
-            Express Checkout
+            সরাসরি অর্ডার করুন (বাই নাও)
           </button>
         </div>
 
@@ -231,7 +231,7 @@
               @click="toggleAccordion('desc')"
               class="w-full flex justify-between items-center uppercase tracking-wider font-semibold text-[#111111]"
             >
-              <span>Garment Description & Details</span>
+              <span>পোশাকের বিবরণ ও বিস্তারিত</span>
               <span>{{ activeAccordion === 'desc' ? '−' : '+' }}</span>
             </button>
             <div v-if="activeAccordion === 'desc'" class="pt-3 text-[#111111]/80 font-light leading-relaxed">
@@ -246,11 +246,11 @@
               @click="toggleAccordion('fabric')"
               class="w-full flex justify-between items-center uppercase tracking-wider font-semibold text-[#111111]"
             >
-              <span>Fabric & Sustainable Care</span>
+              <span>ফেব্রিক ও যত্ন নেওয়ার নির্দেশিকা</span>
               <span>{{ activeAccordion === 'fabric' ? '−' : '+' }}</span>
             </button>
             <div v-if="activeAccordion === 'fabric'" class="pt-3 text-[#111111]/80 font-light leading-relaxed">
-              {{ product.fabric_care || 'Crafted exclusively from 100% natural fibers sourced from ethical partner mills. Dry clean or gentle hand wash.' }}
+              {{ product.fabric_care || '১০০% প্রিমিয়াম সুতি ও আরামদায়ক ফেব্রিক। স্বাভাবিক পানিতে ধুয়ে ছায়ায় শুকান অথবা ড্রাই ক্লিন করুন।' }}
             </div>
           </div>
 
@@ -261,11 +261,11 @@
               @click="toggleAccordion('shipping')"
               class="w-full flex justify-between items-center uppercase tracking-wider font-semibold text-[#111111]"
             >
-              <span>Complimentary Shipping & Returns</span>
+              <span>ডেলিভারি ও এক্সচেঞ্জ পলিসি</span>
               <span>{{ activeAccordion === 'shipping' ? '−' : '+' }}</span>
             </button>
             <div v-if="activeAccordion === 'shipping'" class="pt-3 text-[#111111]/80 font-light leading-relaxed">
-              {{ product.shipping_info || 'Complimentary worldwide insured shipping on orders over $150. Enjoy 30-day white-glove home courier collection for returns.' }}
+              {{ product.shipping_info || 'সারাদেশে দ্রুত ক্যাশ অন ডেলিভারি সুবিধা। কোনো সাইজ সমস্যা হলে ৭ দিনের মধ্যে সহজে এক্সচেঞ্জ করতে পারবেন।' }}
             </div>
           </div>
         </div>
@@ -276,9 +276,9 @@
     <section class="mt-24 pt-16 border-t border-[#D8CCBC]/40">
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
         <div>
-          <span class="text-xs uppercase tracking-[0.25em] text-[#A89B8A] font-medium block">Client Reflections</span>
+          <span class="text-xs uppercase tracking-[0.25em] text-[#A89B8A] font-medium block">গ্রাহকদের মতামত</span>
           <h3 class="font-serif text-2xl sm:text-3xl text-[#111111]">
-            Reviews ({{ product.reviews ? product.reviews.length : 0 }})
+            রিভিউ ({{ product.reviews ? product.reviews.length : 0 }}টি)
           </h3>
         </div>
         <button
@@ -286,7 +286,7 @@
           @click="reviewModalOpen = true"
           class="px-6 py-2.5 bg-[#111111] text-white text-xs uppercase tracking-widest font-semibold hover:bg-black transition-colors"
         >
-          Write a Review
+          রিভিউ দিন
         </button>
       </div>
 
@@ -307,14 +307,14 @@
           <p class="text-xs text-[#111111]/80 font-light leading-relaxed">"{{ rev.review }}"</p>
         </div>
       </div>
-      <p v-else class="text-xs text-[#A89B8A]">There are no reviews for this piece yet. Be the first to share your experience.</p>
+      <p v-else class="text-xs text-[#A89B8A]">এই পোশাকে এখনো কোনো রিভিউ নেই। প্রথম রিভিউ দিয়ে আপনার অভিজ্ঞতা জানান!</p>
     </section>
 
     <!-- Related Products -->
     <section v-if="relatedProducts.length" class="mt-24 pt-16 border-t border-[#D8CCBC]/40">
       <div class="text-center max-w-xl mx-auto mb-12 space-y-2">
-        <span class="text-xs uppercase tracking-[0.25em] text-[#A89B8A] font-medium block">Complementary Silhouettes</span>
-        <h3 class="font-serif text-2xl sm:text-3xl text-[#111111]">Complete The Wardrobe</h3>
+        <span class="text-xs uppercase tracking-[0.25em] text-[#A89B8A] font-medium block">সম্পর্কিত পোশাকসমূহ</span>
+        <h3 class="font-serif text-2xl sm:text-3xl text-[#111111]">আপনার পছন্দের আরও পোশাক</h3>
       </div>
       <ProductGrid :products="relatedProducts" />
     </section>
@@ -322,26 +322,26 @@
     <!-- Size Guide Modal -->
     <BaseModal
       :is-open="sizeGuideOpen"
-      title="Tailoring Size Guide"
+      title="সাইজ চার্ট ও নির্দেশিকা"
       max-width="md"
       @close="sizeGuideOpen = false"
     >
       <div class="space-y-4 text-xs text-[#111111]">
-        <p class="font-light">Our garments follow classic bespoke European tailoring metrics. For assistance, contact our client concierge.</p>
+        <p class="font-light">আমাদের প্রতিটি পোশাক স্ট্যান্ডার্ড মাপ অনুযায়ী নিখুঁতভাবে তৈরি। আরও তথ্যের জন্য গ্রাহক সহায়তায় যোগাযোগ করতে পারেন।</p>
         <table class="w-full text-left border-collapse border border-[#D8CCBC]">
           <thead>
             <tr class="bg-[#F7F5F0]">
-              <th class="p-2 border border-[#D8CCBC]">Size</th>
-              <th class="p-2 border border-[#D8CCBC]">Chest (in)</th>
-              <th class="p-2 border border-[#D8CCBC]">Waist (in)</th>
-              <th class="p-2 border border-[#D8CCBC]">European</th>
+              <th class="p-2 border border-[#D8CCBC]">সাইজ</th>
+              <th class="p-2 border border-[#D8CCBC]">বুক (ইঞ্চি)</th>
+              <th class="p-2 border border-[#D8CCBC]">কোমর (ইঞ্চি)</th>
+              <th class="p-2 border border-[#D8CCBC]">ইউরোপিয়ান</th>
             </tr>
           </thead>
           <tbody>
-            <tr><td class="p-2 border border-[#D8CCBC]">S</td><td class="p-2 border border-[#D8CCBC]">36–38</td><td class="p-2 border border-[#D8CCBC]">30–32</td><td class="p-2 border border-[#D8CCBC]">46–48</td></tr>
-            <tr><td class="p-2 border border-[#D8CCBC]">M</td><td class="p-2 border border-[#D8CCBC]">39–41</td><td class="p-2 border border-[#D8CCBC]">33–35</td><td class="p-2 border border-[#D8CCBC]">50–52</td></tr>
-            <tr><td class="p-2 border border-[#D8CCBC]">L</td><td class="p-2 border border-[#D8CCBC]">42–44</td><td class="p-2 border border-[#D8CCBC]">36–38</td><td class="p-2 border border-[#D8CCBC]">54–56</td></tr>
-            <tr><td class="p-2 border border-[#D8CCBC]">XL</td><td class="p-2 border border-[#D8CCBC]">45–47</td><td class="p-2 border border-[#D8CCBC]">39–41</td><td class="p-2 border border-[#D8CCBC]">58–60</td></tr>
+            <tr><td class="p-2 border border-[#D8CCBC]">S</td><td class="p-2 border border-[#D8CCBC]">৩৬–৩৮</td><td class="p-2 border border-[#D8CCBC]">৩০–৩২</td><td class="p-2 border border-[#D8CCBC]">৪৬–৪৮</td></tr>
+            <tr><td class="p-2 border border-[#D8CCBC]">M</td><td class="p-2 border border-[#D8CCBC]">৩৯–৪১</td><td class="p-2 border border-[#D8CCBC]">৩৩–৩৫</td><td class="p-2 border border-[#D8CCBC]">৫০–৫২</td></tr>
+            <tr><td class="p-2 border border-[#D8CCBC]">L</td><td class="p-2 border border-[#D8CCBC]">৪২–৪৪</td><td class="p-2 border border-[#D8CCBC]">৩৬–৩৮</td><td class="p-2 border border-[#D8CCBC]">৫৪–৫৬</td></tr>
+            <tr><td class="p-2 border border-[#D8CCBC]">XL</td><td class="p-2 border border-[#D8CCBC]">৪৫–৪৭</td><td class="p-2 border border-[#D8CCBC]">৩৯–৪১</td><td class="p-2 border border-[#D8CCBC]">৫৮–৬০</td></tr>
           </tbody>
         </table>
       </div>
@@ -350,36 +350,36 @@
     <!-- Review Submission Modal -->
     <BaseModal
       :is-open="reviewModalOpen"
-      title="Submit Client Review"
+      title="রিভিউ প্রদান করুন"
       max-width="md"
       @close="reviewModalOpen = false"
     >
       <form @submit.prevent="submitReview" class="space-y-4 text-xs">
         <div>
-          <label class="block font-semibold uppercase tracking-wider mb-1">Your Name</label>
+          <label class="block font-semibold uppercase tracking-wider mb-1">আপনার নাম</label>
           <input type="text" v-model="newReview.author_name" required class="w-full px-3 py-2 border border-[#D8CCBC]" />
         </div>
         <div>
-          <label class="block font-semibold uppercase tracking-wider mb-1">Rating</label>
+          <label class="block font-semibold uppercase tracking-wider mb-1">রেটিং</label>
           <select v-model="newReview.rating" class="w-full px-3 py-2 border border-[#D8CCBC]">
-            <option :value="5">★★★★★ (5/5 Exceptional)</option>
-            <option :value="4">★★★★☆ (4/5 Very Good)</option>
-            <option :value="3">★★★☆☆ (3/5 Average)</option>
+            <option :value="5">★★★★★ (৫/৫ অসাধারণ)</option>
+            <option :value="4">★★★★☆ (৪/৫ খুব ভালো)</option>
+            <option :value="3">★★★☆☆ (৩/৫ সন্তোষজনক)</option>
           </select>
         </div>
         <div>
-          <label class="block font-semibold uppercase tracking-wider mb-1">Review Headline</label>
-          <input type="text" v-model="newReview.title" placeholder="Exquisite fit and finish" class="w-full px-3 py-2 border border-[#D8CCBC]" />
+          <label class="block font-semibold uppercase tracking-wider mb-1">রিভিউ শিরোনাম</label>
+          <input type="text" v-model="newReview.title" placeholder="চমৎকার ফেব্রিক ও ফিটিং" class="w-full px-3 py-2 border border-[#D8CCBC]" />
         </div>
         <div>
-          <label class="block font-semibold uppercase tracking-wider mb-1">Your Experience</label>
+          <label class="block font-semibold uppercase tracking-wider mb-1">আপনার বিস্তারিত অভিজ্ঞতা</label>
           <textarea rows="4" v-model="newReview.review" required class="w-full px-3 py-2 border border-[#D8CCBC]"></textarea>
         </div>
         <button
           type="submit"
           class="w-full py-3 bg-[#111111] text-white uppercase tracking-widest font-semibold hover:bg-black transition-colors"
         >
-          Submit Review
+          রিভিউ সাবমিট করুন
         </button>
       </form>
     </BaseModal>
@@ -388,7 +388,7 @@
     <div class="lg:hidden fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-[#D8CCBC]/40 p-4 z-40 flex items-center justify-between gap-4 shadow-xl">
       <div>
         <p class="font-serif text-sm text-[#111111] line-clamp-1">{{ product.name }}</p>
-        <span class="text-xs font-semibold text-[#111111]">${{ product.sale_price || product.price }}</span>
+        <span class="text-xs font-semibold text-[#111111]">৳ {{ product.sale_price || product.price }}</span>
       </div>
       <button
         type="button"
@@ -396,7 +396,7 @@
         @click="handleAddToCart"
         class="px-6 py-3 bg-[#111111] text-white text-xs uppercase tracking-widest font-semibold hover:bg-black transition-colors shrink-0"
       >
-        {{ inStock ? 'Add to Bag' : 'Sold Out' }}
+        {{ inStock ? 'ব্যাগে যোগ করুন' : 'স্টক শেষ' }}
       </button>
     </div>
   </div>
@@ -504,7 +504,7 @@ const handleAddToCart = async () => {
       selectedSize.value || null
     );
   } catch (err) {
-    alert(err.response?.data?.message || 'Could not add to cart');
+    alert(err.response?.data?.message || 'ব্যাগে যোগ করা যায়নি');
   } finally {
     adding.value = false;
   }
@@ -522,9 +522,9 @@ const submitReview = async () => {
     product.value.reviews.unshift(res.data.data);
     reviewModalOpen.value = false;
     newReview.value = { author_name: '', rating: 5, title: '', review: '' };
-    alert('Thank you for your review!');
+    alert('আপনার মূল্যবান মতামতের জন্য ধন্যবাদ!');
   } catch (err) {
-    alert(err.response?.data?.message || 'Error submitting review');
+    alert(err.response?.data?.message || 'রিভিউ সাবমিট করতে সমস্যা হয়েছে');
   }
 };
 

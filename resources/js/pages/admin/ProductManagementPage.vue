@@ -56,6 +56,44 @@
       @edit="openEditModal"
       @delete="confirmDelete"
     >
+      <template #filters>
+        <div class="flex items-center gap-2">
+          <select
+            v-model="selectedCategoryFilter"
+            @change="fetchProducts(1)"
+            class="px-3 py-2 bg-[#F7F5F0] border border-[#D8CCBC]/60 text-xs text-[#111111] focus:outline-none focus:border-[#111111] rounded-xs"
+          >
+            <option value="">সকল ক্যাটাগরি (All Categories)</option>
+            <option v-for="cat in categories" :key="cat.id" :value="cat.id">
+              {{ cat.name }} ({{ cat.products_count ?? 0 }})
+            </option>
+          </select>
+          <button
+            v-if="selectedCategoryFilter"
+            type="button"
+            @click="selectedCategoryFilter = ''; fetchProducts(1)"
+            class="p-2 text-xs text-rose-600 hover:bg-rose-50 rounded"
+            title="ক্যাটাগরি ফিল্টার ক্লিয়ার করুন"
+          >
+            ✕
+          </button>
+        </div>
+      </template>
+
+      <template #col-category="{ item }">
+        <button
+          v-if="item.category"
+          type="button"
+          @click="selectedCategoryFilter = item.category_id; fetchProducts(1)"
+          class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 transition-colors"
+          :title="'Filter by ' + item.category.name"
+        >
+          <span>📁</span>
+          <span>{{ item.category.name }}</span>
+        </button>
+        <span v-else class="text-slate-400 italic text-[11px]">No category</span>
+      </template>
+
       <template #col-price="{ item }">
         <span class="font-medium">${{ Number(item.sale_price || item.price).toFixed(2) }}</span>
         <span v-if="item.sale_price" class="text-[10px] text-[#A89B8A] line-through ml-1.5">
@@ -341,12 +379,14 @@
 
 <script setup>
 import { ref, reactive, onMounted, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import api from '../../api';
 import DataTable from '../../components/admin/DataTable.vue';
 import BaseModal from '../../components/common/BaseModal.vue';
 import MediaPicker from '../../components/admin/MediaPicker.vue';
 import { useToastStore } from '../../stores/toast';
 
+const route = useRoute();
 const toast = useToastStore();
 const products = ref([]);
 const categories = ref([]);
@@ -355,6 +395,7 @@ const loading = ref(true);
 const saving = ref(false);
 const meta = ref(null);
 const searchQuery = ref('');
+const selectedCategoryFilter = ref(route.query.category_id ? Number(route.query.category_id) : '');
 const sortBy = ref('created_at');
 const sortDirection = ref('desc');
 
@@ -487,6 +528,7 @@ const fetchProducts = async (page = 1) => {
     const params = {
       page,
       search: searchQuery.value || undefined,
+      category_id: selectedCategoryFilter.value || undefined,
       sort_by: sortBy.value,
       sort_direction: sortDirection.value,
     };
@@ -621,8 +663,9 @@ onMounted(async () => {
       api.get('/admin/resources/categories?per_page=-1'),
       api.get('/admin/resources/brands?per_page=-1'),
     ]);
-    categories.value = catRes.data.data || [];
-    brands.value = brandRes.data.data || [];
+    const rawCats = catRes.data?.data?.data || catRes.data?.data || catRes.data || [];
+    categories.value = Array.isArray(rawCats) ? rawCats : [];
+    brands.value = brandRes.data?.data || [];
   } catch (err) {
     console.error(err);
   }

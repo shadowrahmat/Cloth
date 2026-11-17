@@ -21,6 +21,7 @@ class DashboardController extends Controller
         $pendingOrders = Order::where('order_status', 'pending')->count();
         $totalCustomers = User::where('role', 'customer')->count();
         $totalProducts = Product::count();
+        $totalCategories = \App\Models\Category::count();
         $lowStockProducts = Product::where('stock', '<=', 5)->count();
 
         // Recent 5 orders
@@ -61,6 +62,7 @@ class DashboardController extends Controller
                     'pending_orders' => $pendingOrders,
                     'total_customers' => $totalCustomers,
                     'total_products' => $totalProducts,
+                    'total_categories' => $totalCategories,
                     'low_stock_count' => $lowStockProducts,
                 ],
                 'sales_chart' => $days,
@@ -77,6 +79,8 @@ class DashboardController extends Controller
         $lowStockProducts = Product::where('stock', '<=', 5)->count();
         $unapprovedReviews = \App\Models\ProductReview::where('is_approved', false)->count();
         $newInquiries = \App\Models\ContactMessage::where('is_read', false)->count();
+        $totalCategories = \App\Models\Category::count();
+        $totalProducts = Product::count();
         $pendingReturns = 0;
 
         return response()->json([
@@ -87,6 +91,8 @@ class DashboardController extends Controller
                 'unapproved_reviews' => $unapprovedReviews,
                 'new_inquiries' => $newInquiries,
                 'pending_returns' => $pendingReturns,
+                'total_categories' => $totalCategories,
+                'total_products' => $totalProducts,
             ],
         ]);
     }

@@ -5,7 +5,7 @@
         <!-- Editorial Image -->
         <div class="lg:col-span-7 relative aspect-4/5 sm:aspect-16/11 overflow-hidden bg-white shadow-xl">
           <img
-            :src="content.image || 'https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=1200&q=80'"
+            :src="content.image || '/storage/uploads/chic-burgundy-wool-coat-wide-leg-pants-fall-outfit-idea-1794824526-m3WQ.jpg'"
             alt="Editorial Campaign"
             class="w-full h-full object-cover"
           />

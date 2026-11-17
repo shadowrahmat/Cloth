@@ -10,7 +10,7 @@
   </div>
 
   <div v-else-if="loading" class="py-24 text-center text-xs text-[#A89B8A]">
-    Loading page...
+    পেজ লোড হচ্ছে...
   </div>
 </template>
 

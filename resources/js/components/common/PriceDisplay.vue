@@ -1,19 +1,19 @@
 <template>
   <div class="inline-flex items-baseline gap-2">
     <span :class="[sizeClass, 'font-medium text-[#111111]']">
-      ${{ formatPrice(effectivePrice) }}
+      ৳ {{ formatPrice(effectivePrice) }}
     </span>
     <span
       v-if="compareAtPrice && compareAtPrice > effectivePrice"
       class="text-xs text-[#A89B8A] line-through font-normal"
     >
-      ${{ formatPrice(compareAtPrice) }}
+      ৳ {{ formatPrice(compareAtPrice) }}
     </span>
     <span
       v-if="showBadge && isOnSale"
       class="px-1.5 py-0.5 text-[10px] uppercase tracking-wider font-semibold bg-[#111111] text-white"
     >
-      Sale
+      অফার
     </span>
   </div>
 </template>

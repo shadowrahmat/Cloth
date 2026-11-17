@@ -16,11 +16,11 @@
         <div class="flex items-center gap-3 mb-2">
           <span class="inline-block w-2 h-2 rounded-full bg-[#C5A880] animate-pulse"></span>
           <span class="text-[11px] uppercase tracking-[0.3em] text-[#C5A880] font-medium">
-            Runway Lookbook • 2026/27 Collection
+            রানওয়ে লুকবুক • ২০২৬/২৭ কালেকশন
           </span>
         </div>
         <h2 class="font-serif text-3xl sm:text-5xl lg:text-6xl text-white tracking-tight leading-none">
-          THE RUNWAY EDIT
+          রানওয়ে এডিটোরিয়াল
         </h2>
       </div>
 
@@ -28,7 +28,7 @@
       <div class="flex items-center gap-6">
         <div class="hidden sm:flex flex-col items-end">
           <span class="text-xs uppercase tracking-widest text-[#A89B8A] mb-1.5 font-light">
-            Scroll to glide the collection
+            কালেকশন দেখতে স্ক্রল করুন
           </span>
           <!-- Dynamic Progress Bar -->
           <div class="w-44 h-1 bg-white/10 rounded-full overflow-hidden">
@@ -60,20 +60,20 @@
         <div class="w-[300px] sm:w-[360px] lg:w-[420px] shrink-0 bg-white/5 border border-white/10 p-8 sm:p-10 flex flex-col justify-between aspect-3/4 backdrop-blur-md">
           <div class="space-y-4">
             <span class="text-[10px] tracking-[0.3em] uppercase text-[#C5A880] font-semibold block">
-              Curated Silhouette
+              কিউরেটেড সিলুয়েট
             </span>
             <h3 class="font-serif text-2xl sm:text-3xl text-white leading-snug">
-              Sculpted tailoring for the contemporary silhouette.
+              সমসাময়িক তরুণদের জন্য নিখুঁত কাটিং ও টেইলারিং।
             </h3>
             <p class="text-xs sm:text-sm text-white/60 font-light leading-relaxed">
-              Every garment in this collection is cut from hand-selected double-faced wool, raw mulberry silk, and Tuscan buttery lambskin.
+              আমাদের প্রতিটি পোশাক প্রিমিয়াম কম্বড কটন ও আরামদায়ক ফেব্রিকে তৈরি, যা দৈনন্দিন ব্যবহারের জন্য সর্বোচ্চ স্বাচ্ছন্দ্য দেয়।
             </p>
           </div>
 
           <div class="pt-6 border-t border-white/10 flex items-center justify-between text-xs text-white/40">
-            <span class="uppercase tracking-widest text-[10px]">Fall / Winter</span>
+            <span class="uppercase tracking-widest text-[10px]">অটাম / উইন্টার</span>
             <span class="inline-flex items-center gap-2 text-[#C5A880] font-medium text-xs">
-              <span>Glide Forward</span>
+              <span>সামনে দেখুন</span>
               <span>→</span>
             </span>
           </div>
@@ -95,7 +95,7 @@
           <!-- Product Image with Cinematic Parallax Scale -->
           <div class="relative flex-1 overflow-hidden bg-black/40">
             <img
-              :src="item.featured_image || 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80'"
+              :src="item.featured_image || '/storage/uploads/drop-shoulder-price-490size-mlxl1-1794823766-fpGc.jpg'"
               :alt="item.name"
               class="runway-img w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-108"
               loading="lazy"
@@ -112,9 +112,9 @@
                   {{ item.name }}
                 </h4>
                 <div class="text-xs text-white/90 font-mono">
-                  <span>${{ item.sale_price || item.price }}</span>
+                  <span>BDT {{ item.sale_price || item.price }}</span>
                   <span v-if="item.sale_price" class="text-white/40 line-through text-[10px] ml-1.5">
-                    ${{ item.price }}
+                    BDT {{ item.price }}
                   </span>
                 </div>
               </div>
@@ -136,22 +136,22 @@
         <div class="w-[280px] sm:w-[340px] lg:w-[400px] shrink-0 bg-gradient-to-br from-[#1E1C1A] to-[#111111] border border-[#C5A880]/30 p-8 sm:p-10 flex flex-col justify-between aspect-3/4">
           <div class="space-y-4">
             <span class="text-[10px] tracking-[0.3em] uppercase text-[#C5A880] font-semibold block">
-              Complete Experience
+              এক্সক্লুসিভ কালেকশন
             </span>
             <h3 class="font-serif text-3xl sm:text-4xl text-white leading-tight">
-              Explore The Complete Runway Edit
+              সম্পূর্ণ রানওয়ে ক্যাটালগ দেখুন
             </h3>
             <p class="text-xs sm:text-sm text-white/60 font-light leading-relaxed">
-              Step into our complete collection catalog featuring all 48 signature designs, bespoke accessories, and seasonal footwear.
+              আমাদের সকল সিগনেচার ডিজাইন, প্রিমিয়াম টি-শার্ট, পাঞ্জাবি ও বটমস কালেকশন থেকে আপনার পছন্দের পোশাক অর্ডার করুন।
             </p>
           </div>
 
           <div class="pt-6">
             <router-link
               to="/collections"
-              class="inline-flex items-center justify-center w-full py-3.5 px-6 bg-[#C5A880] text-[#111111] text-xs uppercase tracking-[0.2em] font-semibold hover:bg-white transition-colors duration-300 shadow-xl"
+              class="inline-flex items-center justify-center w-full py-3.5 px-6 bg-[#C5A880] text-[#111111] text-xs font-semibold hover:bg-white transition-colors duration-300 shadow-xl"
             >
-              <span>Explore All Garments</span>
+              <span>সকল পোশাক দেখুন</span>
               <span class="ml-2">→</span>
             </router-link>
           </div>
@@ -162,13 +162,13 @@
     <!-- Bottom Editorial Footer Strip -->
     <div class="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 lg:pb-8 flex items-center justify-between text-[11px] text-white/40 border-t border-white/10 pt-4">
       <div class="flex items-center gap-6">
-        <span>CRAFTED IN MILAN & PARIS</span>
+        <span>১০০% প্রিমিয়াম সুতি ও আরামদায়ক ফেব্রিক</span>
         <span class="hidden sm:inline">•</span>
-        <span class="hidden sm:inline">ZERO-WASTE SUSTAINABLE CASHMERE</span>
+        <span class="hidden sm:inline">সারা দেশে দ্রুত ডেলিভারি</span>
       </div>
       <div class="flex items-center gap-2">
         <span class="w-1.5 h-1.5 rounded-full bg-[#C5A880]"></span>
-        <span class="font-mono text-white/60">AUTUMN / WINTER 2026</span>
+        <span class="font-mono text-white/60">অটাম / উইন্টার ২০২৬</span>
       </div>
     </div>
   </section>
@@ -190,52 +190,61 @@ const trackWrapperRef = ref(null);
 const trackRef = ref(null);
 const scrollPercent = ref(0);
 
-// Default luxury fallback garments if products are loading
+// Default luxury fallback garments mapping to real media library products
 const fallbackProducts = [
   {
-    id: 'fb-1',
-    name: 'Sartorial Double-Breasted Wool Coat',
-    slug: 'sartorial-double-breasted-wool-coat',
-    price: '890.00',
+    id: 18,
+    name: 'Exclusive Heritage Panjabi Collection',
+    slug: 'exclusive-heritage-panjabi-collection',
+    price: '1499.00',
     sale_price: null,
-    featured_image: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=900&q=80',
-    category: { name: 'Outerwear' },
+    featured_image: '/storage/uploads/price-1499size-4042441-1794823926-a9P0.jpg',
+    category: { name: 'Panjabi' },
   },
   {
-    id: 'fb-2',
-    name: 'Fluid Silk Georgette Evening Gown',
-    slug: 'fluid-silk-georgette-evening-gown',
-    price: '740.00',
-    sale_price: '680.00',
-    featured_image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80',
-    category: { name: 'Gowns' },
-  },
-  {
-    id: 'fb-3',
-    name: 'Unlined Mongolian Cashmere Wrap',
-    slug: 'unlined-mongolian-cashmere-wrap',
-    price: '620.00',
+    id: 11,
+    name: 'Boxy Fit Heavyweight Cotton T-Shirt',
+    slug: 'boxy-fit-heavyweight-cotton-t-shirt',
+    price: '790.00',
     sale_price: null,
-    featured_image: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=900&q=80',
-    category: { name: 'Knitwear' },
+    featured_image: '/storage/uploads/boxy-fit-price-790-size-mlxl1-1794823757-keB9.jpg',
+    category: { name: 'BOXY' },
   },
   {
-    id: 'fb-4',
-    name: 'Pleated Virgin Wool Wide-Leg Trousers',
-    slug: 'pleated-virgin-wool-wide-leg-trousers',
-    price: '420.00',
+    id: 12,
+    name: 'Drop Shoulder Oversized T-Shirt',
+    slug: 'drop-shoulder-oversized-t-shirt',
+    price: '490.00',
     sale_price: null,
-    featured_image: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=900&q=80',
-    category: { name: 'Tailoring' },
+    featured_image: '/storage/uploads/drop-shoulder-price-490size-mlxl1-1794823766-fpGc.jpg',
+    category: { name: 'Drop shoulder' },
   },
   {
-    id: 'fb-5',
-    name: 'Handcrafted Glove Lambskin Trench',
-    slug: 'handcrafted-glove-lambskin-trench',
-    price: '1250.00',
-    sale_price: '1100.00',
-    featured_image: 'https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=900&q=80',
-    category: { name: 'Leather' },
+    id: 10,
+    name: 'Men Baggy Fit Casual Pant',
+    slug: 'men-baggy-fit-casual-pant',
+    price: '650.00',
+    sale_price: null,
+    featured_image: '/storage/uploads/baggy-pant-01-1794823750-TG8Q.webp',
+    category: { name: 'Baggy pants' },
+  },
+  {
+    id: 19,
+    name: 'Classic Pique Polo T-Shirt',
+    slug: 'classic-pique-polo-t-shirt',
+    price: '650.00',
+    sale_price: null,
+    featured_image: '/storage/uploads/polo-t-shirt-price-650size-mlxl1-1794823936-Kham.jpg',
+    category: { name: 'Polo t-shirt' },
+  },
+  {
+    id: 16,
+    name: 'Premium Denim & Chino Pants',
+    slug: 'premium-denim-chino-pants',
+    price: '950.00',
+    sale_price: null,
+    featured_image: '/storage/uploads/price-950size-2829303132333435-361-1794823890-5RIh.jpg',
+    category: { name: 'Jeans pant' },
   },
 ];
 

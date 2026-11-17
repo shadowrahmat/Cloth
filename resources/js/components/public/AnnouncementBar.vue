@@ -36,9 +36,9 @@ const props = defineProps({
   content: {
     type: Object,
     default: () => ({
-      text: 'Complimentary Worldwide Shipping on Orders Over $150',
-      link_url: '/collections/autumn-winter',
-      link_text: 'Discover The Edit',
+      text: 'সারাদেশে ২৫০০ টাকার বেশি অর্ডারে ফ্রি ডেলিভারি • সহজ সাইজ এক্সচেঞ্জ সুবিধা',
+      link_url: '/collections',
+      link_text: 'কালেকশন দেখুন',
       enabled: true,
     }),
   },

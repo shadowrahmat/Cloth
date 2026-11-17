@@ -145,6 +145,23 @@ Route::prefix('v1')->group(function () {
             Route::post('/products/import', [ProductController::class, 'import']);
             Route::apiResource('products', ProductController::class);
 
+            // Categories Management
+            Route::get('/categories', function (\Illuminate\Http\Request $request) {
+                return app(ResourceController::class)->index($request, 'categories');
+            });
+            Route::post('/categories', function (\Illuminate\Http\Request $request) {
+                return app(ResourceController::class)->store($request, 'categories');
+            });
+            Route::get('/categories/{id}', function (\Illuminate\Http\Request $request, $id) {
+                return app(ResourceController::class)->show($request, 'categories', $id);
+            });
+            Route::put('/categories/{id}', function (\Illuminate\Http\Request $request, $id) {
+                return app(ResourceController::class)->update($request, 'categories', $id);
+            });
+            Route::delete('/categories/{id}', function (\Illuminate\Http\Request $request, $id) {
+                return app(ResourceController::class)->destroy($request, 'categories', $id);
+            });
+
             // Specialized Order Management
             Route::get('/orders', [OrderController::class, 'index']);
             Route::get('/orders/{id}', [OrderController::class, 'show']);

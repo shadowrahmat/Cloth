@@ -34,6 +34,11 @@ class ResourceController extends Controller
             $query->with($config['with']);
         }
 
+        // Relationship counts
+        if (!empty($config['with_count'])) {
+            $query->withCount($config['with_count']);
+        }
+
         // Search
         if ($search = $request->input('search')) {
             $searchable = $config['searchable'] ?? [];

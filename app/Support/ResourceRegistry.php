@@ -36,6 +36,7 @@ class ResourceRegistry
                 'is_active' => ['type' => 'boolean', 'label' => 'Active Status'],
             ],
             'with' => ['parent'],
+            'with_count' => ['products'],
             'order_by' => ['display_order' => 'asc', 'name' => 'asc'],
             'slug_field' => 'slug',
             'slug_source' => 'name',

@@ -25,7 +25,7 @@
                 type="text"
                 v-model="query"
                 @input="handleSearch"
-                placeholder="Search garments, cashmere, suits, accessories..."
+                placeholder="পোশাক, পাঞ্জাবি, টি-শার্ট, প্যান্ট খুঁজুন..."
                 class="w-full text-xl sm:text-2xl font-serif text-[#111111] placeholder:text-[#A89B8A] focus:outline-none bg-transparent"
               />
               <button
@@ -41,10 +41,10 @@
 
             <!-- Quick Suggestions -->
             <div v-if="!query && !results.length" class="space-y-4">
-              <span class="text-xs uppercase tracking-widest text-[#A89B8A] font-semibold">Popular Searches:</span>
+              <span class="text-xs uppercase tracking-widest text-[#A89B8A] font-semibold">জনপ্রিয় অনুসন্ধান:</span>
               <div class="flex flex-wrap gap-2">
                 <button
-                  v-for="tag in ['Cashmere Overcoat', 'Sartorial Blazer', 'Silk Dress', 'Winter Knits', 'Flannel Trousers']"
+                  v-for="tag in ['পাঞ্জাবি', 'টি-শার্ট', 'ব্যাগি প্যান্ট', 'পোলো টি-শার্ট', 'ড্রপ শোল্ডার', 'ক্যাজুয়াল শার্ট']"
                   :key="tag"
                   type="button"
                   @click="query = tag; handleSearch()"
@@ -57,7 +57,7 @@
 
             <!-- Live Results -->
             <div v-if="results.length" class="mt-6">
-              <h5 class="text-xs uppercase tracking-widest text-[#A89B8A] font-semibold mb-4">Discovered Pieces ({{ results.length }}):</h5>
+              <h5 class="text-xs uppercase tracking-widest text-[#A89B8A] font-semibold mb-4">খুঁজে পাওয়া পোশাক ({{ results.length }}টি):</h5>
               <div data-lenis-prevent class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 max-h-[60vh] overflow-y-auto pr-2">
                 <router-link
                   v-for="item in results"
@@ -71,15 +71,15 @@
                   </div>
                   <div class="flex-1 min-w-0">
                     <h6 class="text-xs font-serif text-[#111111] truncate group-hover:text-[#A89B8A]">{{ item.name }}</h6>
-                    <p class="text-[11px] text-[#A89B8A] mb-1">SKU: {{ item.sku }}</p>
-                    <span class="text-xs font-medium text-[#111111]">${{ item.sale_price || item.price }}</span>
+                    <p class="text-[11px] text-[#A89B8A] mb-1">কোড: {{ item.sku }}</p>
+                    <span class="text-xs font-semibold text-[#111111]">৳ {{ Number(item.sale_price || item.price).toLocaleString() }}</span>
                   </div>
                 </router-link>
               </div>
             </div>
 
             <div v-else-if="query && query.length >= 2 && !loading" class="mt-8 text-center text-sm text-[#A89B8A]">
-              No garments found matching "{{ query }}".
+              "{{ query }}" দিয়ে কোনো পোশাক পাওয়া যায়নি।
             </div>
           </div>
         </div>

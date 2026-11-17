@@ -25,66 +25,65 @@
           </router-link>
         </div>
 
-        <!-- Desktop Navigation Bar -->
-        <nav class="hidden lg:flex items-center space-x-8 text-xs uppercase tracking-widest font-medium">
+        <!-- Desktop Navigation Bar: Minimal Editorial Navigation -->
+        <nav class="hidden lg:flex items-center space-x-7 xl:space-x-9 text-xs font-medium tracking-wider">
+          <!-- NEW ARRIVALS -->
           <router-link
             to="/collection/new-arrivals"
-            class="text-[#111111] hover:text-[#A89B8A] transition-colors py-2"
+            active-class="text-[#14382A] font-bold"
+            class="text-[#171C1A] hover:text-[#16A36A] transition-colors py-2"
           >
-            New Arrivals
+            নতুন কালেকশন
           </router-link>
 
-          <div
-            class="relative py-2"
-            @mouseenter="openMegaMenu"
-            @mouseleave="scheduleCloseMegaMenu"
-          >
-            <router-link
-              to="/collection/women"
-              class="text-[#111111] hover:text-[#A89B8A] transition-colors inline-flex items-center gap-1"
-            >
-              Women
-              <svg class="w-3 h-3 text-[#A89B8A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-              </svg>
-            </router-link>
-          </div>
-
-          <div
-            class="relative py-2"
-            @mouseenter="openMegaMenu"
-            @mouseleave="scheduleCloseMegaMenu"
-          >
-            <router-link
-              to="/collection/men"
-              class="text-[#111111] hover:text-[#A89B8A] transition-colors inline-flex items-center gap-1"
-            >
-              Men
-              <svg class="w-3 h-3 text-[#A89B8A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-              </svg>
-            </router-link>
-          </div>
-
-          <router-link
-            to="/collection/kids"
-            class="text-[#111111] hover:text-[#A89B8A] transition-colors py-2"
-          >
-            Kids
-          </router-link>
-
-          <router-link
-            to="/collection/winter"
-            class="text-[#111111] hover:text-[#C5A880] transition-colors font-semibold py-2"
-          >
-            The Winter Edit
-          </router-link>
-
+          <!-- COLLECTIONS -->
           <router-link
             to="/collections"
-            class="text-[#111111] hover:text-[#A89B8A] transition-colors py-2"
+            active-class="text-[#14382A] font-bold"
+            class="text-[#171C1A] hover:text-[#16A36A] transition-colors py-2"
           >
-            Collections
+            সব কালেকশন
+          </router-link>
+
+          <!-- CLOTHING (Mega Menu Dropdown with all 16 categories) -->
+          <div
+            class="relative py-2 flex items-center group cursor-pointer"
+            @mouseenter="openMegaMenu"
+            @mouseleave="scheduleCloseMegaMenu"
+          >
+            <router-link
+              to="/collections"
+              class="text-[#171C1A] hover:text-[#16A36A] transition-colors inline-flex items-center gap-1.5 py-1"
+              :class="{ 'text-[#14382A] font-bold': megaMenuOpen || $route.path.startsWith('/category') }"
+            >
+              <span>পোশাক</span>
+              <svg
+                :class="['w-3.5 h-3.5 transition-transform duration-200 text-[#69736E]', megaMenuOpen ? 'rotate-180 text-[#14382A]' : 'group-hover:text-[#16A36A]']"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M19 9l-7 7-7-7" />
+              </svg>
+            </router-link>
+          </div>
+
+          <!-- LOOKBOOK -->
+          <a
+            href="#lookbook"
+            @click.prevent="scrollToLookbook"
+            class="text-[#171C1A] hover:text-[#16A36A] transition-colors py-2 cursor-pointer"
+          >
+            লুকবুক
+          </a>
+
+          <!-- ABOUT -->
+          <router-link
+            to="/about"
+            active-class="text-[#14382A] font-bold"
+            class="text-[#171C1A] hover:text-[#16A36A] transition-colors py-2"
+          >
+            আমাদের সম্পর্কে
           </router-link>
         </nav>
 
@@ -95,7 +94,7 @@
             type="button"
             @click="searchOpen = true"
             class="p-2 text-[#111111] hover:text-[#A89B8A] transition-colors"
-            title="Search catalog"
+            title="পণ্য খুঁজুন"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -106,7 +105,7 @@
           <router-link
             :to="authStore.isCustomerAuthenticated ? '/account' : '/account'"
             class="p-2 text-[#111111] hover:text-[#A89B8A] transition-colors relative"
-            title="Client account"
+            title="গ্রাহক অ্যাকাউন্ট"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
@@ -117,7 +116,7 @@
           <router-link
             to="/wishlist"
             class="p-2 text-[#111111] hover:text-[#A89B8A] transition-colors relative"
-            title="Wishlist"
+            title="পছন্দের তালিকা"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
@@ -180,6 +179,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { useAuthStore } from '../../stores/auth';
 import { useCartStore } from '../../stores/cart';
 import { useWishlistStore } from '../../stores/wishlist';
@@ -189,9 +189,21 @@ import MobileMenu from './MobileMenu.vue';
 import SearchDrawer from './SearchDrawer.vue';
 import MiniCart from './MiniCart.vue';
 
+const router = useRouter();
 const authStore = useAuthStore();
 const cartStore = useCartStore();
 const wishlistStore = useWishlistStore();
+
+const scrollToLookbook = () => {
+  if (window.location.pathname !== '/') {
+    router.push('/#lookbook');
+  } else {
+    const el = document.getElementById('lookbook');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  }
+};
 
 const categories = ref([]);
 const megaMenuOpen = ref(false);

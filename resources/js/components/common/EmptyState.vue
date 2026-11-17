@@ -15,7 +15,7 @@
 
 <script setup>
 defineProps({
-  title: { type: String, default: 'No records discovered' },
-  description: { type: String, default: 'There are currently no items matching your criteria in the archive.' },
+  title: { type: String, default: 'কোনো তথ্য পাওয়া যায়নি' },
+  description: { type: String, default: 'আপনার অনুসন্ধানের সাথে মিলে এমন কোনো পণ্য বা তথ্য এই মুহূর্তে নেই।' },
 });
 </script>

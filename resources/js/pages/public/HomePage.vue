@@ -17,16 +17,16 @@
     <section v-if="newArrivalsSection" class="py-20 lg:py-28 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-12 border-b border-[#D8CCBC]/40 pb-4 gap-4">
         <div>
-          <span class="text-xs uppercase tracking-[0.25em] text-[#A89B8A] font-medium block">Seasonal Releases</span>
+          <span class="text-xs tracking-[0.25em] text-[#A89B8A] font-medium block">নতুন আগমন</span>
           <h2 class="font-serif text-3xl sm:text-4xl text-[#111111]">
-            {{ newArrivalsSection.content?.heading || 'New Arrivals' }}
+            {{ newArrivalsSection.content?.heading || 'নতুন কালেকশন' }}
           </h2>
         </div>
         <router-link
           to="/collection/new-arrivals"
-          class="text-xs uppercase tracking-widest font-semibold text-[#111111] hover:text-[#A89B8A] transition-colors inline-flex items-center gap-1.5"
+          class="text-xs font-semibold text-[#111111] hover:text-[#16A36A] transition-colors inline-flex items-center gap-1.5"
         >
-          <span>View All New Releases</span>
+          <span>সকল নতুন পোশাক দেখুন</span>
           <span>→</span>
         </router-link>
       </div>
@@ -46,12 +46,12 @@
     <!-- Section 07: Best Sellers -->
     <section v-if="bestSellersSection" class="py-20 lg:py-28 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="text-center max-w-2xl mx-auto mb-14 space-y-3">
-        <span class="text-xs uppercase tracking-[0.25em] text-[#A89B8A] font-medium">Classics</span>
+        <span class="text-xs tracking-[0.25em] text-[#A89B8A] font-medium">জনপ্রিয় কালেকশন</span>
         <h2 class="font-serif text-3xl sm:text-4xl text-[#111111]">
-          {{ bestSellersSection.content?.heading || 'Most Celebrated Pieces' }}
+          {{ bestSellersSection.content?.heading || 'সর্বাধিক বিক্রিত পোশাক' }}
         </h2>
         <p class="text-xs sm:text-sm text-[#A89B8A] leading-relaxed">
-          {{ bestSellersSection.content?.description || 'Iconic silhouettes consistently favored by our discerning clientele.' }}
+          {{ bestSellersSection.content?.description || 'আমাদের গ্রাহকদের সবচেয়ে পছন্দের ট্রেন্ডি ও আরামদায়ক পোশাক।' }}
         </p>
       </div>
 

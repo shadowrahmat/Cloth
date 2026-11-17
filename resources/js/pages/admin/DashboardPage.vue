@@ -9,6 +9,14 @@
 
       <div class="flex flex-wrap items-center gap-2.5">
         <router-link
+          to="/admin/categories"
+          class="px-4 py-2 border border-emerald-300 bg-emerald-50/60 text-[#14382A] text-xs uppercase tracking-wider font-semibold rounded-md hover:bg-emerald-100 transition-colors shadow-2xs inline-flex items-center gap-1.5"
+        >
+          <span class="text-sm">📁</span>
+          <span>ক্যাটাগরি সমূহ ({{ stats.total_categories || 16 }})</span>
+        </router-link>
+
+        <router-link
           to="/admin/products"
           class="px-4 py-2 bg-[#14382A] text-white text-xs uppercase tracking-wider font-semibold rounded-md hover:bg-[#16A36A] transition-colors shadow-2xs inline-flex items-center gap-1.5"
         >

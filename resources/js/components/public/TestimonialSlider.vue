@@ -1,12 +1,12 @@
 <template>
   <section class="py-20 lg:py-28 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="text-center max-w-2xl mx-auto mb-14 space-y-3">
-      <span class="text-xs uppercase tracking-[0.25em] text-[#A89B8A] font-medium">Testimonials</span>
+      <span class="text-xs uppercase tracking-[0.25em] text-[#A89B8A] font-medium">গ্রাহকদের মতামত</span>
       <h2 class="font-serif text-3xl sm:text-4xl text-[#111111] tracking-tight">
-        {{ content.heading || 'Reflections from Our Clients' }}
+        {{ content.heading || 'গ্রাহকদের অনুভূতি ও অভিজ্ঞতা' }}
       </h2>
       <p class="text-xs sm:text-sm text-[#A89B8A] leading-relaxed">
-        {{ content.description || 'Verified reviews from customers experiencing DRAWER CLOTHING firsthand.' }}
+        {{ content.description || 'DRAWER CLOTHING থেকে পণ্য ক্রয়কারী সম্মানিত গ্রাহকদের মূল্যবান রিভিউ ও অভিজ্ঞতা।' }}
       </p>
     </div>
 
@@ -42,7 +42,7 @@
           <div>
             <h6 class="font-sans font-semibold text-xs text-[#111111]">{{ t.customer_name }}</h6>
             <span v-if="t.product_purchased" class="text-[11px] text-[#A89B8A] block">
-              Purchased: {{ t.product_purchased }}
+              ক্রয় করেছেন: {{ t.product_purchased }}
             </span>
           </div>
         </div>
