@@ -1,0 +1,61 @@
+@import 'tailwindcss';
+@import 'lenis/dist/lenis.css';
+
+@theme {
+    --container-7xl: 1600px;
+
+    --color-primary-black: #111111;
+    --color-ivory: #F7F5F0;
+    --color-sand: #D8CCBC;
+    --color-taupe: #A89B8A;
+    --color-pure-white: #FFFFFF;
+    --color-luxury-gold: #C5A880;
+
+    /* Master Admin Theme Tokens (Deep Emerald) */
+    --color-admin-sidebar: #14382A;
+    --color-admin-accent: #16A36A;
+    --color-admin-bg: #F7F8FA;
+    --color-admin-surface: #FFFFFF;
+    --color-admin-text: #171C1A;
+    --color-admin-muted: #69736E;
+    --color-admin-border: #E7EBE8;
+    --color-admin-success: #15803D;
+    --color-admin-warning: #D97706;
+    --color-admin-danger: #DC2626;
+    --color-admin-info: #2563EB;
+
+    --font-serif: 'Playfair Display', 'Cormorant Garamond', Georgia, Cambria, 'Times New Roman', Times, serif;
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+@layer base {
+    body {
+        background-color: var(--color-ivory);
+        color: var(--color-primary-black);
+        font-family: var(--font-sans);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        overflow-x: hidden;
+    }
+
+    h1, h2, h3, .font-editorial {
+        font-family: var(--font-serif);
+        letter-spacing: -0.02em;
+    }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #F7F5F0;
+}
+::-webkit-scrollbar-thumb {
+    background: #D8CCBC;
+    border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #A89B8A;
+}
