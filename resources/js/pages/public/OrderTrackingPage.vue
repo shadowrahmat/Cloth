@@ -93,20 +93,28 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
 import api from '../../api';
+import { useAuthStore } from '../../stores/auth';
 
-const orderNumber = ref('');
-const email = ref('');
+const route = useRoute();
+const authStore = useAuthStore();
+
+const orderNumber = ref(typeof route.query.order === 'string' ? route.query.order : '');
+const email = ref(authStore.customerUser?.email || '');
 const loading = ref(false);
 const error = ref('');
 const order = ref(null);
 
 const stages = ['pending', 'confirmed', 'processing', 'shipped', 'delivered'];
+// Statuses that sit between timeline stages map onto the nearest stage.
+const STAGE_ALIASES = { ready_to_ship: 'processing' };
 
 const isPassed = (stage) => {
   if (!order.value) return false;
-  const currentIdx = stages.indexOf(order.value.order_status);
+  const status = STAGE_ALIASES[order.value.order_status] || order.value.order_status;
+  const currentIdx = stages.indexOf(status);
   const targetIdx = stages.indexOf(stage);
   return currentIdx >= targetIdx;
 };
@@ -127,4 +135,9 @@ const track = async () => {
     loading.value = false;
   }
 };
+
+// Arriving from the account page: both fields are known, look the order up straight away.
+onMounted(() => {
+  if (orderNumber.value && email.value) track();
+});
 </script>

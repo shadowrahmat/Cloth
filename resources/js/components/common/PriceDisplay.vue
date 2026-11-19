@@ -1,25 +1,23 @@
 <template>
-  <div class="inline-flex items-baseline gap-2">
-    <span :class="[sizeClass, 'font-medium text-[#111111]']">
-      ৳ {{ formatPrice(effectivePrice) }}
+  <div class="inline-flex items-baseline gap-2 tabular-nums">
+    <span :class="[sizeClass, 'font-medium', struckPrice ? 'text-[#B4232A]' : 'text-[#111111]']">
+      {{ taka(effectivePrice) }}
+    </span>
+    <span v-if="struckPrice" class="text-xs text-[#A89B8A] line-through font-normal">
+      {{ taka(struckPrice) }}
     </span>
     <span
-      v-if="compareAtPrice && compareAtPrice > effectivePrice"
-      class="text-xs text-[#A89B8A] line-through font-normal"
+      v-if="showBadge && struckPrice"
+      class="px-1.5 py-0.5 text-[10px] font-semibold bg-[#111111] text-white"
     >
-      ৳ {{ formatPrice(compareAtPrice) }}
-    </span>
-    <span
-      v-if="showBadge && isOnSale"
-      class="px-1.5 py-0.5 text-[10px] uppercase tracking-wider font-semibold bg-[#111111] text-white"
-    >
-      অফার
+      -{{ bnNumber(Math.round((1 - effectivePrice / struckPrice) * 100)) }}%
     </span>
   </div>
 </template>
 
 <script setup>
 import { computed } from 'vue';
+import { taka, bnNumber } from '../../utils/bn';
 
 const props = defineProps({
   price: { type: [Number, String], required: true },
@@ -30,26 +28,16 @@ const props = defineProps({
 });
 
 const effectivePrice = computed(() => {
-  if (props.salePrice && Number(props.salePrice) > 0) {
-    return Number(props.salePrice);
-  }
-  return Number(props.price);
+  const sale = Number(props.salePrice);
+  return sale > 0 && sale < Number(props.price) ? sale : Number(props.price);
 });
 
-const isOnSale = computed(() => {
-  return props.salePrice && Number(props.salePrice) < Number(props.price);
+// The higher "was" price to strike through: compare-at price, or the list price when on sale.
+const struckPrice = computed(() => {
+  const compare = Number(props.compareAtPrice);
+  if (compare > effectivePrice.value) return compare;
+  return Number(props.price) > effectivePrice.value ? Number(props.price) : null;
 });
 
-const sizeClass = computed(() => {
-  switch (props.size) {
-    case 'sm': return 'text-xs';
-    case 'lg': return 'text-lg';
-    case 'xl': return 'text-2xl font-serif';
-    default: return 'text-sm';
-  }
-});
-
-const formatPrice = (val) => {
-  return Number(val || 0).toFixed(2);
-};
+const sizeClass = computed(() => ({ sm: 'text-xs', lg: 'text-lg', xl: 'text-2xl font-serif' }[props.size] || 'text-sm'));
 </script>

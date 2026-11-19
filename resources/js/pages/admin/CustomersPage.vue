@@ -136,6 +136,7 @@
 </template>
 
 <script setup>
+import { useAdminDeepLink } from '../../composables/useAdminDeepLink';
 import { ref, onMounted } from 'vue';
 import BaseModal from '../../components/admin/BaseModal.vue';
 import api from '../../api';
@@ -179,4 +180,7 @@ const openCustomerDetail = async (c) => {
 onMounted(() => {
   fetchCustomers();
 });
+
+// Open from links like ?search=... or ?new=1 (sidebar, Ctrl+K, dashboard)
+useAdminDeepLink({ search: searchQuery, reload: fetchCustomers });
 </script>

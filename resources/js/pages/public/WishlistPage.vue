@@ -19,7 +19,7 @@
         আমাদের আধুনিক কালেকশন ব্রাউজ করার সময় পছন্দের পোশাকে লাভ আইকন চেপে এখানে সংরক্ষণ করুন।
       </p>
       <router-link
-        to="/clothing"
+        to="/collections"
         class="px-8 py-3.5 bg-[#111111] text-white text-xs uppercase tracking-[0.2em] font-semibold hover:bg-black transition-colors inline-block"
       >
         পোশাক কালেকশন দেখুন

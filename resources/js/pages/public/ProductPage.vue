@@ -384,20 +384,29 @@
       </form>
     </BaseModal>
 
-    <!-- Mobile Sticky Add to Cart Bar -->
-    <div class="lg:hidden fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-[#D8CCBC]/40 p-4 z-40 flex items-center justify-between gap-4 shadow-xl">
-      <div>
-        <p class="font-serif text-sm text-[#111111] line-clamp-1">{{ product.name }}</p>
-        <span class="text-xs font-semibold text-[#111111]">৳ {{ product.sale_price || product.price }}</span>
+    <!-- Mobile buy bar (replaces the bottom tab bar on product pages, app-style) -->
+    <div class="lg:hidden fixed inset-x-0 bottom-0 z-40 px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+      <div class="rounded-2xl bg-white/95 backdrop-blur-xl border border-black/[0.06] shadow-[0_8px_30px_-8px_rgba(17,17,17,0.3)] p-2 flex items-center gap-2">
+        <button type="button" @click="cartStore.openDrawer()" class="relative w-11 h-11 shrink-0 rounded-xl flex items-center justify-center active:scale-95 transition-transform" aria-label="ব্যাগ দেখুন">
+          <ShoppingBag class="w-5 h-5" :stroke-width="1.7" />
+          <span v-if="cartStore.itemCount" class="absolute top-1 right-1 min-w-4 h-4 px-1 rounded-full bg-[#111111] text-white text-[10px] font-bold flex items-center justify-center">{{ cartStore.itemCount }}</span>
+        </button>
+        <button type="button" @click="wishlistStore.toggleWishlist(product)" class="w-11 h-11 shrink-0 rounded-xl flex items-center justify-center active:scale-95 transition-transform" :aria-label="wishlistStore.isInWishlist(product.id) ? 'উইশলিস্ট থেকে সরান' : 'উইশলিস্টে রাখুন'">
+          <Heart class="w-5 h-5" :stroke-width="1.7" :fill="wishlistStore.isInWishlist(product.id) ? 'currentColor' : 'none'" />
+        </button>
+        <div class="min-w-0 flex-1 px-1">
+          <p class="text-[15px] font-semibold text-[#111111] tabular-nums leading-tight">{{ taka(effectivePrice) }}</p>
+          <p class="text-[11.5px] text-[#69736E] truncate">{{ selectedSize ? `সাইজ ${selectedSize}` : (inStock ? 'স্টকে আছে' : 'স্টক শেষ') }}</p>
+        </div>
+        <button type="button" :disabled="!inStock || adding" @click="handleAddToCart"
+                class="h-11 px-3.5 shrink-0 rounded-xl border border-[#111111] text-[13px] font-medium active:scale-95 transition-transform disabled:opacity-40">
+          {{ adding ? '…' : 'ব্যাগে' }}
+        </button>
+        <button type="button" :disabled="!inStock || adding" @click="handleBuyNow"
+                class="h-11 px-4 shrink-0 rounded-xl bg-[#111111] text-white text-[13px] font-medium active:scale-95 transition-transform disabled:opacity-40">
+          {{ inStock ? 'এখনই কিনুন' : 'স্টক শেষ' }}
+        </button>
       </div>
-      <button
-        type="button"
-        :disabled="!inStock"
-        @click="handleAddToCart"
-        class="px-6 py-3 bg-[#111111] text-white text-xs uppercase tracking-widest font-semibold hover:bg-black transition-colors shrink-0"
-      >
-        {{ inStock ? 'ব্যাগে যোগ করুন' : 'স্টক শেষ' }}
-      </button>
     </div>
   </div>
 </template>
@@ -411,6 +420,8 @@ import api from '../../api';
 import PriceDisplay from '../../components/common/PriceDisplay.vue';
 import ProductGrid from '../../components/public/ProductGrid.vue';
 import BaseModal from '../../components/common/BaseModal.vue';
+import { ShoppingBag, Heart } from 'lucide-vue-next';
+import { taka } from '../../utils/bn';
 
 const route = useRoute();
 const router = useRouter();
@@ -480,6 +491,13 @@ const inStock = computed(() => {
     return activeVariant.value.stock > 0;
   }
   return (product.value?.stock || 0) > 0;
+});
+
+const effectivePrice = computed(() => {
+  const v = activeVariant.value;
+  const price = Number(v?.price || product.value?.price || 0);
+  const sale = Number(product.value?.sale_price || 0);
+  return sale > 0 && sale < Number(product.value?.price) ? sale : price;
 });
 
 const toggleAccordion = (name) => {

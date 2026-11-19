@@ -1,569 +1,228 @@
 <template>
   <div>
-    <!-- Mobile Backdrop Overlay -->
+    <!-- Mobile backdrop -->
     <div
       v-if="mobileOpen"
-      class="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs lg:hidden transition-opacity"
+      class="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs lg:hidden"
       @click="$emit('close-mobile')"
     ></div>
 
-    <!-- Sidebar Element -->
     <aside
-      ref="sidebarRef"
       :class="[
-        'fixed lg:static top-0 bottom-0 left-0 z-50 flex flex-col shrink-0 select-none transition-all duration-300 ease-in-out',
-        'bg-[#14382A] text-white border-r border-emerald-900/60 shadow-xl lg:shadow-none',
-        mobileOpen ? 'translate-x-0 w-[288px]' : '-translate-x-full lg:translate-x-0 lg:w-[264px]'
+        'fixed lg:sticky top-0 left-0 z-50 h-screen flex flex-col shrink-0 select-none',
+        'bg-[#14382A] text-emerald-50 border-r border-emerald-950/60 transition-[width,transform] duration-200 ease-out',
+        mobileOpen ? 'translate-x-0 w-72' : '-translate-x-full lg:translate-x-0',
+        !mobileOpen && (collapsed ? 'lg:w-[72px]' : 'lg:w-64'),
       ]"
+      aria-label="Admin navigation"
     >
-      <!-- Top Brand Header -->
-      <div class="h-16 px-4 border-b border-emerald-900/80 flex items-center justify-between shrink-0 bg-[#0F2D21]">
-        <router-link to="/admin" class="flex items-center gap-2">
-          <img
-            src="/images/logo-white.png"
-            alt="DRAWER CLOTHING"
-            class="h-9 sm:h-10 w-auto max-w-[170px] object-contain brightness-110"
-          />
+      <!-- Brand -->
+      <div :class="['h-16 flex items-center shrink-0 bg-[#0F2D21] border-b border-emerald-950/70', collapsed ? 'justify-center px-2' : 'justify-between px-4']">
+        <router-link to="/admin" class="flex items-center min-w-0" title="ড্যাশবোর্ড">
+          <img v-if="!collapsed" src="/images/logo-white.png" alt="DRAWER CLOTHING" class="h-9 w-auto max-w-[150px] object-contain" />
+          <span v-else class="w-9 h-9 rounded-lg bg-[#16A36A] text-white font-bold flex items-center justify-center">D</span>
         </router-link>
-
-        <div class="flex items-center gap-1">
-          <!-- View Storefront link -->
-          <a
-            href="/"
-            target="_blank"
-            class="p-1.5 text-emerald-300/80 hover:text-white hover:bg-white/10 rounded-md transition-colors"
-            title="লাইভ স্টোরফ্রন্ট দেখুন"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-            </svg>
-          </a>
-
-          <!-- Mobile close button -->
-          <button
-            type="button"
-            @click="$emit('close-mobile')"
-            class="p-1.5 text-emerald-300/80 hover:text-white hover:bg-white/10 rounded-md lg:hidden transition-colors"
-          >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      <!-- Quick Storefront Link Bar -->
-      <div class="px-3.5 py-2 bg-emerald-950/40 border-b border-emerald-900/50 flex items-center justify-between text-[11px]">
-        <span class="text-emerald-300/80 flex items-center gap-1.5 font-medium">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span>DRAWER Admin v2.4</span>
-        </span>
-        <a
-          href="/shop"
-          target="_blank"
-          class="text-emerald-300 hover:text-white font-medium hover:underline inline-flex items-center gap-1"
+        <button
+          type="button"
+          @click="$emit('close-mobile')"
+          class="p-1.5 rounded-md text-emerald-300 hover:text-white hover:bg-white/10 lg:hidden"
+          aria-label="মেনু বন্ধ করুন"
         >
-          <span>শপ দেখুন</span>
-          <span>↗</span>
-        </a>
+          <X class="w-5 h-5" />
+        </button>
       </div>
 
-      <!-- Scrollable Navigation Container with Scroll Memory -->
-      <nav
-        ref="navContainerRef"
-        class="flex-1 overflow-y-auto px-3 py-4 space-y-5 text-xs text-emerald-100/85 divide-y divide-emerald-900/40"
-        @scroll="saveScrollPosition"
-      >
-        <!-- SECTION 1: OVERVIEW & DASHBOARD -->
-        <div class="space-y-1">
-          <div class="px-3 pb-1.5 flex items-center justify-between">
-            <span class="text-[10px] uppercase tracking-[0.2em] text-emerald-400 font-bold block">
-              ১. ওভারভিউ (Overview)
+      <!-- Search trigger -->
+      <div :class="['shrink-0 pt-3 pb-1', collapsed ? 'px-3' : 'px-3']">
+        <button
+          type="button"
+          @click="ui.paletteOpen = true"
+          :class="[
+            'w-full flex items-center gap-2 rounded-lg bg-white/[0.07] hover:bg-white/[0.12] text-emerald-200/80 hover:text-white text-xs transition-colors',
+            collapsed ? 'justify-center h-10' : 'px-3 h-9',
+          ]"
+          title="খুঁজুন বা যেকোনো পেজে যান (Ctrl + K)"
+        >
+          <Search class="w-4 h-4 shrink-0" />
+          <template v-if="!collapsed">
+            <span class="flex-1 text-left">খুঁজুন / পেজে যান…</span>
+            <kbd class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-black/20 text-emerald-300/80">Ctrl K</kbd>
+          </template>
+        </button>
+      </div>
+
+      <!-- Navigation -->
+      <nav ref="navRef" class="flex-1 overflow-y-auto overscroll-contain px-3 py-2 space-y-1 text-[13px] [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.18)_transparent]" @scroll="saveScroll">
+        <div v-for="group in visibleGroups" :key="group.key" class="pt-2">
+          <!-- Group heading (folds the group) -->
+          <button
+            v-if="!collapsed"
+            type="button"
+            @click="ui.toggleGroup(group.key)"
+            class="w-full flex items-center justify-between px-2 py-1.5 text-[11px] font-semibold tracking-wide text-emerald-300/70 hover:text-emerald-100 rounded"
+            :aria-expanded="isGroupOpen(group)"
+          >
+            <span>{{ group.label }}</span>
+            <span class="flex items-center gap-1.5">
+              <span v-if="!isGroupOpen(group) && groupAlertCount(group)" class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+              <ChevronDown :class="['w-3.5 h-3.5 transition-transform', !isGroupOpen(group) && '-rotate-90']" />
             </span>
-          </div>
+          </button>
+          <div v-else class="mx-auto my-1.5 w-6 border-t border-emerald-800/70"></div>
 
-          <router-link
-            to="/admin"
-            exact-active-class="bg-[#16A36A] text-white font-semibold shadow-xs"
-            class="flex items-center justify-between px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition-colors"
-          >
-            <div class="flex items-center gap-2.5">
-              <span class="text-sm">📊</span>
-              <div>
-                <span class="block font-medium">ড্যাশবোর্ড</span>
-                <span class="text-[10px] text-emerald-300/70 block -mt-0.5">Executive Dashboard</span>
-              </div>
-            </div>
-          </router-link>
-
-          <router-link
-            to="/admin/reports"
-            active-class="bg-[#16A36A] text-white font-semibold shadow-xs"
-            class="flex items-center justify-between px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition-colors"
-          >
-            <div class="flex items-center gap-2.5">
-              <span class="text-sm">📈</span>
-              <div>
-                <span class="block font-medium">বিক্রয় রিপোর্ট</span>
-                <span class="text-[10px] text-emerald-300/70 block -mt-0.5">Sales Reports</span>
-              </div>
-            </div>
-          </router-link>
-
-          <router-link
-            to="/admin/reports/sales"
-            active-class="bg-[#16A36A] text-white font-semibold shadow-xs"
-            class="flex items-center justify-between px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition-colors"
-          >
-            <div class="flex items-center gap-2.5">
-              <span class="text-sm">📉</span>
-              <div>
-                <span class="block font-medium">সেলস অ্যানালাইসিস</span>
-                <span class="text-[10px] text-emerald-300/70 block -mt-0.5">Sales Analysis</span>
-              </div>
-            </div>
-          </router-link>
-        </div>
-
-        <!-- SECTION 2: CATALOG & PRODUCTS (PRIORITY #1!) -->
-        <div class="pt-4 space-y-1">
-          <div class="px-3 pb-1.5 flex items-center justify-between">
-            <span class="text-[10px] uppercase tracking-[0.2em] text-emerald-400 font-bold block">
-              ২. ক্যাটালগ ও পণ্য (Catalog)
-            </span>
-            <span class="text-[9px] uppercase px-1.5 py-0.2 bg-emerald-500/20 text-emerald-300 rounded font-mono">
-              Core
-            </span>
-          </div>
-
-          <!-- CATEGORIES WITH HIGHLIGHT & BADGE -->
-          <router-link
-            to="/admin/categories"
-            active-class="bg-[#16A36A] text-white font-semibold shadow-xs"
-            class="flex items-center justify-between px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition-colors group"
-          >
-            <div class="flex items-center gap-2.5">
-              <span class="text-sm">📁</span>
-              <div>
-                <span class="block font-medium">ক্যাটাগরি সমূহ</span>
-                <span class="text-[10px] text-emerald-300/70 block -mt-0.5">Categories & Taxonomy</span>
-              </div>
-            </div>
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/30 text-emerald-200 border border-emerald-400/30">
-              {{ badges.total_categories || 16 }}
-            </span>
-          </router-link>
-
-          <!-- PRODUCTS MANAGEMENT -->
-          <router-link
-            to="/admin/products"
-            active-class="bg-[#16A36A] text-white font-semibold shadow-xs"
-            class="flex items-center justify-between px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition-colors"
-          >
-            <div class="flex items-center gap-2.5">
-              <span class="text-sm">👔</span>
-              <div>
-                <span class="block font-medium">পণ্য তালিকা ও ম্যানেজমেন্ট</span>
-                <span class="text-[10px] text-emerald-300/70 block -mt-0.5">Products Catalog</span>
-              </div>
-            </div>
-            <span v-if="badges.total_products" class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white/10 text-emerald-200">
-              {{ badges.total_products }}
-            </span>
-          </router-link>
-
-          <!-- INVENTORY & STOCK -->
-          <router-link
-            to="/admin/inventory"
-            active-class="bg-[#16A36A] text-white font-semibold shadow-xs"
-            class="flex items-center justify-between px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition-colors"
-          >
-            <div class="flex items-center gap-2.5">
-              <span class="text-sm">📦</span>
-              <div>
-                <span class="block font-medium">স্টক ও ইনভেন্টরি</span>
-                <span class="text-[10px] text-emerald-300/70 block -mt-0.5">Inventory & Stock</span>
-              </div>
-            </div>
-            <span
-              v-if="badges.low_stock > 0"
-              class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-400 text-amber-950"
-              title="কম স্টক সতর্কতা"
+          <div v-show="collapsed || isGroupOpen(group)" class="space-y-0.5 mt-0.5">
+            <router-link
+              v-for="item in group.items"
+              :key="item.to"
+              :to="item.to"
+              @click="$emit('close-mobile')"
+              :title="collapsed ? `${item.label} (${item.hint})` : item.hint"
+              :class="[
+                'group relative flex items-center gap-3 rounded-lg transition-colors',
+                collapsed ? 'justify-center h-10' : 'px-2.5 py-2',
+                isActive(item)
+                  ? 'bg-[#16A36A] text-white font-semibold shadow-sm'
+                  : 'text-emerald-100/85 hover:bg-white/[0.08] hover:text-white',
+              ]"
+              :aria-current="isActive(item) ? 'page' : undefined"
             >
-              {{ badges.low_stock }}
-            </span>
-          </router-link>
+              <component :is="item.icon" class="w-[18px] h-[18px] shrink-0" :stroke-width="isActive(item) ? 2.2 : 1.8" />
+              <span v-if="!collapsed" class="flex-1 truncate">{{ item.label }}</span>
 
-          <!-- CUSTOMER REVIEWS -->
-          <router-link
-            to="/admin/reviews"
-            active-class="bg-[#16A36A] text-white font-semibold shadow-xs"
-            class="flex items-center justify-between px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition-colors"
-          >
-            <div class="flex items-center gap-2.5">
-              <span class="text-sm">⭐</span>
-              <div>
-                <span class="block font-medium">রিভিউ ও রেটিং</span>
-                <span class="text-[10px] text-emerald-300/70 block -mt-0.5">Reviews & Ratings</span>
-              </div>
-            </div>
-            <span
-              v-if="badges.unapproved_reviews > 0"
-              class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-400 text-emerald-950"
-            >
-              {{ badges.unapproved_reviews }}
-            </span>
-          </router-link>
-
-          <!-- MEDIA LIBRARY -->
-          <router-link
-            to="/admin/media"
-            active-class="bg-[#16A36A] text-white font-semibold shadow-xs"
-            class="flex items-center justify-between px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition-colors"
-          >
-            <div class="flex items-center gap-2.5">
-              <span class="text-sm">🖼️</span>
-              <div>
-                <span class="block font-medium">মিডিয়া লাইব্রেরি</span>
-                <span class="text-[10px] text-emerald-300/70 block -mt-0.5">Media Assets & CDN</span>
-              </div>
-            </div>
-          </router-link>
-        </div>
-
-        <!-- SECTION 3: SALES & FULFILLMENT -->
-        <div class="pt-4 space-y-1">
-          <div class="px-3 pb-1.5 flex items-center justify-between">
-            <span class="text-[10px] uppercase tracking-[0.2em] text-emerald-400 font-bold block">
-              ৩. সেলস ও ডেলিভারি (Orders)
-            </span>
+              <!-- Counter -->
+              <template v-if="badgeValue(item)">
+                <span
+                  v-if="!collapsed"
+                  :class="['min-w-[22px] px-1.5 py-0.5 rounded-full text-[10px] font-bold text-center leading-none', badgeClass(item)]"
+                >
+                  {{ badgeValue(item) }}
+                </span>
+                <span
+                  v-else-if="item.badgeTone"
+                  :class="['absolute top-1.5 right-2 w-2 h-2 rounded-full ring-2 ring-[#14382A]', dotClass(item)]"
+                ></span>
+              </template>
+            </router-link>
           </div>
-
-          <!-- ORDERS -->
-          <router-link
-            to="/admin/orders"
-            active-class="bg-[#16A36A] text-white font-semibold shadow-xs"
-            class="flex items-center justify-between px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition-colors"
-          >
-            <div class="flex items-center gap-2.5">
-              <span class="text-sm">🛍️</span>
-              <div>
-                <span class="block font-medium">অর্ডার ম্যানেজমেন্ট</span>
-                <span class="text-[10px] text-emerald-300/70 block -mt-0.5">Orders & Fulfillment</span>
-              </div>
-            </div>
-            <span
-              v-if="badges.pending_orders > 0"
-              class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-400 text-amber-950 shadow-xs animate-pulse"
-            >
-              {{ badges.pending_orders }}
-            </span>
-          </router-link>
-
-          <!-- LOGISTICS (STEADFAST) -->
-          <router-link
-            to="/admin/logistics"
-            active-class="bg-[#16A36A] text-white font-semibold shadow-xs"
-            class="flex items-center justify-between px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition-colors"
-          >
-            <div class="flex items-center gap-2.5">
-              <span class="text-sm">🚚</span>
-              <div>
-                <span class="block font-medium">লজিস্টিকস ও কুরিয়ার</span>
-                <span class="text-[10px] text-emerald-300/70 block -mt-0.5">Steadfast Courier</span>
-              </div>
-            </div>
-            <span class="text-[9px] uppercase tracking-wider text-emerald-300 font-mono">Steadfast</span>
-          </router-link>
-
-          <!-- CUSTOMERS -->
-          <router-link
-            to="/admin/customers"
-            active-class="bg-[#16A36A] text-white font-semibold shadow-xs"
-            class="flex items-center justify-between px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition-colors"
-          >
-            <div class="flex items-center gap-2.5">
-              <span class="text-sm">👥</span>
-              <div>
-                <span class="block font-medium">গ্রাহক তালিকা</span>
-                <span class="text-[10px] text-emerald-300/70 block -mt-0.5">Customers Directory</span>
-              </div>
-            </div>
-          </router-link>
-
-          <!-- RETURNS -->
-          <router-link
-            to="/admin/returns"
-            active-class="bg-[#16A36A] text-white font-semibold shadow-xs"
-            class="flex items-center justify-between px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition-colors"
-          >
-            <div class="flex items-center gap-2.5">
-              <span class="text-sm">🔄</span>
-              <div>
-                <span class="block font-medium">রিটার্ন ও এক্সচেঞ্জ</span>
-                <span class="text-[10px] text-emerald-300/70 block -mt-0.5">Returns & Exchanges</span>
-              </div>
-            </div>
-            <span
-              v-if="badges.pending_returns > 0"
-              class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-400 text-rose-950"
-            >
-              {{ badges.pending_returns }}
-            </span>
-          </router-link>
-
-          <!-- COUPONS -->
-          <router-link
-            to="/admin/coupons"
-            active-class="bg-[#16A36A] text-white font-semibold shadow-xs"
-            class="flex items-center justify-between px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition-colors"
-          >
-            <div class="flex items-center gap-2.5">
-              <span class="text-sm">🎟️</span>
-              <div>
-                <span class="block font-medium">কুপন ও ডিসকাউন্ট</span>
-                <span class="text-[10px] text-emerald-300/70 block -mt-0.5">Coupons & Promos</span>
-              </div>
-            </div>
-          </router-link>
-        </div>
-
-        <!-- SECTION 4: CMS & MARKETING -->
-        <div class="pt-4 space-y-1">
-          <div class="px-3 pb-1.5 flex items-center justify-between">
-            <span class="text-[10px] uppercase tracking-[0.2em] text-emerald-400 font-bold block">
-              ৪. ওয়েবসাইট ও কনটেন্ট (CMS)
-            </span>
-          </div>
-
-          <router-link
-            to="/admin/homepage-builder"
-            active-class="bg-[#16A36A] text-white font-semibold shadow-xs"
-            class="flex items-center justify-between px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition-colors"
-          >
-            <div class="flex items-center gap-2.5">
-              <span class="text-sm">🎨</span>
-              <div>
-                <span class="block font-medium">হোমপেজ বিল্ডার</span>
-                <span class="text-[10px] text-emerald-300/70 block -mt-0.5">Visual Homepage Builder</span>
-              </div>
-            </div>
-          </router-link>
-
-          <router-link
-            to="/admin/messages"
-            active-class="bg-[#16A36A] text-white font-semibold shadow-xs"
-            class="flex items-center justify-between px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition-colors"
-          >
-            <div class="flex items-center gap-2.5">
-              <span class="text-sm">💬</span>
-              <div>
-                <span class="block font-medium">মেসেজ ও ইনকোয়ারি</span>
-                <span class="text-[10px] text-emerald-300/70 block -mt-0.5">Client Messages</span>
-              </div>
-            </div>
-            <span
-              v-if="badges.new_inquiries > 0"
-              class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-400 text-sky-950"
-            >
-              {{ badges.new_inquiries }}
-            </span>
-          </router-link>
-
-          <router-link
-            to="/admin/content"
-            active-class="bg-[#16A36A] text-white font-semibold shadow-xs"
-            class="flex items-center justify-between px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition-colors"
-          >
-            <div class="flex items-center gap-2.5">
-              <span class="text-sm">📄</span>
-              <div>
-                <span class="block font-medium">পেজ ও পলিসি CMS</span>
-                <span class="text-[10px] text-emerald-300/70 block -mt-0.5">Pages & Static Content</span>
-              </div>
-            </div>
-          </router-link>
-
-          <router-link
-            to="/admin/blog"
-            active-class="bg-[#16A36A] text-white font-semibold shadow-xs"
-            class="flex items-center justify-between px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition-colors"
-          >
-            <div class="flex items-center gap-2.5">
-              <span class="text-sm">📰</span>
-              <div>
-                <span class="block font-medium">ব্লগ ও এডিটোরিয়াল</span>
-                <span class="text-[10px] text-emerald-300/70 block -mt-0.5">Blog Articles</span>
-              </div>
-            </div>
-          </router-link>
-        </div>
-
-        <!-- SECTION 5: SETTINGS & ACCESS CONTROL -->
-        <div class="pt-4 space-y-1">
-          <div class="px-3 pb-1.5 flex items-center justify-between">
-            <span class="text-[10px] uppercase tracking-[0.2em] text-emerald-400 font-bold block">
-              ৫. সিস্টেম ও সেটিংস (Settings)
-            </span>
-          </div>
-
-          <router-link
-            to="/admin/settings"
-            active-class="bg-[#16A36A] text-white font-semibold shadow-xs"
-            class="flex items-center justify-between px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition-colors"
-          >
-            <div class="flex items-center gap-2.5">
-              <span class="text-sm">⚙️</span>
-              <div>
-                <span class="block font-medium">স্টোর সেটিংস</span>
-                <span class="text-[10px] text-emerald-300/70 block -mt-0.5">Central Settings (7 Tabs)</span>
-              </div>
-            </div>
-          </router-link>
-
-          <router-link
-            to="/admin/users"
-            active-class="bg-[#16A36A] text-white font-semibold shadow-xs"
-            class="flex items-center justify-between px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition-colors"
-          >
-            <div class="flex items-center gap-2.5">
-              <span class="text-sm">👤</span>
-              <div>
-                <span class="block font-medium">স্টাফ ও অ্যাডমিন</span>
-                <span class="text-[10px] text-emerald-300/70 block -mt-0.5">Staff & Team Users</span>
-              </div>
-            </div>
-          </router-link>
-
-          <router-link
-            to="/admin/roles"
-            active-class="bg-[#16A36A] text-white font-semibold shadow-xs"
-            class="flex items-center justify-between px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition-colors"
-          >
-            <div class="flex items-center gap-2.5">
-              <span class="text-sm">🛡️</span>
-              <div>
-                <span class="block font-medium">রোলস ও পারমিশন</span>
-                <span class="text-[10px] text-emerald-300/70 block -mt-0.5">RBAC Permissions</span>
-              </div>
-            </div>
-          </router-link>
-
-          <router-link
-            to="/admin/audit-logs"
-            active-class="bg-[#16A36A] text-white font-semibold shadow-xs"
-            class="flex items-center justify-between px-3 py-2 rounded-md hover:bg-white/10 hover:text-white transition-colors"
-          >
-            <div class="flex items-center gap-2.5">
-              <span class="text-sm">📋</span>
-              <div>
-                <span class="block font-medium">সিকিউরিটি অডিট লগ</span>
-                <span class="text-[10px] text-emerald-300/70 block -mt-0.5">Activity & Security Logs</span>
-              </div>
-            </div>
-          </router-link>
         </div>
       </nav>
 
-      <!-- Bottom Staff Profile Strip -->
-      <div class="p-3.5 border-t border-emerald-900/80 bg-[#0F2D21] flex items-center justify-between text-xs shrink-0">
-        <div class="flex items-center gap-2.5 min-w-0">
-          <div class="w-8 h-8 rounded-full bg-emerald-800 text-white font-bold flex items-center justify-center shrink-0 border border-emerald-600">
-            {{ userInitial }}
-          </div>
-          <div class="min-w-0">
-            <span class="text-white font-medium block truncate text-xs">{{ authStore.user?.name || 'Administrator' }}</span>
-            <span class="text-[10px] text-emerald-300/80 block uppercase font-mono tracking-wider truncate">
-              {{ authStore.user?.role || 'Super Admin' }}
-            </span>
-          </div>
+      <!-- Footer: store link, collapse, profile -->
+      <div class="shrink-0 border-t border-emerald-950/70 bg-[#0F2D21]">
+        <div :class="['flex', collapsed ? 'flex-col items-center gap-1 py-2' : 'items-center justify-between px-3 py-2']">
+          <a
+            href="/"
+            target="_blank"
+            rel="noopener"
+            :class="['flex items-center gap-2 text-xs text-emerald-300/90 hover:text-white rounded-md hover:bg-white/10', collapsed ? 'p-2' : 'px-2 py-1.5']"
+            title="ওয়েবসাইট দেখুন (নতুন ট্যাবে)"
+          >
+            <ExternalLink class="w-4 h-4" />
+            <span v-if="!collapsed">ওয়েবসাইট দেখুন</span>
+          </a>
+          <button
+            type="button"
+            @click="ui.toggleSidebar()"
+            class="hidden lg:flex p-2 rounded-md text-emerald-300/80 hover:text-white hover:bg-white/10"
+            :title="collapsed ? 'মেনু বড় করুন' : 'মেনু ছোট করুন'"
+          >
+            <ChevronsRight v-if="collapsed" class="w-4 h-4" />
+            <ChevronsLeft v-else class="w-4 h-4" />
+          </button>
         </div>
 
-        <button
-          type="button"
-          @click="handleLogout"
-          class="p-2 text-emerald-300/70 hover:text-white hover:bg-white/10 rounded-md transition-colors"
-          title="লগআউট"
-        >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-          </svg>
-        </button>
+        <div :class="['flex items-center border-t border-emerald-950/70', collapsed ? 'flex-col gap-2 py-3' : 'justify-between px-3 py-3']">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <div class="w-8 h-8 rounded-full bg-emerald-700 text-white text-xs font-bold flex items-center justify-center shrink-0 ring-1 ring-emerald-500/60" :title="userName">
+              {{ userInitial }}
+            </div>
+            <div v-if="!collapsed" class="min-w-0">
+              <p class="text-xs font-medium text-white truncate">{{ userName }}</p>
+              <p class="text-[10px] text-emerald-300/80 uppercase tracking-wider truncate">{{ roleLabel }}</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            @click="handleLogout"
+            class="p-2 rounded-md text-emerald-300/80 hover:text-white hover:bg-rose-500/20"
+            title="লগআউট"
+          >
+            <LogOut class="w-4 h-4" />
+          </button>
+        </div>
       </div>
     </aside>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick } from 'vue';
-import { useRouter } from 'vue-router';
+import { computed, ref, onMounted, nextTick } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { Search, X, ChevronDown, ChevronsLeft, ChevronsRight, ExternalLink, LogOut } from 'lucide-vue-next';
 import { useAuthStore } from '../../stores/auth';
-import api from '../../api';
+import { useAdminUiStore } from '../../stores/adminUi';
+import { navGroups, findNavItem, bnNumber } from '../../admin-nav';
 
-defineProps({
-  mobileOpen: {
-    type: Boolean,
-    default: false,
-  },
+const props = defineProps({
+  mobileOpen: { type: Boolean, default: false },
 });
-
 defineEmits(['close-mobile']);
 
+const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
-const navContainerRef = ref(null);
+const ui = useAdminUiStore();
+const navRef = ref(null);
 
-const badges = ref({
-  pending_orders: 0,
-  low_stock: 0,
-  unapproved_reviews: 0,
-  new_inquiries: 0,
-  pending_returns: 0,
-  total_categories: 16,
-  total_products: 0,
-});
+// The mobile drawer always shows full labels.
+const collapsed = computed(() => ui.sidebarCollapsed && !props.mobileOpen);
 
-const userInitial = computed(() => {
-  const name = authStore.user?.name || 'Admin';
-  return name.charAt(0).toUpperCase();
-});
+const visibleGroups = computed(() =>
+  navGroups
+    .map((g) => ({ ...g, items: g.items.filter((i) => !i.permission || authStore.hasPermission(i.permission)) }))
+    .filter((g) => g.items.length),
+);
 
-const saveScrollPosition = () => {
-  if (navContainerRef.value) {
-    sessionStorage.setItem('admin_sidebar_scroll', navContainerRef.value.scrollTop);
-  }
+const activeItem = computed(() => findNavItem(route.path));
+const isActive = (item) => activeItem.value?.to === item.to;
+
+// A folded group still opens when it contains the current page.
+const isGroupOpen = (group) =>
+  !ui.closedGroups.includes(group.key) || group.items.some((i) => isActive(i));
+
+const badgeValue = (item) => {
+  const n = item.badge ? ui.badges[item.badge] : 0;
+  return n > 0 ? bnNumber(n > 99 ? '99+' : n) : '';
 };
-
-const restoreScrollPosition = () => {
-  const saved = sessionStorage.getItem('admin_sidebar_scroll');
-  if (saved && navContainerRef.value) {
-    navContainerRef.value.scrollTop = parseInt(saved, 10);
-  }
+const TONE = {
+  warn: ['bg-amber-400 text-amber-950', 'bg-amber-400'],
+  danger: ['bg-rose-400 text-rose-950', 'bg-rose-400'],
+  info: ['bg-sky-400 text-sky-950', 'bg-sky-400'],
 };
+const badgeClass = (item) => TONE[item.badgeTone]?.[0] || 'bg-white/10 text-emerald-200';
+const dotClass = (item) => TONE[item.badgeTone]?.[1] || '';
+const groupAlertCount = (group) => group.items.filter((i) => i.badgeTone && ui.badges[i.badge] > 0).length;
 
-const fetchBadges = async () => {
-  try {
-    const res = await api.get('/admin/dashboard/badges');
-    if (res.data?.data) {
-      badges.value = {
-        ...badges.value,
-        ...res.data.data,
-      };
-    }
-  } catch (err) {
-    // Graceful fallback
-  }
-};
+const userName = computed(() => authStore.adminUser?.name || 'Administrator');
+const userInitial = computed(() => userName.value.charAt(0).toUpperCase());
+const roleLabel = computed(() => ({ admin: 'সুপার অ্যাডমিন', manager: 'ম্যানেজার' }[authStore.adminUser?.role] || authStore.adminUser?.role || ''));
 
 const handleLogout = async () => {
-  await authStore.logout();
+  if (!window.confirm('লগআউট করতে চান?')) return;
+  await authStore.adminLogout();
   router.push('/admin/login');
 };
 
+const saveScroll = () => {
+  try { sessionStorage.setItem('admin_sidebar_scroll', String(navRef.value?.scrollTop || 0)); } catch { /* ignore */ }
+};
+
 onMounted(() => {
-  fetchBadges();
   nextTick(() => {
-    restoreScrollPosition();
+    try {
+      const saved = Number(sessionStorage.getItem('admin_sidebar_scroll') || 0);
+      if (navRef.value) navRef.value.scrollTop = saved;
+    } catch { /* ignore */ }
   });
 });
 </script>

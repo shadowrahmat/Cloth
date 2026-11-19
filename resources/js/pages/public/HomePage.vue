@@ -1,99 +1,63 @@
 <template>
   <div>
-    <!-- Section 03: Hero Campaign Banner -->
-    <HeroBanner
-      v-if="heroSection"
-      :content="heroSection.content || {}"
-    />
+    <!-- Sections render in the order (and visibility) set in Admin → হোমপেজ বিল্ডার -->
+    <template v-for="section in sections" :key="section.id">
+      <HeroBanner v-if="section.type === 'hero'" :content="section.content || {}" />
 
-    <!-- Section 04: Featured Categories (Men, Women, Kids, Winter) -->
-    <CategoryGrid
-      v-if="categoryGridSection"
-      :categories="featuredCategories"
-      :content="categoryGridSection.content || {}"
-    />
+      <CategoryGrid
+        v-else-if="section.type === 'category_grid'"
+        :categories="featuredCategories"
+        :content="section.content || {}"
+      />
 
-    <!-- Section 05: New Arrivals -->
-    <section v-if="newArrivalsSection" class="py-20 lg:py-28 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-12 border-b border-[#D8CCBC]/40 pb-4 gap-4">
-        <div>
-          <span class="text-xs tracking-[0.25em] text-[#A89B8A] font-medium block">নতুন আগমন</span>
-          <h2 class="font-serif text-3xl sm:text-4xl text-[#111111]">
-            {{ newArrivalsSection.content?.heading || 'নতুন কালেকশন' }}
-          </h2>
+      <template v-else-if="section.type === 'new_arrivals'">
+        <section class="py-16 lg:py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="flex items-end justify-between mb-8 sm:mb-12 gap-4" v-reveal>
+            <div>
+              <span class="text-[11px] tracking-normal text-[#A89B8A] font-medium block mb-1">নতুন আগমন</span>
+              <h2 class="font-serif text-3xl sm:text-4xl text-[#111111]">{{ section.content?.heading || 'নতুন কালেকশন' }}</h2>
+            </div>
+            <router-link to="/collection/new-arrivals" class="group shrink-0 text-[13px] font-medium text-[#111111] inline-flex items-center gap-1.5">
+              <span class="hidden sm:inline">সব নতুন পোশাক</span><span class="sm:hidden">সব দেখুন</span>
+              <ArrowRight class="w-4 h-4 transition-transform group-hover:translate-x-1" />
+            </router-link>
+          </div>
+          <ProductGrid :products="newArrivals" />
+        </section>
+        <!-- Runway lookbook follows New Arrivals; switch off with "show_runway" in the builder -->
+        <RunwayLookbook v-if="section.content?.show_runway !== false" :products="runwayProducts" />
+      </template>
+
+      <EditorialSection v-else-if="section.type === 'editorial'" v-reveal :content="section.content || {}" />
+
+      <section v-else-if="section.type === 'best_sellers'" class="py-16 lg:py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center max-w-2xl mx-auto mb-10 sm:mb-14 space-y-3" v-reveal>
+          <span class="text-[11px] tracking-normal text-[#A89B8A] font-medium">জনপ্রিয়</span>
+          <h2 class="font-serif text-3xl sm:text-4xl text-[#111111]">{{ section.content?.heading || 'সর্বাধিক বিক্রিত পোশাক' }}</h2>
+          <p class="text-sm text-[#69736E] leading-relaxed">{{ section.content?.description || 'আমাদের গ্রাহকদের সবচেয়ে পছন্দের ট্রেন্ডি ও আরামদায়ক পোশাক।' }}</p>
         </div>
-        <router-link
-          to="/collection/new-arrivals"
-          class="text-xs font-semibold text-[#111111] hover:text-[#16A36A] transition-colors inline-flex items-center gap-1.5"
-        >
-          <span>সকল নতুন পোশাক দেখুন</span>
-          <span>→</span>
-        </router-link>
-      </div>
+        <ProductGrid :products="bestSellers" />
+      </section>
 
-      <ProductGrid :products="newArrivals" />
-    </section>
+      <!-- Scroll-driven category showcase (pinned; deliberately no v-reveal — a transform would break sticky) -->
+      <CategoryShowcase v-else-if="section.type === 'category_showcase'" :content="section.content || {}" :items="section.showcase || []" />
+      <ShopTheLook v-else-if="section.type === 'shop_the_look'" v-reveal :content="section.content || {}" />
+      <BrandStory v-else-if="section.type === 'brand_story'" v-reveal :content="section.content || {}" />
+      <TestimonialSlider v-else-if="section.type === 'testimonials'" v-reveal :testimonials="testimonials" :content="section.content || {}" />
+      <InstagramGallery v-else-if="section.type === 'instagram_gallery'" v-reveal :gallery="socialGallery" :content="section.content || {}" />
+      <NewsletterForm v-else-if="section.type === 'newsletter'" v-reveal :content="section.content || {}" />
+    </template>
 
-    <!-- Section 05.5: Awwwards-Honored Pinned Horizontal Runway Lookbook -->
-    <RunwayLookbook :products="runwayProducts" />
-
-    <!-- Section 06: Editorial Campaign ("The Art of Everyday Dressing") -->
-    <EditorialSection
-      v-if="editorialSection"
-      :content="editorialSection.content || {}"
-    />
-
-    <!-- Section 07: Best Sellers -->
-    <section v-if="bestSellersSection" class="py-20 lg:py-28 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="text-center max-w-2xl mx-auto mb-14 space-y-3">
-        <span class="text-xs tracking-[0.25em] text-[#A89B8A] font-medium">জনপ্রিয় কালেকশন</span>
-        <h2 class="font-serif text-3xl sm:text-4xl text-[#111111]">
-          {{ bestSellersSection.content?.heading || 'সর্বাধিক বিক্রিত পোশাক' }}
-        </h2>
-        <p class="text-xs sm:text-sm text-[#A89B8A] leading-relaxed">
-          {{ bestSellersSection.content?.description || 'আমাদের গ্রাহকদের সবচেয়ে পছন্দের ট্রেন্ডি ও আরামদায়ক পোশাক।' }}
-        </p>
-      </div>
-
-      <ProductGrid :products="bestSellers" />
-    </section>
-
-    <!-- Section 08: Shop The Look (Interactive Lookbook Hotspots!) -->
-    <ShopTheLook
-      v-if="shopTheLookSection"
-      :content="shopTheLookSection.content || {}"
-    />
-
-    <!-- Section 09: Brand Story ("Designed With Intention") -->
-    <BrandStory
-      v-if="brandStorySection"
-      :content="brandStorySection.content || {}"
-    />
-
-    <!-- Section 10: Customer Testimonials -->
-    <TestimonialSlider
-      v-if="testimonialsSection"
-      :testimonials="testimonials"
-      :content="testimonialsSection.content || {}"
-    />
-
-    <!-- Section 11: Instagram & Community Gallery -->
-    <InstagramGallery
-      v-if="instagramSection"
-      :gallery="socialGallery"
-      :content="instagramSection.content || {}"
-    />
-
-    <!-- Section 12: Newsletter Subscription -->
-    <NewsletterForm
-      v-if="newsletterSection"
-      :content="newsletterSection.content || {}"
-    />
+    <!-- First load skeleton -->
+    <div v-if="loading" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <div class="skeleton h-[60vh] rounded-sm"></div>
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4"><div v-for="n in 4" :key="n" class="skeleton aspect-[3/4] rounded-sm"></div></div>
+    </div>
   </div>
 </template>
-
 <script setup>
 import { ref, computed, onMounted } from 'vue';
+import { ArrowRight } from 'lucide-vue-next';
 import api from '../../api';
 import HeroBanner from '../../components/public/HeroBanner.vue';
 import CategoryGrid from '../../components/public/CategoryGrid.vue';
@@ -101,6 +65,7 @@ import ProductGrid from '../../components/public/ProductGrid.vue';
 import RunwayLookbook from '../../components/public/RunwayLookbook.vue';
 import EditorialSection from '../../components/public/EditorialSection.vue';
 import ShopTheLook from '../../components/public/ShopTheLook.vue';
+import CategoryShowcase from '../../components/public/CategoryShowcase.vue';
 import BrandStory from '../../components/public/BrandStory.vue';
 import TestimonialSlider from '../../components/public/TestimonialSlider.vue';
 import InstagramGallery from '../../components/public/InstagramGallery.vue';
@@ -110,7 +75,8 @@ import { refreshScrollTrigger } from '../../utils/smoothScroll';
 const homepageData = ref(null);
 const loading = ref(true);
 
-const sections = computed(() => homepageData.value?.sections || []);
+const CHROME = ['announcement', 'header', 'footer'];
+const sections = computed(() => (homepageData.value?.sections || []).filter((s) => !CHROME.includes(s.type)));
 const featuredCategories = computed(() => homepageData.value?.featured_categories || []);
 const newArrivals = computed(() => homepageData.value?.new_arrivals || []);
 const bestSellers = computed(() => homepageData.value?.best_sellers || []);
@@ -127,17 +93,6 @@ const runwayProducts = computed(() => {
   return [];
 });
 
-// Section Lookups
-const heroSection = computed(() => sections.value.find(s => s.type === 'hero'));
-const categoryGridSection = computed(() => sections.value.find(s => s.type === 'category_grid'));
-const newArrivalsSection = computed(() => sections.value.find(s => s.type === 'new_arrivals'));
-const editorialSection = computed(() => sections.value.find(s => s.type === 'editorial'));
-const bestSellersSection = computed(() => sections.value.find(s => s.type === 'best_sellers'));
-const shopTheLookSection = computed(() => sections.value.find(s => s.type === 'shop_the_look'));
-const brandStorySection = computed(() => sections.value.find(s => s.type === 'brand_story'));
-const testimonialsSection = computed(() => sections.value.find(s => s.type === 'testimonials'));
-const instagramSection = computed(() => sections.value.find(s => s.type === 'instagram_gallery'));
-const newsletterSection = computed(() => sections.value.find(s => s.type === 'newsletter'));
 
 onMounted(async () => {
   try {

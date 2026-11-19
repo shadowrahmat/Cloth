@@ -25,6 +25,8 @@
                 type="text"
                 v-model="query"
                 @input="handleSearch"
+                @keydown.enter.prevent="viewAll"
+                @keydown.esc="$emit('close')"
                 placeholder="পোশাক, পাঞ্জাবি, টি-শার্ট, প্যান্ট খুঁজুন..."
                 class="w-full text-xl sm:text-2xl font-serif text-[#111111] placeholder:text-[#A89B8A] focus:outline-none bg-transparent"
               />
@@ -76,6 +78,13 @@
                   </div>
                 </router-link>
               </div>
+              <button
+                type="button"
+                @click="viewAll"
+                class="mt-5 inline-flex items-center gap-2 h-11 px-6 bg-[#111111] text-white text-sm rounded-sm hover:bg-black transition-colors"
+              >
+                "{{ query.trim() }}" এর সব ফলাফল ফিল্টারসহ দেখুন →
+              </button>
             </div>
 
             <div v-else-if="query && query.length >= 2 && !loading" class="mt-8 text-center text-sm text-[#A89B8A]">
@@ -90,7 +99,18 @@
 
 <script setup>
 import { ref, watch, nextTick } from 'vue';
+import { useRouter } from 'vue-router';
 import api from '../../api';
+
+const router = useRouter();
+
+// Enter / "view all": open the shop page with the search applied (and all filters available).
+const viewAll = () => {
+  const q = query.value.trim();
+  if (q.length < 2) return;
+  emit('close');
+  router.push({ path: '/collections', query: { q } });
+};
 
 const props = defineProps({
   isOpen: { type: Boolean, default: false },

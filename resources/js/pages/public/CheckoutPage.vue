@@ -351,7 +351,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue';
+import { ref, reactive, computed, watch, onMounted } from 'vue';
 import { useCartStore } from '../../stores/cart';
 import { useAuthStore } from '../../stores/auth';
 import api from '../../api';
@@ -394,6 +394,12 @@ const getShippingMethodCost = (method) => {
   return Number(method.rate);
 };
 
+// Keep the cart drawer's delivery area in sync if it's changed here.
+watch(() => form.shipping_method, (code) => {
+  if (!code) return;
+  try { localStorage.setItem('cart_delivery_area', code); } catch { /* storage blocked */ }
+});
+
 const orderTotal = computed(() => {
   const sub = cartStore.subtotal - (cartStore.appliedCoupon?.discount_amount || 0);
   return Math.max(0, sub + selectedShippingCost.value);
@@ -432,7 +438,10 @@ onMounted(async () => {
     const res = await api.get('/public/shipping-methods');
     shippingMethods.value = res.data.data || [];
     if (shippingMethods.value.length) {
-      form.shipping_method = shippingMethods.value[0].code;
+      // Pre-select the delivery area chosen in the cart drawer, if still offered.
+      let chosen = null;
+      try { chosen = localStorage.getItem('cart_delivery_area'); } catch { /* storage blocked */ }
+      form.shipping_method = shippingMethods.value.some((m) => m.code === chosen) ? chosen : shippingMethods.value[0].code;
     }
   } catch (err) {
     console.error('Failed to load shipping methods', err);

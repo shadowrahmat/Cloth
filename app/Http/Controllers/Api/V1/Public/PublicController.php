@@ -24,7 +24,12 @@ class PublicController extends Controller
     {
         $sections = HomepageSection::where('is_active', true)
             ->orderBy('display_order')
-            ->get();
+            ->get()
+            ->each(function (HomepageSection $section) {
+                if ($section->type === 'category_showcase') {
+                    $section->setAttribute('showcase', $this->categoryShowcase((array) $section->content));
+                }
+            });
 
         // New Arrivals (8 items)
         $newArrivals = Product::with(['category', 'variants'])
@@ -77,6 +82,49 @@ class PublicController extends Controller
         ]);
     }
 
+    /**
+     * Data for the scroll-driven "category showcase" homepage section:
+     * each chosen category with a few of its best product photos.
+     * content.categories = ordered list of slugs (empty = top categories by product count).
+     */
+    private function categoryShowcase(array $content): array
+    {
+        $perCategory = max(1, min(4, (int) ($content['products_per_category'] ?? 3)));
+        $slugs = array_values(array_filter((array) ($content['categories'] ?? []), 'is_string'));
+
+        $published = fn ($q) => $q->where('status', 'published')->whereNotNull('featured_image')->where('featured_image', '!=', '');
+
+        $query = Category::where('is_active', true)->with('children:id,parent_id');
+        $categories = $slugs
+            ? $query->whereIn('slug', $slugs)->get()->sortBy(fn ($c) => array_search($c->slug, $slugs, true))->values()
+            : $query->withCount(['products' => $published])->orderByDesc('products_count')->take(5)->get();
+
+        return $categories->map(function (Category $cat) use ($perCategory, $published) {
+            $ids = $cat->children->pluck('id')->push($cat->id);
+            $base = Product::whereIn('category_id', $ids)->where($published);
+
+            $products = (clone $base)
+                ->orderByDesc('is_featured')->orderByDesc('is_bestseller')->latest()
+                ->take($perCategory)
+                ->get(['id', 'name', 'slug', 'price', 'sale_price', 'featured_image']);
+
+            return [
+                'slug' => $cat->slug,
+                'name' => $cat->name,
+                'url' => "/category/{$cat->slug}",
+                'count' => (clone $base)->count(),
+                'products' => $products->map(fn ($p) => [
+                    'id' => $p->id,
+                    'name' => $p->name,
+                    'slug' => $p->slug,
+                    'price' => (float) $p->price,
+                    'sale_price' => $p->sale_price ? (float) $p->sale_price : null,
+                    'image' => $p->featured_image,
+                ])->values(),
+            ];
+        })->filter(fn ($c) => count($c['products']) > 0)->values()->all();
+    }
+
     public function categories(): JsonResponse
     {
         // Categories with their subcategories tree
@@ -92,89 +140,168 @@ class PublicController extends Controller
         ]);
     }
 
-    public function products(Request $request): JsonResponse
+    /** Comma-separated (or array) query value -> clean list of strings. */
+    private function listParam(Request $request, string $key): array
     {
-        $query = Product::with(['category', 'brand', 'variants'])
-            ->where('status', 'published');
+        $raw = $request->input($key);
+        $items = is_array($raw) ? $raw : explode(',', (string) $raw);
 
-        // Category filter (includes children subcategories)
-        if ($categorySlug = $request->input('category')) {
-            $cat = Category::where('slug', $categorySlug)->first();
-            if ($cat) {
-                $catIds = $cat->children()->pluck('id')->push($cat->id)->all();
-                $query->whereIn('category_id', $catIds);
+        return array_values(array_filter(array_map(fn ($v) => trim((string) $v), $items), fn ($v) => $v !== ''));
+    }
+
+    /** SQL for the price a customer actually pays (sale price when set and lower). */
+    // `+ 0` forces numeric comparison (SQLite stores decimals as text).
+    private const EFFECTIVE_PRICE = 'CASE WHEN sale_price IS NOT NULL AND sale_price + 0 > 0 AND sale_price + 0 < price + 0 THEN sale_price + 0 ELSE price + 0 END';
+
+    private const ON_SALE = 'sale_price IS NOT NULL AND sale_price + 0 > 0 AND sale_price + 0 < price + 0';
+
+    /**
+     * Apply storefront filters. $skip lets the facet endpoint leave one
+     * filter out, so e.g. size counts reflect every other active filter.
+     */
+    private function applyProductFilters($query, Request $request, array $skip = [])
+    {
+        $query->where('status', 'published');
+
+        // Category: route slug (`category`) plus any extra ticked categories (`categories`), children included
+        if (! in_array('category', $skip, true)) {
+            $slugs = array_merge($this->listParam($request, 'category'), $this->listParam($request, 'categories'));
+            if ($slugs) {
+                $cats = Category::whereIn('slug', $slugs)->with('children:id,parent_id')->get(['id']);
+                if ($cats->isNotEmpty()) {
+                    $ids = $cats->flatMap(fn ($c) => $c->children->pluck('id')->push($c->id))->unique()->all();
+                    $query->whereIn('category_id', $ids);
+                }
             }
         }
 
-        // Collection filter
         if ($collectionSlug = $request->input('collection')) {
             $collection = Collection::where('slug', $collectionSlug)->first();
             if ($collection) {
-                $query->whereHas('collections', function ($q) use ($collection) {
-                    $q->where('collections.id', $collection->id);
-                });
+                $query->whereHas('collections', fn ($q) => $q->where('collections.id', $collection->id));
             }
         }
 
-        // Brand filter
         if ($brandSlug = $request->input('brand')) {
-            $query->whereHas('brand', function ($q) use ($brandSlug) {
-                $q->where('slug', $brandSlug);
-            });
+            $query->whereHas('brand', fn ($q) => $q->where('slug', $brandSlug));
         }
 
-        // Price range
-        if ($minPrice = $request->input('min_price')) {
-            $query->where('price', '>=', (float) $minPrice);
-        }
-        if ($maxPrice = $request->input('max_price')) {
-            $query->where('price', '<=', (float) $maxPrice);
-        }
-
-        // Size filter
-        if ($size = $request->input('size')) {
-            $query->where(function ($q) use ($size) {
-                $q->whereHas('variants', fn($vq) => $vq->where('size', $size))
-                  ->orWhere('attributes', 'like', "%{$size}%");
-            });
+        if (! in_array('price', $skip, true)) {
+            if (is_numeric($request->input('min_price'))) {
+                $query->whereRaw(self::EFFECTIVE_PRICE.' >= CAST(? AS DECIMAL(12,2))', [(float) $request->input('min_price')]);
+            }
+            if (is_numeric($request->input('max_price'))) {
+                $query->whereRaw(self::EFFECTIVE_PRICE.' <= CAST(? AS DECIMAL(12,2))', [(float) $request->input('max_price')]);
+            }
         }
 
-        // Color filter
-        if ($color = $request->input('color')) {
-            $query->where(function ($q) use ($color) {
-                $q->whereHas('variants', fn($vq) => $vq->where('color', $color))
-                  ->orWhere('attributes', 'like', "%{$color}%");
-            });
+        foreach (['size', 'color'] as $attr) {
+            $values = $this->listParam($request, $attr);
+            if ($values && ! in_array($attr, $skip, true)) {
+                $query->whereHas('variants', fn ($vq) => $vq->whereIn($attr, $values)->where('is_active', true));
+            }
         }
 
-        // In stock only
-        if ($request->boolean('in_stock')) {
+        if ($request->boolean('in_stock') && ! in_array('in_stock', $skip, true)) {
             $query->where('stock', '>', 0);
         }
 
-        // On sale only
-        if ($request->boolean('on_sale')) {
-            $query->whereNotNull('sale_price')->whereColumn('sale_price', '<', 'price');
+        if ($request->boolean('on_sale') && ! in_array('on_sale', $skip, true)) {
+            $query->whereRaw(self::ON_SALE);
         }
 
-        // Search keyword
-        if ($search = $request->input('search')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('short_description', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%")
-                  ->orWhere('sku', 'like', "%{$search}%");
+        if ($search = trim((string) $request->input('search'))) {
+            $like = '%'.str_replace(['%', '_'], ['\%', '\_'], $search).'%';
+            $query->where(fn ($q) => $q
+                ->where('name', 'like', $like)
+                ->orWhere('short_description', 'like', $like)
+                ->orWhere('sku', 'like', $like));
+        }
+
+        return $query;
+    }
+
+    /**
+     * Filter options with live counts for the shop page:
+     * categories, sizes, colours, price range, on-sale and in-stock totals.
+     */
+    public function productFacets(Request $request): JsonResponse
+    {
+        $base = fn (array $skip = []) => $this->applyProductFilters(Product::query(), $request, $skip);
+
+        $variantCounts = function (string $attr) use ($base) {
+            $ids = $base([$attr])->pluck('id');
+
+            return \App\Models\ProductVariant::query()
+                ->whereIn('product_id', $ids)
+                ->where('is_active', true)
+                ->whereNotNull($attr)->where($attr, '!=', '')
+                ->selectRaw("{$attr} as value, COUNT(DISTINCT product_id) as count")
+                ->groupBy($attr)
+                ->get()
+                ->map(fn ($r) => ['value' => $r->value, 'count' => (int) $r->count]);
+        };
+
+        $sizeRank = function (string $s): array {
+            $order = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', '2XL', '3XL', '4XL', '5XL'];
+            $i = array_search(strtoupper($s), $order, true);
+            if ($i !== false) {
+                return [0, $i];
+            }
+
+            return is_numeric($s) ? [1, (float) $s] : [2, $s];
+        };
+        $sizes = $variantCounts('size')->sortBy(fn ($r) => $sizeRank($r['value']))->values();
+
+        $colors = $variantCounts('color');
+        $colorCodes = \App\Models\ProductVariant::whereIn('color', $colors->pluck('value'))
+            ->whereNotNull('color_code')->pluck('color_code', 'color');
+        $colors = $colors->map(fn ($c) => $c + ['code' => $colorCodes[$c['value']] ?? null])->sortByDesc('count')->values();
+
+        // Category counts (only categories that have matching products)
+        $byCategory = $base(['category'])->selectRaw('category_id, COUNT(*) as c')->groupBy('category_id')->pluck('c', 'category_id');
+        $categories = Category::where('is_active', true)->get(['id', 'name', 'slug', 'parent_id'])
+            ->map(function ($cat) use ($byCategory) {
+                return ['slug' => $cat->slug, 'name' => $cat->name, 'parent_id' => $cat->parent_id, 'id' => $cat->id, 'count' => (int) ($byCategory[$cat->id] ?? 0)];
             });
-        }
+        // Parents also count their children's products
+        $categories = $categories->map(function ($cat) use ($categories) {
+            $childTotal = $categories->where('parent_id', $cat['id'])->sum('count');
 
+            return $cat + ['total' => $cat['count'] + $childTotal];
+        })->filter(fn ($c) => $c['total'] > 0)->sortByDesc('total')->values()
+            ->map(fn ($c) => ['slug' => $c['slug'], 'name' => $c['name'], 'count' => $c['total'], 'is_child' => (bool) $c['parent_id']]);
+
+        $price = $base(['price'])->selectRaw('MIN('.self::EFFECTIVE_PRICE.') as min, MAX('.self::EFFECTIVE_PRICE.') as max')->first();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'total' => $base()->count(),
+                'categories' => $categories,
+                'sizes' => $sizes,
+                'colors' => $colors,
+                'price' => ['min' => (float) ($price->min ?? 0), 'max' => (float) ($price->max ?? 0)],
+                'on_sale' => $base(['on_sale'])->whereRaw(self::ON_SALE)->count(),
+                'in_stock' => $base(['in_stock'])->where('stock', '>', 0)->count(),
+            ],
+        ]);
+    }
+
+    public function products(Request $request): JsonResponse
+    {
+        $query = $this->applyProductFilters(Product::with(['category', 'brand', 'variants']), $request);
         // Sorting
         $sort = $request->input('sort', 'newest');
         switch ($sort) {
             case 'price_asc':
-                $query->orderBy('price', 'asc');
+                $query->orderByRaw(self::EFFECTIVE_PRICE.' asc');
                 break;
             case 'price_desc':
-                $query->orderBy('price', 'desc');
+                $query->orderByRaw(self::EFFECTIVE_PRICE.' desc');
+                break;
+            case 'discount':
+                $query->orderByRaw('CASE WHEN '.self::ON_SALE.' THEN (price - sale_price) / price ELSE 0 END desc');
                 break;
             case 'bestseller':
                 $query->orderBy('is_bestseller', 'desc')->latest();
@@ -356,9 +483,30 @@ class PublicController extends Controller
         ], 201);
     }
 
+    /** Storefront appearance: logo, announcement, menus, footer, contact, SEO. */
+    public function site(): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'data' => \App\Support\SiteConfig::get(),
+        ]);
+    }
+
+    /**
+     * Settings that are safe to expose publicly. Everything else in
+     * site_settings (gateway secrets, SMTP/SMS credentials, captcha secret)
+     * must never leave the admin API.
+     */
+    private const PUBLIC_SETTING_KEYS = [
+        'site_name', 'site_tagline', 'currency_code', 'currency_symbol',
+        'free_shipping_threshold', 'inside_city_charge', 'outside_city_charge', 'delivery_charge_later',
+        'enable_cod', 'enable_bkash', 'enable_nagad', 'enable_sslcommerz', 'enable_stripe',
+        'enable_recaptcha', 'recaptcha_site_key',
+    ];
+
     public function settings(): JsonResponse
     {
-        $settings = SiteSetting::all()->keyBy('key')->map(function ($s) {
+        $settings = SiteSetting::whereIn('key', self::PUBLIC_SETTING_KEYS)->get()->keyBy('key')->map(function ($s) {
             if ($s->type === 'boolean') {
                 return filter_var($s->value, FILTER_VALIDATE_BOOLEAN);
             }

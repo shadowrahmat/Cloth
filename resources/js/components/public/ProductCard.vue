@@ -7,6 +7,8 @@
         <img
           :src="product.featured_image"
           :alt="product.name"
+          loading="lazy"
+          decoding="async"
           class="w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105"
         />
 
@@ -15,6 +17,8 @@
           v-if="hoverImage"
           :src="hoverImage"
           :alt="product.name"
+          loading="lazy"
+          decoding="async"
           class="absolute inset-0 w-full h-full object-cover object-top opacity-0 transition-opacity duration-500 ease-in-out group-hover:opacity-100"
         />
       </router-link>
@@ -22,14 +26,14 @@
       <!-- Badges -->
       <div class="absolute top-3 left-3 flex flex-col gap-1.5 z-10 pointer-events-none">
         <span
-          v-if="product.is_on_sale"
-          class="px-2 py-0.5 bg-[#111111] text-white text-[10px] font-semibold"
+          v-if="discount"
+          class="px-2 py-0.5 bg-[#111111] text-white text-[11px] font-semibold tabular-nums"
         >
-          অফার
+          -{{ bnNumber(discount) }}%
         </span>
         <span
           v-else-if="product.is_new"
-          class="px-2 py-0.5 bg-white text-[#111111] text-[10px] font-semibold shadow-xs"
+          class="px-2 py-0.5 bg-white text-[#111111] text-[11px] font-semibold shadow-xs"
         >
           নতুন
         </span>
@@ -62,8 +66,18 @@
         </svg>
       </button>
 
-      <!-- Quick Add Overlay Button -->
-      <div class="absolute inset-x-3 bottom-3 z-10 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
+      <!-- Quick add: compact bag button on touch screens (no hover there) -->
+      <button
+        type="button"
+        @click.prevent="handleQuickAdd"
+        class="[@media(hover:hover)]:hidden absolute right-2.5 bottom-2.5 z-10 w-9 h-9 rounded-full bg-white/95 text-[#111111] shadow-md flex items-center justify-center active:scale-95 transition-transform"
+        aria-label="ব্যাগে যোগ করুন"
+      >
+        <ShoppingBag class="w-4 h-4" :stroke-width="1.75" />
+      </button>
+
+      <!-- Quick Add Overlay Button (hover devices) -->
+      <div class="[@media(hover:none)]:hidden absolute inset-x-3 bottom-3 z-10 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
         <button
           type="button"
           @click.prevent="handleQuickAdd"
@@ -76,7 +90,7 @@
 
     <!-- Product Meta -->
     <div class="space-y-1">
-      <span v-if="product.category" class="text-[10px] uppercase tracking-wider text-[#A89B8A] font-medium block">
+      <span v-if="product.category" class="text-[11px] text-[#A89B8A] block truncate">
         {{ product.category.name }}
       </span>
 
@@ -106,6 +120,8 @@
 
 <script setup>
 import { computed } from 'vue';
+import { ShoppingBag } from 'lucide-vue-next';
+import { bnNumber } from '../../utils/bn';
 import { useCartStore } from '../../stores/cart';
 import { useWishlistStore } from '../../stores/wishlist';
 import PriceDisplay from '../common/PriceDisplay.vue';
@@ -126,6 +142,12 @@ const hoverImage = computed(() => {
     return props.product.gallery[1];
   }
   return null;
+});
+
+const discount = computed(() => {
+  const price = Number(props.product.price);
+  const sale = Number(props.product.sale_price);
+  return sale > 0 && sale < price ? Math.round(((price - sale) / price) * 100) : 0;
 });
 
 const availableColors = computed(() => {

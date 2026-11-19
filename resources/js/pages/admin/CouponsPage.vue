@@ -213,6 +213,7 @@
 </template>
 
 <script setup>
+import { useAdminDeepLink } from '../../composables/useAdminDeepLink';
 import { ref, onMounted } from 'vue';
 import BaseModal from '../../components/admin/BaseModal.vue';
 import StatusBadge from '../../components/admin/StatusBadge.vue';
@@ -297,4 +298,7 @@ const deleteCoupon = async (id) => {
 onMounted(() => {
   fetchCoupons();
 });
+
+// Open from links like ?search=... or ?new=1 (sidebar, Ctrl+K, dashboard)
+useAdminDeepLink({ onNew: openCreateModal });
 </script>

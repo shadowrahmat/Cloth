@@ -13,7 +13,7 @@ class SettingsController extends Controller
     public function index(Request $request): JsonResponse
     {
         $group = $request->input('group');
-        $query = SiteSetting::query();
+        $query = SiteSetting::query()->where('key', '!=', \App\Support\SiteConfig::KEY);
 
         if ($group) {
             $query->where('group', $group);
@@ -37,10 +37,17 @@ class SettingsController extends Controller
 
     public function update(Request $request): JsonResponse
     {
-        $settings = $request->input('settings', []);
+        // Accept both {settings: {...}, group} and a flat {key: value} body
+        // (the admin Settings page sends the flat form).
+        $settings = $request->has('settings') ? (array) $request->input('settings', []) : $request->except(['group']);
         $group = $request->input('group', 'general');
 
         foreach ($settings as $key => $value) {
+            // Appearance is managed by AppearanceController; keys must be simple identifiers.
+            if ($key === \App\Support\SiteConfig::KEY || ! preg_match('/^[a-z0-9_]{1,64}$/', (string) $key)) {
+                continue;
+            }
+
             $type = 'text';
             if (is_bool($value)) {
                 $type = 'boolean';

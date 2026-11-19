@@ -53,6 +53,7 @@ export const useCartStore = defineStore('cart', {
             }
         },
 
+        /** Returns true on success, false on failure (callers may ignore it). */
         async updateQuantity(itemId, quantity) {
             try {
                 const response = await api.put(`/public/cart/items/${itemId}`, { quantity });
@@ -60,11 +61,14 @@ export const useCartStore = defineStore('cart', {
                 this.items = data.items || [];
                 this.subtotal = data.subtotal || 0.0;
                 this.totalItems = data.total_items || 0;
+                return true;
             } catch (err) {
                 console.error('Failed to update cart quantity', err);
+                return false;
             }
         },
 
+        /** Returns true on success, false on failure (callers may ignore it). */
         async removeItem(itemId) {
             try {
                 const response = await api.delete(`/public/cart/items/${itemId}`);
@@ -72,8 +76,10 @@ export const useCartStore = defineStore('cart', {
                 this.items = data.items || [];
                 this.subtotal = data.subtotal || 0.0;
                 this.totalItems = data.total_items || 0;
+                return true;
             } catch (err) {
                 console.error('Failed to remove item', err);
+                return false;
             }
         },
 

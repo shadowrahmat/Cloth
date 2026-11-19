@@ -1,63 +1,61 @@
 <template>
-  <div class="bg-white rounded-lg p-5 border border-[#E7EBE8] shadow-xs flex flex-col justify-between transition-all hover:border-[#16A36A]/40 hover:shadow-sm">
-    <div class="flex items-center justify-between mb-3">
-      <span class="text-xs uppercase font-medium tracking-wider text-[#69736E]">{{ title }}</span>
-      <div v-if="$slots.icon" class="w-8 h-8 rounded-md bg-[#F7F8FA] border border-[#E7EBE8] flex items-center justify-center text-[#14382A]">
-        <slot name="icon"></slot>
-      </div>
+  <component
+    :is="to ? 'router-link' : 'div'"
+    :to="to || undefined"
+    :class="[
+      'block bg-white rounded-xl px-4 py-3.5 border border-[#ECEFED] transition-colors',
+      to ? 'hover:border-[#16A36A]/40' : '',
+    ]"
+  >
+    <div class="flex items-center gap-2 text-[12.5px] text-[#69736E]">
+      <span v-if="$slots.icon" class="text-[#16A36A] shrink-0 flex"><slot name="icon"></slot></span>
+      <span class="truncate">{{ title }}</span>
     </div>
 
-    <div v-if="loading" class="animate-pulse space-y-2 py-1">
-      <div class="h-7 bg-slate-200 rounded-sm w-3/4"></div>
-      <div class="h-3 bg-slate-100 rounded-sm w-1/2"></div>
+    <div v-if="loading" class="animate-pulse mt-2.5 space-y-1.5">
+      <div class="h-6 bg-slate-100 rounded w-2/3"></div>
+      <div class="h-3 bg-slate-50 rounded w-1/2"></div>
     </div>
 
-    <div v-else class="space-y-1">
-      <div class="text-2xl sm:text-3xl font-semibold tracking-tight text-[#171C1A]">
-        {{ value }}
-      </div>
+    <template v-else>
+      <div class="mt-1.5 text-[22px] leading-tight font-bold tracking-tight text-[#171C1A] tabular-nums">{{ value }}</div>
 
-      <div class="flex items-center gap-2 pt-1 text-xs">
+      <div v-if="hasChange || change || subtext" class="mt-1 flex items-center gap-1.5 text-[11.5px] min-w-0">
+        <!-- Real period-over-period change (number, e.g. 12.5 or -3) -->
         <span
-          v-if="change"
+          v-if="hasChange"
           :class="[
-            'inline-flex items-center font-medium',
-            trend === 'down' ? 'text-rose-600' : 'text-emerald-700'
+            'shrink-0 font-semibold tabular-nums',
+            changePct > 0 ? 'text-emerald-600' : changePct < 0 ? 'text-rose-600' : 'text-slate-500',
           ]"
         >
-          <span>{{ trend === 'down' ? '↓' : '↑' }} {{ change }}</span>
+          {{ changePct > 0 ? '↑' : changePct < 0 ? '↓' : '→' }} {{ bnNumber(Math.abs(changePct)) }}%
         </span>
-        <span class="text-[#69736E] text-[11px] truncate">{{ subtext || 'vs last month' }}</span>
+        <!-- Free-text tag (legacy) -->
+        <span v-else-if="change" :class="['shrink-0 font-medium', trend === 'down' ? 'text-rose-600' : 'text-emerald-700']">{{ change }}</span>
+        <span v-if="subtext" class="text-[#9AA39F] truncate">{{ subtext }}</span>
       </div>
-    </div>
-  </div>
+    </template>
+  </component>
 </template>
 
 <script setup>
-defineProps({
-  title: {
-    type: String,
-    required: true,
-  },
-  value: {
-    type: [String, Number],
-    default: '—',
-  },
-  change: {
-    type: String,
-    default: null,
-  },
-  trend: {
-    type: String,
-    default: 'up', // 'up' | 'down' | 'neutral'
-  },
-  subtext: {
-    type: String,
-    default: null,
-  },
-  loading: {
-    type: Boolean,
-    default: false,
-  },
+import { computed } from 'vue';
+import { bnNumber } from '../../admin-nav';
+
+const props = defineProps({
+  title: { type: String, required: true },
+  value: { type: [String, Number], default: '—' },
+  /** Percentage change vs the previous period; null/undefined hides it. */
+  changePct: { type: Number, default: null },
+  /** Optional free-text tag, shown only when changePct is absent. */
+  change: { type: String, default: null },
+  trend: { type: String, default: 'up' },
+  subtext: { type: String, default: null },
+  loading: { type: Boolean, default: false },
+  /** Makes the whole card a link. */
+  to: { type: [String, Object], default: null },
 });
+
+const hasChange = computed(() => typeof props.changePct === 'number' && !Number.isNaN(props.changePct));
 </script>

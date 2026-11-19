@@ -1,7 +1,7 @@
 <template>
   <section class="py-16 bg-white border-t border-[#D8CCBC]/40">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8 text-center space-y-2">
-      <span class="text-xs uppercase tracking-[0.25em] text-[#A89B8A] font-medium">আমাদের ফ্যাশন কমিউনিটি</span>
+      <span class="text-[13px] text-[#A89B8A] font-medium">আমাদের ফ্যাশন কমিউনিটি</span>
       <h3 class="font-serif text-2xl sm:text-3xl text-[#111111]">
         {{ content.heading || 'গ্রাহকদের পছন্দের DRAWER লুক' }}
       </h3>

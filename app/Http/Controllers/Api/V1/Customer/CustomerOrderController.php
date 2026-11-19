@@ -12,7 +12,8 @@ class CustomerOrderController extends Controller
 {
     public function orders(Request $request): JsonResponse
     {
-        $orders = Order::with('items')
+        // Product photo is the fallback thumbnail when an order line has no stored image.
+        $orders = Order::with(['items.product:id,slug,featured_image'])
             ->where('user_id', $request->user()->id)
             ->latest()
             ->paginate(10);

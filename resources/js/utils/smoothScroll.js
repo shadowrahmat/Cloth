@@ -14,6 +14,11 @@ export function initSmoothScroll() {
     return lenisInstance;
   }
 
+  // Respect the OS "reduce motion" preference: keep native scrolling.
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+    return null;
+  }
+
   // Initialize Lenis with luxury inertia physics
   lenisInstance = new Lenis({
     duration: 1.2,

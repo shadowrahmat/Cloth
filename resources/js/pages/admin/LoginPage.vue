@@ -19,7 +19,7 @@
             type="email"
             v-model="email"
             required
-            placeholder="admin@cloth.test"
+            placeholder="you@example.com"
             class="w-full px-4 py-3 bg-[#F7F5F0] border border-[#D8CCBC] text-[#111111] focus:outline-none focus:border-[#111111]"
           />
         </div>
@@ -32,7 +32,7 @@
             type="password"
             v-model="password"
             required
-            placeholder="password"
+            placeholder="••••••••"
             class="w-full px-4 py-3 bg-[#F7F5F0] border border-[#D8CCBC] text-[#111111] focus:outline-none focus:border-[#111111]"
           />
         </div>
@@ -67,8 +67,8 @@ import { useAuthStore } from '../../stores/auth';
 const router = useRouter();
 const authStore = useAuthStore();
 
-const email = ref('admin@cloth.test');
-const password = ref('password');
+const email = ref('');
+const password = ref('');
 const loading = ref(false);
 const error = ref('');
 

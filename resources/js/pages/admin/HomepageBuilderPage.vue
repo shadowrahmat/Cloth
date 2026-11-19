@@ -18,6 +18,11 @@
       </div>
     </div>
 
+    <router-link to="/admin/appearance" class="flex items-center justify-between gap-3 p-4 bg-emerald-50/70 border border-emerald-200/70 rounded-lg text-sm text-[#14382A] hover:bg-emerald-50">
+      <span><strong>লোগো, হেডার মেনু, ঘোষণা বার ও ফুটার</strong> এখন <strong>সাইট কাস্টমাইজ</strong> পেজ থেকে পরিবর্তন করুন।</span>
+      <span class="shrink-0 font-semibold">সাইট কাস্টমাইজ →</span>
+    </router-link>
+
     <!-- Sections Ordering List -->
     <div class="bg-white border border-[#D8CCBC]/40 shadow-xs divide-y divide-[#D8CCBC]/30">
       <div
@@ -116,7 +121,58 @@
           </div>
 
           <!-- Specific fields for Hero -->
-          <template v-if="editingSection.type === 'hero'">
+          <!-- Category showcase (scroll section): texts + which categories, in which order -->
+          <template v-if="editingSection.type === 'category_showcase'">
+            <div class="col-span-12 sm:col-span-4">
+              <label class="block font-semibold mb-1">ছোট উপরের লেখা</label>
+              <input type="text" v-model="editForm.content.kicker" class="w-full px-3 py-2 border border-[#D8CCBC]" />
+            </div>
+            <div class="col-span-12 sm:col-span-8">
+              <label class="block font-semibold mb-1">শিরোনাম</label>
+              <input type="text" v-model="editForm.content.heading" class="w-full px-3 py-2 border border-[#D8CCBC]" />
+            </div>
+            <div class="col-span-12 sm:col-span-8">
+              <label class="block font-semibold mb-1">বিবরণ</label>
+              <input type="text" v-model="editForm.content.description" class="w-full px-3 py-2 border border-[#D8CCBC]" />
+            </div>
+            <div class="col-span-12 sm:col-span-4">
+              <label class="block font-semibold mb-1">প্রতি ক্যাটাগরিতে ছবি</label>
+              <select v-model.number="editForm.content.products_per_category" class="w-full px-3 py-2 border border-[#D8CCBC] bg-white">
+                <option v-for="n in 4" :key="n" :value="n">{{ n }}টি পণ্য</option>
+              </select>
+            </div>
+
+            <div class="col-span-12 grid sm:grid-cols-2 gap-4">
+              <div>
+                <p class="font-semibold mb-1.5">দেখানো ক্যাটাগরি (ক্রম অনুযায়ী)</p>
+                <p v-if="!showcaseCats.length" class="p-3 border border-dashed border-[#D8CCBC] text-[#A89B8A]">
+                  কিছু বাছাই না করলে সবচেয়ে বেশি পণ্য থাকা ৫টি ক্যাটাগরি নিজে থেকে দেখাবে।
+                </p>
+                <ol v-else class="border border-[#D8CCBC] divide-y divide-[#D8CCBC]/50">
+                  <li v-for="(slug, i) in showcaseCats" :key="slug" class="flex items-center gap-2 px-3 py-2">
+                    <span class="w-5 text-[#A89B8A] tabular-nums">{{ i + 1 }}.</span>
+                    <span class="flex-1">{{ categoryName(slug) }}</span>
+                    <button type="button" :disabled="i === 0" @click="moveShowcase(i, -1)" class="px-1.5 disabled:opacity-30" title="উপরে">↑</button>
+                    <button type="button" :disabled="i === showcaseCats.length - 1" @click="moveShowcase(i, 1)" class="px-1.5 disabled:opacity-30" title="নিচে">↓</button>
+                    <button type="button" @click="showcaseCats.splice(i, 1)" class="px-1.5 text-rose-600" title="সরান">✕</button>
+                  </li>
+                </ol>
+              </div>
+              <div>
+                <p class="font-semibold mb-1.5">ক্যাটাগরি যোগ করুন</p>
+                <div class="max-h-56 overflow-y-auto border border-[#D8CCBC] divide-y divide-[#D8CCBC]/40">
+                  <button
+                    v-for="c in allCategories.filter((c) => !showcaseCats.includes(c.slug))"
+                    :key="c.slug" type="button"
+                    @click="showcaseCats.push(c.slug)"
+                    :class="['w-full text-left px-3 py-2 hover:bg-[#F7F5F0]', c.is_child && 'pl-6 text-[#111111]/75']"
+                  >+ {{ c.name }}</button>
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <template v-else-if="editingSection.type === 'hero'">
             <div class="col-span-12">
               <label class="block font-semibold uppercase tracking-wider mb-1">Headline</label>
               <input type="text" v-model="editForm.content.headline" class="w-full px-3 py-2 border border-[#D8CCBC]" />
@@ -153,6 +209,10 @@
               <label class="block font-semibold uppercase tracking-wider mb-1">Announcement Ticker Text</label>
               <input type="text" v-model="editForm.content.text" class="w-full px-3 py-2 border border-[#D8CCBC]" />
             </div>
+            <label v-if="editingSection.type === 'new_arrivals'" class="col-span-12 flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" :checked="editForm.content.show_runway !== false" @change="editForm.content.show_runway = $event.target.checked" class="rounded border-[#D8CCBC]" />
+              <span>এর নিচে "রানওয়ে লুকবুক" (স্ক্রল করলে পাশে সরে যাওয়া পণ্যের সারি) দেখান</span>
+            </label>
             <div v-if="editForm.content.image !== undefined" class="col-span-12">
               <label class="block font-semibold uppercase tracking-wider mb-1">Section Photograph</label>
               <MediaPicker v-model="editForm.content.image" />
@@ -179,7 +239,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, computed, onMounted } from 'vue';
 import api from '../../api';
 import BaseModal from '../../components/common/BaseModal.vue';
 import MediaPicker from '../../components/admin/MediaPicker.vue';
@@ -197,11 +257,15 @@ const editForm = reactive({
   content: {},
 });
 
+// Announcement, header and footer are site-wide chrome, managed in সাইট কাস্টমাইজ.
+const CHROME = ['announcement', 'header', 'footer'];
+const pageSections = (list) => list.filter((s) => !CHROME.includes(s.type));
+
 const fetchSections = async () => {
   loading.value = true;
   try {
     const res = await api.get('/admin/homepage-builder');
-    sections.value = res.data.data || [];
+    sections.value = pageSections(res.data.data || []);
   } catch (err) {
     console.error('Failed to load sections', err);
   } finally {
@@ -224,7 +288,7 @@ const moveSection = async (index, direction) => {
 
   try {
     const res = await api.post('/admin/homepage-builder/reorder', { order: payload });
-    sections.value = res.data.data;
+    sections.value = pageSections(res.data.data);
   } catch (err) {
     alert('Reordering failed');
   }
@@ -246,7 +310,32 @@ const openEditModal = (section) => {
   editForm.subtitle = section.subtitle || '';
   editForm.is_active = Boolean(section.is_active);
   editForm.content = JSON.parse(JSON.stringify(section.content || {}));
+  if (section.type === 'category_showcase') {
+    if (!Array.isArray(editForm.content.categories)) editForm.content.categories = [];
+    editForm.content.products_per_category ||= 3;
+    loadCategories();
+  }
   editModalOpen.value = true;
+};
+
+// --- category showcase helpers
+const allCategories = ref([]);
+const loadCategories = async () => {
+  if (allCategories.value.length) return;
+  try {
+    const res = await api.get('/public/categories');
+    allCategories.value = (res.data.data || []).flatMap((p) => [
+      { slug: p.slug, name: p.name, is_child: false },
+      ...(p.children || []).map((c) => ({ slug: c.slug, name: c.name, is_child: true })),
+    ]);
+  } catch { /* list stays empty */ }
+};
+const showcaseCats = computed(() => editForm.content.categories || []);
+const categoryName = (slug) => allCategories.value.find((c) => c.slug === slug)?.name || slug;
+const moveShowcase = (i, d) => {
+  const list = editForm.content.categories;
+  const [x] = list.splice(i, 1);
+  list.splice(i + d, 0, x);
 };
 
 const saveSectionChanges = async () => {

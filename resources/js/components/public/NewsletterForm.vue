@@ -1,7 +1,7 @@
 <template>
   <section class="py-20 lg:py-28 bg-[#F7F5F0] border-t border-[#D8CCBC]/40">
     <div class="max-w-2xl mx-auto px-4 sm:px-6 text-center space-y-4">
-      <span class="text-xs uppercase tracking-[0.25em] text-[#A89B8A] font-medium block">DRAWER নিউজলেটার</span>
+      <span class="text-[13px] text-[#A89B8A] font-medium block">নিউজলেটার</span>
 
       <h2 class="font-serif text-3xl sm:text-4xl text-[#111111]">
         {{ content.heading || 'ফ্যাশন ও অফারের সাথে যুক্ত থাকুন' }}

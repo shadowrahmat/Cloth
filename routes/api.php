@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Admin\AppearanceController;
 use App\Http\Controllers\Api\V1\Admin\AuditLogController;
 use App\Http\Controllers\Api\V1\Admin\AuthController as AdminAuthController;
 use App\Http\Controllers\Api\V1\Admin\BlogController;
@@ -22,6 +23,8 @@ use App\Http\Controllers\Api\V1\Admin\SettingsController;
 use App\Http\Controllers\Api\V1\Admin\UserController;
 use App\Http\Controllers\Api\V1\Customer\CustomerAuthController;
 use App\Http\Controllers\Api\V1\Customer\CustomerOrderController;
+use App\Http\Controllers\Api\V1\Customer\CustomerReturnController;
+use App\Http\Controllers\Api\V1\Public\BlogController as PublicBlogController;
 use App\Http\Controllers\Api\V1\Public\CartController;
 use App\Http\Controllers\Api\V1\Public\CheckoutController;
 use App\Http\Controllers\Api\V1\Public\PublicController;
@@ -43,15 +46,19 @@ Route::prefix('v1')->group(function () {
         Route::get('/homepage', [PublicController::class, 'homepage']);
         Route::get('/categories', [PublicController::class, 'categories']);
         Route::get('/products', [PublicController::class, 'products']);
+        Route::get('/products/facets', [PublicController::class, 'productFacets']);
         Route::get('/products/{slug}', [PublicController::class, 'productDetail']);
         Route::post('/products/{id}/reviews', [PublicController::class, 'addReview']);
         Route::get('/search', [PublicController::class, 'search']);
         Route::get('/collections', [PublicController::class, 'collections']);
         Route::get('/collections/{slug}', [PublicController::class, 'collectionDetail']);
         Route::get('/pages/{slug}', [PublicController::class, 'page']);
+        Route::get('/blog', [PublicBlogController::class, 'index']);
+        Route::get('/blog/{slug}', [PublicBlogController::class, 'show']);
         Route::post('/contact', [PublicController::class, 'submitContact']);
         Route::post('/newsletter/subscribe', [PublicController::class, 'subscribeNewsletter']);
         Route::get('/settings', [PublicController::class, 'settings']);
+        Route::get('/site', [PublicController::class, 'site']);
         Route::get('/shipping-methods', [CheckoutController::class, 'getShippingMethods']);
         Route::post('/track-order', [CheckoutController::class, 'trackOrder']);
 
@@ -74,8 +81,11 @@ Route::prefix('v1')->group(function () {
     // Customer API: /api/v1/customer
     // -------------------------------------------------------------
     Route::prefix('customer')->group(function () {
-        Route::post('/register', [CustomerAuthController::class, 'register']);
-        Route::post('/login', [CustomerAuthController::class, 'login']);
+        // 10 attempts per minute per IP to slow down credential stuffing.
+        Route::middleware('throttle:10,1')->group(function () {
+            Route::post('/register', [CustomerAuthController::class, 'register']);
+            Route::post('/login', [CustomerAuthController::class, 'login']);
+        });
 
         Route::middleware('auth:sanctum')->group(function () {
             Route::get('/me', [CustomerAuthController::class, 'me']);
@@ -84,6 +94,8 @@ Route::prefix('v1')->group(function () {
 
             Route::get('/orders', [CustomerOrderController::class, 'orders']);
             Route::get('/orders/{orderNumber}', [CustomerOrderController::class, 'orderDetail']);
+            Route::post('/orders/{orderNumber}/returns', [CustomerReturnController::class, 'store']);
+            Route::get('/returns', [CustomerReturnController::class, 'index']);
             Route::get('/addresses', [CustomerOrderController::class, 'getAddresses']);
             Route::post('/addresses', [CustomerOrderController::class, 'storeAddress']);
             Route::delete('/addresses/{id}', [CustomerOrderController::class, 'deleteAddress']);
@@ -94,15 +106,16 @@ Route::prefix('v1')->group(function () {
     // Admin API: /api/v1/admin
     // -------------------------------------------------------------
     Route::prefix('admin')->group(function () {
-        Route::post('/login', [AdminAuthController::class, 'login']);
+        Route::post('/login', [AdminAuthController::class, 'login'])->middleware('throttle:5,1');
 
-        Route::middleware('auth:sanctum')->group(function () {
+        Route::middleware(['auth:sanctum', 'admin'])->group(function () {
             Route::get('/me', [AdminAuthController::class, 'me']);
             Route::post('/logout', [AdminAuthController::class, 'logout']);
 
             // Dashboard & Badges
             Route::get('/dashboard', [DashboardController::class, 'index']);
             Route::get('/dashboard/badges', [DashboardController::class, 'badges']);
+            Route::get('/search', [DashboardController::class, 'search']);
 
             // Reports & Analytics
             Route::get('/reports', [ReportController::class, 'index']);
@@ -189,6 +202,11 @@ Route::prefix('v1')->group(function () {
             // System Settings
             Route::get('/settings', [SettingsController::class, 'index']);
             Route::post('/settings', [SettingsController::class, 'update']);
+
+            // Site Customize (logo, header, footer, contact, SEO)
+            Route::get('/appearance', [AppearanceController::class, 'show']);
+            Route::put('/appearance', [AppearanceController::class, 'update']);
+            Route::post('/appearance/reset', [AppearanceController::class, 'reset']);
 
             // RBAC (Users & Roles)
             Route::apiResource('users', UserController::class);

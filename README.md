@@ -275,6 +275,12 @@ To run the entire test suite:
 php artisan test
 ```
 
+The suite runs against `database/database.sqlite` (see `phpunit.xml`), so PHP needs the `pdo_sqlite` extension even when the app itself runs on MySQL. If `php -m` doesn't list it, enable `extension=pdo_sqlite` in `php.ini`, or load it for a single run:
+
+```bash
+php -d extension=pdo_sqlite vendor/bin/phpunit
+```
+
 **Results:**
 ```text
    PASS  Tests\Unit\ExampleTest

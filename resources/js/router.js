@@ -5,44 +5,49 @@ import { useAuthStore } from './stores/auth';
 import PublicLayout from './layouts/PublicLayout.vue';
 import AdminLayout from './layouts/AdminLayout.vue';
 
-// Public Pages
+// Public Pages: the homepage ships in the main bundle for a fast first paint,
+// every other page is code-split and loaded on demand.
 import HomePage from './pages/public/HomePage.vue';
-import CollectionPage from './pages/public/CollectionPage.vue';
-import ProductPage from './pages/public/ProductPage.vue';
-import CartPage from './pages/public/CartPage.vue';
-import CheckoutPage from './pages/public/CheckoutPage.vue';
-import WishlistPage from './pages/public/WishlistPage.vue';
-import AccountPage from './pages/public/AccountPage.vue';
-import OrderTrackingPage from './pages/public/OrderTrackingPage.vue';
-import AboutPage from './pages/public/AboutPage.vue';
-import ContactPage from './pages/public/ContactPage.vue';
-import StaticPage from './pages/public/StaticPage.vue';
+const CollectionPage = () => import('./pages/public/CollectionPage.vue');
+const ProductPage = () => import('./pages/public/ProductPage.vue');
+const CartPage = () => import('./pages/public/CartPage.vue');
+const CheckoutPage = () => import('./pages/public/CheckoutPage.vue');
+const WishlistPage = () => import('./pages/public/WishlistPage.vue');
+const AccountPage = () => import('./pages/public/AccountPage.vue');
+const OrderTrackingPage = () => import('./pages/public/OrderTrackingPage.vue');
+const AboutPage = () => import('./pages/public/AboutPage.vue');
+const ContactPage = () => import('./pages/public/ContactPage.vue');
+const StaticPage = () => import('./pages/public/StaticPage.vue');
+const BlogListPage = () => import('./pages/public/BlogListPage.vue');
+const BlogPostPage = () => import('./pages/public/BlogPostPage.vue');
+const NotFoundPage = () => import('./pages/public/NotFoundPage.vue');
 
-// Admin Pages
-import LoginPage from './pages/admin/LoginPage.vue';
-import DashboardPage from './pages/admin/DashboardPage.vue';
-import ProductManagementPage from './pages/admin/ProductManagementPage.vue';
-import OrderManagementPage from './pages/admin/OrderManagementPage.vue';
-import InventoryPage from './pages/admin/InventoryPage.vue';
-import HomepageBuilderPage from './pages/admin/HomepageBuilderPage.vue';
-import MediaLibraryPage from './pages/admin/MediaLibraryPage.vue';
-import SettingsPage from './pages/admin/SettingsPage.vue';
-import UsersPage from './pages/admin/UsersPage.vue';
-import RolesPage from './pages/admin/RolesPage.vue';
-import ResourceListPage from './pages/admin/ResourceListPage.vue';
-import ResourceFormPage from './pages/admin/ResourceFormPage.vue';
-import ReportsPage from './pages/admin/ReportsPage.vue';
-import SalesAnalysisPage from './pages/admin/SalesAnalysisPage.vue';
-import CustomersPage from './pages/admin/CustomersPage.vue';
-import CouponsPage from './pages/admin/CouponsPage.vue';
-import MessagesPage from './pages/admin/MessagesPage.vue';
-import ReturnsPage from './pages/admin/ReturnsPage.vue';
-import LogisticsPage from './pages/admin/LogisticsPage.vue';
-import ReviewsPage from './pages/admin/ReviewsPage.vue';
-import CategoriesPage from './pages/admin/CategoriesPage.vue';
-import ContentCMSPage from './pages/admin/ContentCMSPage.vue';
-import BlogPage from './pages/admin/BlogPage.vue';
-import AuditLogsPage from './pages/admin/AuditLogsPage.vue';
+// Admin Pages: storefront visitors never download the admin console.
+const LoginPage = () => import('./pages/admin/LoginPage.vue');
+const DashboardPage = () => import('./pages/admin/DashboardPage.vue');
+const ProductManagementPage = () => import('./pages/admin/ProductManagementPage.vue');
+const OrderManagementPage = () => import('./pages/admin/OrderManagementPage.vue');
+const InventoryPage = () => import('./pages/admin/InventoryPage.vue');
+const HomepageBuilderPage = () => import('./pages/admin/HomepageBuilderPage.vue');
+const MediaLibraryPage = () => import('./pages/admin/MediaLibraryPage.vue');
+const SettingsPage = () => import('./pages/admin/SettingsPage.vue');
+const AppearancePage = () => import('./pages/admin/AppearancePage.vue');
+const UsersPage = () => import('./pages/admin/UsersPage.vue');
+const RolesPage = () => import('./pages/admin/RolesPage.vue');
+const ResourceListPage = () => import('./pages/admin/ResourceListPage.vue');
+const ResourceFormPage = () => import('./pages/admin/ResourceFormPage.vue');
+const ReportsPage = () => import('./pages/admin/ReportsPage.vue');
+const SalesAnalysisPage = () => import('./pages/admin/SalesAnalysisPage.vue');
+const CustomersPage = () => import('./pages/admin/CustomersPage.vue');
+const CouponsPage = () => import('./pages/admin/CouponsPage.vue');
+const MessagesPage = () => import('./pages/admin/MessagesPage.vue');
+const ReturnsPage = () => import('./pages/admin/ReturnsPage.vue');
+const LogisticsPage = () => import('./pages/admin/LogisticsPage.vue');
+const ReviewsPage = () => import('./pages/admin/ReviewsPage.vue');
+const CategoriesPage = () => import('./pages/admin/CategoriesPage.vue');
+const ContentCMSPage = () => import('./pages/admin/ContentCMSPage.vue');
+const BlogPage = () => import('./pages/admin/BlogPage.vue');
+const AuditLogsPage = () => import('./pages/admin/AuditLogsPage.vue');
 
 const routes = [
   // Public Storefront Routes
@@ -54,79 +59,99 @@ const routes = [
         path: '',
         name: 'home',
         component: HomePage,
-        meta: { title: 'ATELIER ÉTOILE | Haute Prêt-à-Porter' }
+        meta: { title: 'হোম' }
       },
       {
         path: 'collections',
         name: 'collections.all',
         component: CollectionPage,
-        meta: { title: 'Collections' }
+        meta: { title: 'সব পোশাক' }
       },
       {
         path: 'collection/:slug',
         name: 'collection.show',
         component: CollectionPage,
-        meta: { title: 'Collection' }
+        meta: { title: 'কালেকশন' }
       },
       {
         path: 'category/:slug',
         name: 'category.show',
         component: CollectionPage,
-        meta: { title: 'Category' }
+        meta: { title: 'ক্যাটাগরি' }
       },
       {
         path: 'product/:slug',
         name: 'product.show',
         component: ProductPage,
-        meta: { title: 'Product Details' }
+        meta: { title: 'পণ্যের বিবরণ' }
       },
       {
         path: 'cart',
         name: 'cart',
         component: CartPage,
-        meta: { title: 'Shopping Bag' }
+        meta: { title: 'শপিং ব্যাগ' }
       },
       {
         path: 'checkout',
         name: 'checkout',
         component: CheckoutPage,
-        meta: { title: 'Checkout' }
+        meta: { title: 'চেকআউট' }
       },
       {
         path: 'wishlist',
         name: 'wishlist',
         component: WishlistPage,
-        meta: { title: 'Curated Wishlist' }
+        meta: { title: 'পছন্দের তালিকা' }
       },
       {
         path: 'account',
         name: 'account',
         component: AccountPage,
-        meta: { title: 'Customer Account' }
+        meta: { title: 'আমার অ্যাকাউন্ট' }
       },
       {
         path: 'track-order',
         name: 'order.tracking',
         component: OrderTrackingPage,
-        meta: { title: 'Track Order' }
+        meta: { title: 'অর্ডার ট্র্যাক' }
       },
       {
         path: 'about',
         name: 'about',
         component: AboutPage,
-        meta: { title: 'The Maison' }
+        meta: { title: 'আমাদের সম্পর্কে' }
       },
       {
         path: 'contact',
         name: 'contact',
         component: ContactPage,
-        meta: { title: 'Concierge & Contact' }
+        meta: { title: 'যোগাযোগ' }
       },
       {
         path: 'pages/:slug',
         name: 'static.page',
         component: StaticPage,
-        meta: { title: 'Page' }
+        meta: { title: 'পেজ' }
+      },
+      {
+        path: 'blog',
+        alias: 'journal',          // old links keep working
+        name: 'journal',
+        component: BlogListPage,
+        meta: { title: 'ব্লগ' }
+      },
+      {
+        path: 'blog/:slug',
+        alias: 'journal/:slug',
+        name: 'journal.post',
+        component: BlogPostPage,
+        meta: { title: 'ব্লগ' }
+      },
+      {
+        path: ':pathMatch(.*)*',
+        name: 'not-found',
+        component: NotFoundPage,
+        meta: { title: 'পেজ পাওয়া যায়নি' }
       }
     ]
   },
@@ -248,6 +273,12 @@ const routes = [
         meta: { title: 'Media Assets & CDN' }
       },
       {
+        path: 'appearance',
+        name: 'admin.appearance',
+        component: AppearancePage,
+        meta: { title: 'সাইট কাস্টমাইজ' }
+      },
+      {
         path: 'settings',
         name: 'admin.settings',
         component: SettingsPage,
@@ -291,12 +322,6 @@ const routes = [
         meta: { title: 'Edit Entry' }
       }
     ]
-  },
-
-  // Fallback 404
-  {
-    path: '/:pathMatch(.*)*',
-    redirect: '/'
   }
 ];
 
@@ -304,17 +329,32 @@ const router = createRouter({
   history: createWebHistory(),
   routes,
   scrollBehavior(to, from, savedPosition) {
-    if (savedPosition) {
-      return savedPosition;
-    }
-    return { top: 0, behavior: 'smooth' };
+    // Opening/closing the mobile cart sheet toggles a "#cart" history entry: never scroll for it.
+    if (to.path === from.path && (to.hash === '#cart' || from.hash === '#cart')) return false;
+    // Storefront pages animate out/in (~200ms); scroll once the new page is in place.
+    const wait = to.path.startsWith('/admin') ? 0 : 220;
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        if (savedPosition) return resolve(savedPosition);           // Back/Forward keeps your place
+        if (to.hash) return resolve({ el: to.hash, top: 90, behavior: 'smooth' }); // e.g. /#lookbook
+        if (to.path === from.path) return resolve(false);           // only query changed (filters)
+        resolve({ top: 0 });
+      }, wait);
+    });
   }
 });
 
 router.beforeEach((to, from, next) => {
-  // Update document title
-  const pageTitle = to.meta?.title ? `${to.meta.title} | ATELIER ÉTOILE` : 'ATELIER ÉTOILE';
-  document.title = pageTitle;
+  // Document title: "<page> | <site name>" (site name/SEO title come from Admin → সাইট কাস্টমাইজ)
+  const site = window.__SITE__ || {};
+  const siteName = site.branding?.site_name || 'DRAWER CLOTHING';
+  if (to.name === 'home') {
+    document.title = site.seo?.title || siteName;
+  } else if (to.path.startsWith('/admin')) {
+    document.title = `${to.meta?.title || 'Admin'} | ${siteName} Admin`;
+  } else {
+    document.title = to.meta?.title ? `${to.meta.title} | ${siteName}` : siteName;
+  }
 
   const authStore = useAuthStore();
 

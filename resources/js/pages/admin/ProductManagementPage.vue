@@ -378,6 +378,7 @@
 </template>
 
 <script setup>
+import { useAdminDeepLink } from '../../composables/useAdminDeepLink';
 import { ref, reactive, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import api from '../../api';
@@ -670,4 +671,7 @@ onMounted(async () => {
     console.error(err);
   }
 });
+
+// Open from links like ?search=... or ?new=1 (sidebar, Ctrl+K, dashboard)
+useAdminDeepLink({ search: searchQuery, onNew: openCreateModal, reload: () => fetchProducts(1) });
 </script>

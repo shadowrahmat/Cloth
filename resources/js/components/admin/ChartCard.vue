@@ -1,10 +1,10 @@
 <template>
-  <div class="bg-white rounded-lg p-6 border border-[#E7EBE8] shadow-xs flex flex-col">
+  <div class="bg-white rounded-xl px-4 py-3.5 border border-[#ECEFED] flex flex-col">
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#E7EBE8] gap-4 mb-4">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
       <div>
-        <h3 class="text-base font-semibold text-[#171C1A] tracking-tight">{{ title }}</h3>
-        <p v-if="subtitle" class="text-xs text-[#69736E] mt-0.5">{{ subtitle }}</p>
+        <h3 class="text-sm font-semibold text-[#171C1A] tracking-tight">{{ title }}</h3>
+        <p v-if="subtitle" class="text-[11.5px] text-[#9AA39F] mt-0.5">{{ subtitle }}</p>
       </div>
 
       <div class="flex items-center gap-2">
@@ -24,7 +24,7 @@
     </div>
 
     <!-- Chart Canvas Area -->
-    <div class="flex-1 min-h-[260px] relative">
+    <div class="flex-1 min-h-[224px] relative">
       <slot></slot>
     </div>
   </div>
@@ -40,9 +40,10 @@ defineProps({
     type: String,
     default: null,
   },
+  // Only shown when a page passes options AND listens to update:selectedFilter.
   filterOptions: {
     type: Array,
-    default: () => ['Last 7 Days', 'Last 30 Days', 'This Month', 'Year to Date'],
+    default: () => [],
   },
   selectedFilter: {
     type: String,

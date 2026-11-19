@@ -207,6 +207,7 @@
 </template>
 
 <script setup>
+import { useAdminDeepLink } from '../../composables/useAdminDeepLink';
 import { ref, reactive, onMounted } from 'vue';
 import api from '../../api';
 import DataTable from '../../components/admin/DataTable.vue';
@@ -327,4 +328,7 @@ const submitStatusUpdate = async () => {
 onMounted(() => {
   fetchOrders(1);
 });
+
+// Open from links like ?search=... or ?new=1 (sidebar, Ctrl+K, dashboard)
+useAdminDeepLink({ search: searchQuery, reload: () => fetchOrders(1) });
 </script>

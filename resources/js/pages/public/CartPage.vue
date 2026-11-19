@@ -2,7 +2,7 @@
   <div class="py-12 sm:py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="mb-10 border-b border-[#D8CCBC]/40 pb-6 flex items-baseline justify-between">
       <h1 class="font-serif text-3xl sm:text-4xl text-[#111111]">আপনার শপিং ব্যাগ</h1>
-      <router-link to="/clothing" class="text-xs uppercase tracking-wider text-[#A89B8A] hover:text-[#111111] transition-colors">
+      <router-link to="/collections" class="text-xs uppercase tracking-wider text-[#A89B8A] hover:text-[#111111] transition-colors">
         পোশাক ব্রাউজ চালিয়ে যান →
       </router-link>
     </div>
@@ -146,7 +146,7 @@
         আমাদের কিউরেটেড কালেকশন থেকে আপনার পছন্দের আধুনিক পোশাক বেছে নিন।
       </p>
       <router-link
-        to="/clothing"
+        to="/collections"
         class="px-8 py-3.5 bg-[#111111] text-white text-xs uppercase tracking-[0.2em] font-semibold hover:bg-black transition-colors inline-block"
       >
         পোশাক কালেকশন দেখুন

@@ -17,7 +17,7 @@
 
       <div class="flex flex-wrap items-center gap-2.5">
         <a
-          href="/shop"
+          href="/collections"
           target="_blank"
           class="px-3.5 py-2 border border-[#E7EBE8] bg-white text-[#171C1A] text-xs font-semibold rounded-md hover:bg-[#F7F8FA] transition-colors shadow-2xs inline-flex items-center gap-1.5"
           title="ভিজিট শপ পেজ"
@@ -571,6 +571,7 @@
 </template>
 
 <script setup>
+import { useAdminDeepLink } from '../../composables/useAdminDeepLink';
 import { ref, computed, onMounted } from 'vue';
 import BaseModal from '../../components/admin/BaseModal.vue';
 import StatusBadge from '../../components/admin/StatusBadge.vue';
@@ -746,4 +747,7 @@ const deleteCategory = async (id) => {
 onMounted(() => {
   fetchCategories();
 });
+
+// Open from links like ?search=... or ?new=1 (sidebar, Ctrl+K, dashboard)
+useAdminDeepLink({ search: searchQuery, onNew: openCreateModal });
 </script>
