@@ -30,7 +30,8 @@ export const useCartStore = defineStore('cart', {
             }
         },
 
-        async addToCart(productId, variantId = null, quantity = 1, color = null, size = null) {
+        /** options.openDrawer (default true): the product page passes false and shows its own confirmation. */
+        async addToCart(productId, variantId = null, quantity = 1, color = null, size = null, { openDrawer = true } = {}) {
             this.loading = true;
             try {
                 const response = await api.post('/public/cart/add', {
@@ -44,7 +45,7 @@ export const useCartStore = defineStore('cart', {
                 this.items = data.items || [];
                 this.subtotal = data.subtotal || 0.0;
                 this.totalItems = data.total_items || 0;
-                this.isDrawerOpen = true; // Auto open mini cart drawer on add
+                if (openDrawer) this.isDrawerOpen = true; // Auto open mini cart drawer on add
                 return response.data;
             } catch (err) {
                 throw err;

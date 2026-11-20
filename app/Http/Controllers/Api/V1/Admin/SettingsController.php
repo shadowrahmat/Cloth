@@ -13,7 +13,9 @@ class SettingsController extends Controller
     public function index(Request $request): JsonResponse
     {
         $group = $request->input('group');
-        $query = SiteSetting::query()->where('key', '!=', \App\Support\SiteConfig::KEY);
+        // Appearance and the email/SMTP setup have their own screens; the SMTP password is never sent back.
+        $query = SiteSetting::query()->where('key', '!=', \App\Support\SiteConfig::KEY)
+            ->whereNotIn('key', \App\Services\StoreMailer::SETTING_KEYS);
 
         if ($group) {
             $query->where('group', $group);
@@ -44,7 +46,7 @@ class SettingsController extends Controller
 
         foreach ($settings as $key => $value) {
             // Appearance is managed by AppearanceController; keys must be simple identifiers.
-            if ($key === \App\Support\SiteConfig::KEY || ! preg_match('/^[a-z0-9_]{1,64}$/', (string) $key)) {
+            if ($key === \App\Support\SiteConfig::KEY || in_array($key, \App\Services\StoreMailer::SETTING_KEYS, true) || ! preg_match('/^[a-z0-9_]{1,64}$/', (string) $key)) {
                 continue;
             }
 

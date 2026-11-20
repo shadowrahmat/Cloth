@@ -4,10 +4,14 @@ namespace Tests\Feature;
 
 use App\Models\Order;
 use App\Models\User;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
 class EnterpriseAdminTest extends TestCase
 {
+    // Roll back every test so repeated runs do not drain the seeded stock.
+    use DatabaseTransactions;
+
     protected function getAdminUser(): User
     {
         return User::where('role', 'admin')->first() ?? User::factory()->create(['role' => 'admin']);

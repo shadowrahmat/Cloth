@@ -329,6 +329,13 @@
             </div>
           </Card>
         </template>
+
+        <!-- SIZE CHARTS -->
+        <template v-else-if="tab === 'sizes'">
+          <Card title="সাইজ চার্ট" hint="প্রোডাক্ট পেজে “সাইজ চার্ট” চাপলে এই টেবিল দেখায়। ক্যাটাগরি অনুযায়ী আলাদা চার্ট রাখতে পারেন — যেমন প্যান্টের জন্য একটা, পাঞ্জাবির জন্য আরেকটা।">
+            <SizeChartEditor :model-value="cfg.size_charts" />
+          </Card>
+        </template>
       </div>
     </div>
 
@@ -344,7 +351,7 @@ import { ref, computed, watch, onMounted, onBeforeUnmount, h } from 'vue';
 import { onBeforeRouteLeave } from 'vue-router';
 import {
   Save, ExternalLink, Trash2, Plus, X, ChevronUp, ChevronDown, ChevronLeft,
-  BadgeCheck, Megaphone, PanelTop, PanelBottom, Contact, Search, FileText,
+  BadgeCheck, Megaphone, PanelTop, PanelBottom, Contact, Search, FileText, Ruler,
 } from 'lucide-vue-next';
 import api from '../../api';
 import { useToastStore } from '../../stores/toast';
@@ -353,6 +360,7 @@ import MediaPicker from '../../components/admin/MediaPicker.vue';
 import LinkListEditor from '../../components/admin/LinkListEditor.vue';
 import RepeatListEditor from '../../components/admin/RepeatListEditor.vue';
 import SocialIcon from '../../components/common/SocialIcon.vue';
+import SizeChartEditor from '../../components/admin/SizeChartEditor.vue';
 
 const toast = useToastStore();
 const siteStore = useSiteStore();
@@ -365,8 +373,10 @@ const tabs = [
   { key: 'contact', label: 'যোগাযোগ ও সোশ্যাল', icon: Contact },
   { key: 'pages', label: 'পেজ কনটেন্ট', icon: FileText },
   { key: 'seo', label: 'SEO', icon: Search },
+  { key: 'sizes', label: 'সাইজ চার্ট', icon: Ruler },
 ];
-const tab = ref('branding');
+const initialTab = new URLSearchParams(window.location.search).get('tab');   // e.g. /admin/appearance?tab=announcement
+const tab = ref(tabs.some((t) => t.key === initialTab) ? initialTab : 'branding');
 const PAGE_TABS = [
   { key: 'about', label: 'আমাদের সম্পর্কে', url: '/about' },
   { key: 'blog', label: 'ব্লগ', url: '/blog' },
@@ -447,6 +457,7 @@ const normalize = (data) => {
   c.pages = c.pages || {};
   c.pages.about = { stats: [], values: [], ...(c.pages.about || {}) };
   c.pages.blog = { ...(c.pages.blog || {}) };
+  c.size_charts = (c.size_charts || []).map((s, i) => ({ _k: `sc-${i}`, name: '', note: '', ...s, categories: [...(s.categories || [])], columns: [...(s.columns || [])], rows: (s.rows || []).map((r) => (s.columns || []).map((_, j) => r?.[j] ?? '')) }));
   c.pages.contact = { faq: [], ...(c.pages.contact || {}) };
   c.footer.columns = c.footer.columns || [];
   c.footer.payment_methods = c.footer.payment_methods || [];
@@ -496,6 +507,11 @@ const payload = () => {
   c.pages.about.stats = filled(c.pages.about.stats, ['value', 'label']);
   c.pages.about.values = filled(c.pages.about.values, ['title', 'text']);
   c.pages.contact.faq = filled(c.pages.contact.faq, ['q', 'a']);
+  c.size_charts = (c.size_charts || []).map((s) => ({
+    ...s,
+    columns: s.columns.map((x) => String(x ?? '').trim()),
+    rows: s.rows.filter((r) => r.some((v) => String(v ?? '').trim())),
+  }));
   return c;
 };
 

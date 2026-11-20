@@ -4,7 +4,7 @@
 import {
   LayoutDashboard, ChartColumn, TrendingUp, FolderTree, Shirt, Package, Star, Image,
   ShoppingBag, Truck, Users, RotateCcw, TicketPercent, LayoutTemplate, MessageSquare,
-  FileText, Newspaper, Settings, UserCog, ShieldCheck, ScrollText, Palette,
+  FileText, Newspaper, Settings, UserCog, ShieldCheck, ScrollText, Palette, Banknote, Mail,
 } from 'lucide-vue-next';
 
 /**
@@ -36,6 +36,7 @@ export const navGroups = [
       { label: 'অর্ডার', hint: 'Orders', to: '/admin/orders', icon: ShoppingBag, badge: 'pending_orders', badgeTone: 'warn', permission: 'view_orders', keywords: 'order checkout fulfilment invoice' },
       { label: 'রিটার্ন ও এক্সচেঞ্জ', hint: 'Returns', to: '/admin/returns', icon: RotateCcw, badge: 'pending_returns', badgeTone: 'danger', permission: 'view_orders', keywords: 'refund exchange rma' },
       { label: 'কুরিয়ার ও ডেলিভারি', hint: 'Logistics', to: '/admin/logistics', icon: Truck, permission: 'view_orders', keywords: 'steadfast courier shipment delivery' },
+      { label: 'ডেলিভারি চার্জ', hint: 'Delivery charges', to: '/admin/delivery-charges', icon: Banknote, permission: 'manage_shipping', keywords: 'shipping rate fee dhaka free delivery' },
       { label: 'গ্রাহক', hint: 'Customers', to: '/admin/customers', icon: Users, permission: 'view_customers', keywords: 'client buyer' },
       { label: 'মেসেজ', hint: 'Messages', to: '/admin/messages', icon: MessageSquare, badge: 'new_inquiries', badgeTone: 'info', permission: 'view_customers', keywords: 'contact inquiry inbox' },
     ],
@@ -55,7 +56,7 @@ export const navGroups = [
     key: 'website',
     label: 'ওয়েবসাইট',
     items: [
-      { label: 'সাইট কাস্টমাইজ', hint: 'Logo, header, footer', to: '/admin/appearance', icon: Palette, permission: 'view_cms', keywords: 'logo header footer menu announcement contact social seo brand theme' },
+      { label: 'সাইট কাস্টমাইজ', hint: 'Logo, header, footer', to: '/admin/appearance', icon: Palette, permission: 'view_cms', keywords: 'logo header footer menu announcement contact social seo brand theme size chart সাইজ চার্ট' },
       { label: 'হোমপেজ বিল্ডার', hint: 'Homepage', to: '/admin/homepage-builder', icon: LayoutTemplate, permission: 'view_cms', keywords: 'banner hero section' },
       { label: 'মিডিয়া লাইব্রেরি', hint: 'Media', to: '/admin/media', icon: Image, permission: 'view_media', keywords: 'image photo upload' },
       { label: 'পেজ ও পলিসি', hint: 'Pages', to: '/admin/content', icon: FileText, permission: 'view_cms', keywords: 'about policy terms cms' },
@@ -66,7 +67,8 @@ export const navGroups = [
     key: 'system',
     label: 'সেটিংস',
     items: [
-      { label: 'স্টোর সেটিংস', hint: 'Settings', to: '/admin/settings', icon: Settings, permission: 'view_settings', keywords: 'config store payment shipping' },
+      { label: 'স্টোর সেটিংস', hint: 'Settings', to: '/admin/settings', icon: Settings, permission: 'view_settings', keywords: 'config store invoice stock threshold' },
+      { label: 'ইমেইল টেমপ্লেট', hint: 'Email templates', to: '/admin/email-templates', icon: Mail, permission: 'view_settings', keywords: 'email mail smtp template notification order confirmation gmail ইমেইল' },
       { label: 'স্টাফ ও অ্যাডমিন', hint: 'Users', to: '/admin/users', icon: UserCog, permission: 'view_users', keywords: 'staff team account password' },
       { label: 'রোল ও পারমিশন', hint: 'Roles', to: '/admin/roles', icon: ShieldCheck, permission: 'view_users', keywords: 'rbac access permission' },
       { label: 'অডিট লগ', hint: 'Audit Log', to: '/admin/audit-logs', icon: ScrollText, permission: 'view_settings', keywords: 'activity security history' },

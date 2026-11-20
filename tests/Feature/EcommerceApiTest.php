@@ -9,10 +9,14 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\ShippingMethod;
 use App\Models\User;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
 class EcommerceApiTest extends TestCase
 {
+    // Roll back every test so repeated runs do not drain the seeded stock.
+    use DatabaseTransactions;
+
     public function test_storage_serves_uploaded_file(): void
     {
         $this->withoutExceptionHandling();
@@ -194,7 +198,7 @@ class EcommerceApiTest extends TestCase
             'state' => 'OR',
             'postal_code' => '97477',
             'country' => 'United States',
-            'payment_method' => 'card',
+            'payment_method' => 'cod',
         ];
 
         $checkoutRes = $this->postJson('/api/v1/public/checkout', $checkoutData);

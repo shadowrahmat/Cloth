@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\Admin\BlogController;
 use App\Http\Controllers\Api\V1\Admin\CouponController;
 use App\Http\Controllers\Api\V1\Admin\CustomerController;
 use App\Http\Controllers\Api\V1\Admin\DashboardController;
+use App\Http\Controllers\Api\V1\Admin\EmailTemplateController;
 use App\Http\Controllers\Api\V1\Admin\HomepageBuilderController;
 use App\Http\Controllers\Api\V1\Admin\InventoryController;
 use App\Http\Controllers\Api\V1\Admin\LogisticsController;
@@ -48,7 +49,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/products', [PublicController::class, 'products']);
         Route::get('/products/facets', [PublicController::class, 'productFacets']);
         Route::get('/products/{slug}', [PublicController::class, 'productDetail']);
-        Route::post('/products/{id}/reviews', [PublicController::class, 'addReview']);
+        Route::post('/products/{id}/reviews', [PublicController::class, 'addReview'])->middleware('throttle:5,1');
         Route::get('/search', [PublicController::class, 'search']);
         Route::get('/collections', [PublicController::class, 'collections']);
         Route::get('/collections/{slug}', [PublicController::class, 'collectionDetail']);
@@ -156,6 +157,8 @@ Route::prefix('v1')->group(function () {
             // Specialized Catalog & Product Management
             Route::get('/products/export', [ProductController::class, 'export']);
             Route::post('/products/import', [ProductController::class, 'import']);
+            Route::post('/products/bulk', [ProductController::class, 'bulk']);
+            Route::post('/products/{id}/duplicate', [ProductController::class, 'duplicate']);
             Route::apiResource('products', ProductController::class);
 
             // Categories Management
@@ -202,6 +205,16 @@ Route::prefix('v1')->group(function () {
             // System Settings
             Route::get('/settings', [SettingsController::class, 'index']);
             Route::post('/settings', [SettingsController::class, 'update']);
+
+            // Email templates, mail setup and sent-mail log
+            Route::get('/email-templates', [EmailTemplateController::class, 'index']);
+            Route::put('/email-templates/{key}', [EmailTemplateController::class, 'update']);
+            Route::post('/email-templates/{key}/preview', [EmailTemplateController::class, 'preview']);
+            Route::post('/email-templates/{key}/test', [EmailTemplateController::class, 'test'])->middleware('throttle:10,1');
+            Route::post('/email-templates/{key}/reset', [EmailTemplateController::class, 'reset']);
+            Route::get('/email-settings', [EmailTemplateController::class, 'settings']);
+            Route::put('/email-settings', [EmailTemplateController::class, 'saveSettings']);
+            Route::get('/email-logs', [EmailTemplateController::class, 'logs']);
 
             // Site Customize (logo, header, footer, contact, SEO)
             Route::get('/appearance', [AppearanceController::class, 'show']);

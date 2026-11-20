@@ -111,7 +111,7 @@ class CheckoutService
                 'tax_amount' => $taxAmount,
                 'total' => $total,
                 'payment_method' => $data['payment_method'] ?? 'cod',
-                'payment_status' => ($data['payment_method'] ?? 'cod') === 'cod' ? 'pending' : 'paid',
+                'payment_status' => 'pending',   // only a verified gateway callback may mark an order paid
                 'payment_id' => $data['payment_id'] ?? null,
                 'order_status' => 'pending',
                 'shipping_method' => $shippingMethod ? $shippingMethod->name : 'Standard Delivery',

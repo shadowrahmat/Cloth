@@ -102,7 +102,8 @@ const route = useRoute();
 const authStore = useAuthStore();
 
 const orderNumber = ref(typeof route.query.order === 'string' ? route.query.order : '');
-const email = ref(authStore.customerUser?.email || '');
+// Links in order emails carry ?order=…&email=… so the status opens straight away.
+const email = ref(typeof route.query.email === 'string' ? route.query.email : authStore.customerUser?.email || '');
 const loading = ref(false);
 const error = ref('');
 const order = ref(null);

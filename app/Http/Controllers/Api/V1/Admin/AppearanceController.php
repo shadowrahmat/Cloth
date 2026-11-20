@@ -125,11 +125,26 @@ class AppearanceController extends Controller
             'pages.contact.faq.*.q' => 'required|string|max:200',
             'pages.contact.faq.*.a' => 'required|string|max:1000',
 
+            'size_charts' => 'nullable|array|max:12',
+            'size_charts.*.name' => 'required|string|max:80',
+            'size_charts.*.categories' => 'nullable|array|max:50',
+            'size_charts.*.categories.*' => 'string|max:120',
+            'size_charts.*.note' => 'nullable|string|max:400',
+            'size_charts.*.columns' => 'required|array|min:2|max:8',
+            'size_charts.*.columns.*' => 'required|string|max:30',
+            'size_charts.*.rows' => 'nullable|array|max:30',
+            'size_charts.*.rows.*' => 'array|max:8',
+            'size_charts.*.rows.*.*' => 'nullable|string|max:30',
+
             'seo' => 'required|array',
             'seo.title' => 'nullable|string|max:120',
             'seo.description' => 'nullable|string|max:300',
         ], $link('footer.columns.*.links')), [
             'contact.map_url.regex' => 'ম্যাপের লিংক Google Maps এর embed লিংক হতে হবে (https://www.google.com/maps/embed?...)।',
+            'size_charts.*.name.required' => 'প্রতিটি সাইজ চার্টের একটা নাম দিন।',
+            'size_charts.*.columns.min' => 'সাইজ চার্টে অন্তত ২টা কলাম লাগবে।',
+            'size_charts.*.columns.*.required' => 'সাইজ চার্টের কোনো কলামের নাম খালি রাখা যাবে না।',
+            'size_charts.*.rows.max' => 'একটা সাইজ চার্টে সর্বোচ্চ ৩০টা সারি রাখা যায়।',
         ]);
 
         $config = SiteConfig::save($this->relativizeOwnUrls($validated, $request));

@@ -49,12 +49,12 @@ class SiteCmsAndShopFilterTest extends TestCase
             }
         }
         \App\Models\HomepageSection::create([
-            'type' => 'category_showcase', 'title' => 'Showcase', 'is_active' => true, 'display_order' => 99,
+            'type' => 'category_showcase', 'title' => "Showcase {$tag}", 'is_active' => true, 'display_order' => 99,
             'content' => ['categories' => [$catB->slug, $catA->slug], 'products_per_category' => 2],
         ]);
 
         $section = collect($this->getJson('/api/v1/public/homepage')->assertOk()->json('data.sections'))
-            ->firstWhere('type', 'category_showcase');
+            ->firstWhere('title', "Showcase {$tag}");   // the database may already hold another showcase
 
         $this->assertSame([$catB->slug, $catA->slug], array_column($section['showcase'], 'slug'));  // admin order kept
         $this->assertCount(2, $section['showcase'][0]['products']);                               // per-category limit

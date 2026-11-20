@@ -138,3 +138,39 @@
     .skeleton { animation: none; }
     html { scroll-behavior: auto !important; }
 }
+
+/* ------------------------------------------------------------------
+   Shared admin form pieces (products, email templates, settings).
+   Pages can still add their own scoped styles on top.
+   ------------------------------------------------------------------ */
+@layer components {
+    .adm-card { background: #fff; border: 1px solid var(--color-admin-border); border-radius: 14px; box-shadow: 0 1px 2px rgba(16, 24, 20, 0.04); }
+    .adm-card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--color-admin-border); }
+    .adm-card-title { font-size: 14px; font-weight: 600; color: var(--color-admin-text); }
+    .adm-card-sub { font-size: 12px; color: var(--color-admin-muted); margin-top: 2px; }
+    .adm-card-body { padding: 20px; }
+    .adm-label { display: block; font-size: 12px; font-weight: 600; color: var(--color-admin-text); margin-bottom: 6px; }
+    .adm-help { font-size: 11.5px; color: var(--color-admin-muted); margin-top: 5px; line-height: 1.5; }
+    .adm-error { font-size: 11.5px; color: var(--color-admin-danger); margin-top: 5px; }
+    .adm-input {
+        width: 100%; padding: 9px 12px; font-size: 13px; color: var(--color-admin-text); background: #fff;
+        border: 1px solid #D5DCD8; border-radius: 9px; transition: border-color .15s, box-shadow .15s;
+    }
+    .adm-input:focus { outline: none; border-color: var(--color-admin-accent); box-shadow: 0 0 0 3px rgba(22, 163, 106, 0.15); }
+    .adm-input.is-invalid { border-color: var(--color-admin-danger); }
+    .adm-input:disabled { background: var(--color-admin-bg); color: var(--color-admin-muted); }
+    textarea.adm-input { line-height: 1.6; resize: vertical; }
+    .adm-btn {
+        display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 14px; font-size: 12.5px; font-weight: 600;
+        border-radius: 9px; border: 1px solid #D5DCD8; background: #fff; color: var(--color-admin-text); transition: background .15s, border-color .15s, color .15s; white-space: nowrap;
+    }
+    .adm-btn:hover:not(:disabled) { border-color: var(--color-admin-text); }
+    .adm-btn:disabled { opacity: .45; cursor: not-allowed; }
+    .adm-btn-primary { background: var(--color-admin-sidebar); border-color: var(--color-admin-sidebar); color: #fff; }
+    .adm-btn-primary:hover:not(:disabled) { background: var(--color-admin-accent); border-color: var(--color-admin-accent); }
+    .adm-btn-danger { color: var(--color-admin-danger); }
+    .adm-btn-danger:hover:not(:disabled) { background: #FEF2F2; border-color: #FCA5A5; }
+    .adm-btn-ghost { border-color: transparent; background: transparent; }
+    .adm-btn-ghost:hover:not(:disabled) { background: var(--color-admin-bg); border-color: transparent; }
+    .adm-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; line-height: 1.6; white-space: nowrap; }
+}

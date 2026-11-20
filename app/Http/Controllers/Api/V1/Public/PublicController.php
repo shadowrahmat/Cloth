@@ -351,6 +351,18 @@ class PublicController extends Controller
             ->take(4)
             ->get();
 
+        // Small categories: top up with the newest other products so "You may also like" is never empty.
+        if ($relatedProducts->count() < 4) {
+            $relatedProducts = $relatedProducts->concat(
+                Product::with(['category', 'variants'])
+                    ->where('status', 'published')
+                    ->whereNotIn('id', $relatedProducts->pluck('id')->push($product->id))
+                    ->latest()
+                    ->take(4 - $relatedProducts->count())
+                    ->get()
+            )->values();
+        }
+
         return response()->json([
             'success' => true,
             'data' => [
@@ -461,7 +473,7 @@ class PublicController extends Controller
             'author_email' => 'nullable|email|max:255',
             'rating' => 'required|integer|min:1|max:5',
             'title' => 'nullable|string|max:255',
-            'review' => 'required|string',
+            'review' => 'required|string|max:2000',
         ]);
 
         $product = Product::findOrFail($productId);
@@ -473,12 +485,12 @@ class PublicController extends Controller
             'rating' => (int) $request->rating,
             'title' => $request->title,
             'review' => $request->review,
-            'is_approved' => true, // default approved for seamless demo
+            'is_approved' => false, // published only after an admin approves it (Admin → রিভিউ)
         ]);
 
         return response()->json([
             'success' => true,
-            'message' => 'Thank you for your review!',
+            'message' => 'ধন্যবাদ! আপনার রিভিউ জমা হয়েছে, যাচাইয়ের পর প্রকাশ করা হবে।',
             'data' => $review,
         ], 201);
     }

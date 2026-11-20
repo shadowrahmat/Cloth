@@ -57,11 +57,11 @@ class ProductController extends Controller
             }
         }
 
-        $sortBy = $request->input('sort_by', 'created_at');
-        $sortDir = $request->input('sort_direction', 'desc');
-        $query->orderBy($sortBy, $sortDir);
+        $sortBy = in_array($request->input('sort_by'), self::SORTABLE, true) ? $request->input('sort_by') : 'created_at';
+        $sortDir = $request->input('sort_direction') === 'asc' ? 'asc' : 'desc';
+        $query->orderBy($sortBy, $sortDir)->orderByDesc('id');
 
-        $perPage = (int) $request->input('per_page', 12);
+        $perPage = max(1, min(100, (int) $request->input('per_page', 12)));
         $products = $query->paginate($perPage);
 
         return response()->json([
@@ -72,25 +72,45 @@ class ProductController extends Controller
                 'last_page' => $products->lastPage(),
                 'per_page' => $products->perPage(),
                 'total' => $products->total(),
+                'counts' => $this->counts(),
             ],
         ]);
     }
 
-    public function store(Request $request): JsonResponse
+    private const SORTABLE = ['created_at', 'updated_at', 'name', 'price', 'stock', 'sku', 'status'];
+
+    /** Numbers for the status/stock filter chips on the products page. */
+    private function counts(): array
     {
-        $validated = $request->validate([
+        return [
+            'all' => Product::count(),
+            'published' => Product::where('status', 'published')->count(),
+            'draft' => Product::where('status', 'draft')->count(),
+            'archived' => Product::where('status', 'archived')->count(),
+            'low_stock' => Product::whereBetween('stock', [1, 5])->count(),
+            'out_of_stock' => Product::where('stock', '<=', 0)->count(),
+        ];
+    }
+
+    private function rules(?int $id = null): array
+    {
+        $ignore = $id ? ',' . $id : '';
+
+        return [
             'name' => 'required|string|max:255',
-            'slug' => 'nullable|string|max:255|unique:products,slug',
-            'sku' => 'nullable|string|max:100|unique:products,sku',
-            'short_description' => 'nullable|string',
+            'slug' => 'nullable|string|max:255|alpha_dash:ascii|unique:products,slug' . $ignore,
+            'sku' => 'nullable|string|max:100|unique:products,sku' . $ignore,
+            'short_description' => 'nullable|string|max:500',
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
-            'sale_price' => 'nullable|numeric|min:0',
+            'sale_price' => 'nullable|numeric|min:0|lt:price',
             'compare_at_price' => 'nullable|numeric|min:0',
+            'cost_price' => 'nullable|numeric|min:0',
             'category_id' => 'nullable|exists:categories,id',
             'brand_id' => 'nullable|exists:brands,id',
             'featured_image' => 'nullable|string',
             'gallery' => 'nullable|array',
+            'gallery.*' => 'nullable|string',
             'stock' => 'nullable|integer|min:0',
             'low_stock_threshold' => 'nullable|integer',
             'track_inventory' => 'nullable|boolean',
@@ -103,12 +123,104 @@ class ProductController extends Controller
             'shipping_info' => 'nullable|string',
             'returns_info' => 'nullable|string',
             'seo_title' => 'nullable|string|max:255',
-            'seo_description' => 'nullable|string',
-            'variants' => 'nullable|array',
+            'seo_description' => 'nullable|string|max:500',
+            'variants' => 'nullable|array|max:200',
+            'variants.*.id' => 'nullable|integer',
+            'variants.*.size' => 'nullable|string|max:40',
+            'variants.*.color' => 'nullable|string|max:60',
+            'variants.*.color_code' => 'nullable|string|max:20',
+            'variants.*.sku' => 'nullable|string|max:100',
+            'variants.*.price' => 'nullable|numeric|min:0',
+            'variants.*.stock' => 'nullable|integer|min:0',
+            'variants.*.image' => 'nullable|string',
+            'variants.*.is_active' => 'nullable|boolean',
+        ];
+    }
+
+    private function messages(): array
+    {
+        return [
+            'name.required' => 'পণ্যের নাম দিন।',
+            'price.required' => 'দাম দিন।',
+            'sale_price.lt' => 'সেল প্রাইস আসল দামের চেয়ে কম হতে হবে।',
+            'slug.unique' => 'এই লিংক (slug) অন্য একটি পণ্যে ব্যবহার হচ্ছে।',
+            'slug.alpha_dash' => 'লিংকে শুধু ইংরেজি অক্ষর, সংখ্যা ও - ব্যবহার করুন।',
+            'sku.unique' => 'এই SKU অন্য একটি পণ্যে ব্যবহার হচ্ছে।',
+            'variants.*.stock.min' => 'স্টক ০ বা তার বেশি হতে হবে।',
+        ];
+    }
+
+    /**
+     * Save the size/colour rows of a product.
+     *
+     * Rows that come back with an id are updated in place, so carts, orders and
+     * stock history that point at a variant keep pointing at it. Rows that are
+     * no longer sent are removed; rows without an id are created.
+     */
+    private function syncVariants(Product $product, array $rows): int
+    {
+        $keepIds = collect($rows)->pluck('id')->filter()->map(fn ($id) => (int) $id)->all();
+        $product->variants()->whereNotIn('id', $keepIds ?: [0])->delete();
+
+        $existing = $product->variants()->get()->keyBy('id');
+        $usedSkus = [];
+        $sum = 0;
+
+        foreach ($rows as $v) {
+            $size = trim((string) ($v['size'] ?? '')) ?: null;
+            $color = trim((string) ($v['color'] ?? '')) ?: null;
+            $stock = max(0, (int) ($v['stock'] ?? 0));
+            $sum += $stock;
+
+            $sku = trim((string) ($v['sku'] ?? ''));
+            $variant = isset($v['id']) ? $existing->get((int) $v['id']) : null;
+            if ($sku === '' || in_array($sku, $usedSkus, true)
+                || ProductVariant::where('sku', $sku)->when($variant, fn ($q) => $q->where('id', '!=', $variant->id))->exists()) {
+                $sku = $variant && ! in_array($variant->sku, $usedSkus, true)
+                    ? $variant->sku
+                    : $product->sku . '-' . Str::upper(Str::slug(implode('-', array_filter([$size, $color])) ?: 'V')) . '-' . Str::upper(Str::random(3));
+            }
+            $usedSkus[] = $sku;
+
+            $price = isset($v['price']) && $v['price'] !== '' && $v['price'] !== null ? (float) $v['price'] : (float) $product->price;
+
+            $attrs = [
+                'sku' => $sku,
+                'title' => implode(' / ', array_filter([$size, $color])) ?: 'Standard',
+                'price' => $price,
+                'stock' => $stock,
+                'size' => $size,
+                'color' => $color,
+                'color_code' => $color ? ($v['color_code'] ?? null) : null,
+                'image' => $v['image'] ?? ($variant?->image ?: $product->featured_image),
+                'is_active' => $v['is_active'] ?? true,
+            ];
+
+            $variant ? $variant->update($attrs) : $product->variants()->create($attrs);
+        }
+
+        return $sum;
+    }
+
+    private function log(Request $request, string $action, ?int $modelId, string $description): void
+    {
+        ActivityLog::create([
+            'user_id' => $request->user()?->id,
+            'action' => $action,
+            'model_type' => Product::class,
+            'model_id' => $modelId,
+            'description' => $description,
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
         ]);
+    }
+
+    public function store(Request $request): JsonResponse
+    {
+        $validated = $request->validate($this->rules(), $this->messages());
 
         if (empty($validated['slug'])) {
-            $validated['slug'] = Str::slug($validated['name']);
+            $validated['slug'] = $this->uniqueSlug($validated['name']);
         }
         if (empty($validated['sku'])) {
             $validated['sku'] = 'SKU-' . strtoupper(Str::random(8));
@@ -121,35 +233,12 @@ class ProductController extends Controller
 
             $product = Product::create($validated);
 
-            // Handle variants
-            $totalStock = $product->stock;
-            if (!empty($variantsData)) {
-                $variantStockSum = 0;
-                foreach ($variantsData as $v) {
-                    $vSku = !empty($v['sku']) ? $v['sku'] : $product->sku . '-' . strtoupper(Str::random(4));
-                    $vStock = isset($v['stock']) ? (int) $v['stock'] : 10;
-                    $variantStockSum += $vStock;
-
-                    $product->variants()->create([
-                        'sku' => $vSku,
-                        'title' => $v['title'] ?? 'Standard',
-                        'price' => $v['price'] ?? $product->price,
-                        'compare_at_price' => $v['compare_at_price'] ?? $product->compare_at_price,
-                        'stock' => $vStock,
-                        'color' => $v['color'] ?? null,
-                        'color_code' => $v['color_code'] ?? null,
-                        'size' => $v['size'] ?? null,
-                        'image' => $v['image'] ?? $product->featured_image,
-                        'is_active' => $v['is_active'] ?? true,
-                    ]);
-                }
-                if ($variantStockSum > 0) {
-                    $product->update(['stock' => $variantStockSum]);
-                    $totalStock = $variantStockSum;
-                }
+            $totalStock = (int) $product->stock;
+            if (! empty($variantsData)) {
+                $totalStock = $this->syncVariants($product, $variantsData);
+                $product->update(['stock' => $totalStock]);
             }
 
-            // Inventory Movement log
             InventoryMovement::create([
                 'product_id' => $product->id,
                 'type' => 'initial',
@@ -160,28 +249,22 @@ class ProductController extends Controller
                 'created_by' => $request->user()?->id,
             ]);
 
-            ActivityLog::create([
-                'user_id' => $request->user()?->id,
-                'action' => 'create_product',
-                'model_type' => Product::class,
-                'model_id' => $product->id,
-                'description' => "Created product '{$product->name}' (SKU: {$product->sku})",
-                'ip_address' => $request->ip(),
-                'user_agent' => $request->userAgent(),
-            ]);
+            $this->log($request, 'create_product', $product->id, "Created product '{$product->name}' (SKU: {$product->sku})");
 
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Product created successfully',
+                'message' => 'পণ্য যোগ হয়েছে',
                 'data' => $product->load(['category', 'brand', 'variants']),
             ], 201);
         } catch (Exception $e) {
             DB::rollBack();
+            report($e);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to create product: ' . $e->getMessage(),
+                'message' => 'পণ্য সেভ করা যায়নি: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -203,34 +286,13 @@ class ProductController extends Controller
             return response()->json(['success' => false, 'message' => 'Product not found'], 404);
         }
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'slug' => 'nullable|string|max:255|unique:products,slug,' . $id,
-            'sku' => 'nullable|string|max:100|unique:products,sku,' . $id,
-            'short_description' => 'nullable|string',
-            'description' => 'nullable|string',
-            'price' => 'required|numeric|min:0',
-            'sale_price' => 'nullable|numeric|min:0',
-            'compare_at_price' => 'nullable|numeric|min:0',
-            'category_id' => 'nullable|exists:categories,id',
-            'brand_id' => 'nullable|exists:brands,id',
-            'featured_image' => 'nullable|string',
-            'gallery' => 'nullable|array',
-            'stock' => 'nullable|integer|min:0',
-            'low_stock_threshold' => 'nullable|integer',
-            'track_inventory' => 'nullable|boolean',
-            'is_featured' => 'nullable|boolean',
-            'is_bestseller' => 'nullable|boolean',
-            'is_new' => 'nullable|boolean',
-            'status' => 'nullable|in:published,draft,archived',
-            'attributes' => 'nullable|array',
-            'fabric_care' => 'nullable|string',
-            'shipping_info' => 'nullable|string',
-            'returns_info' => 'nullable|string',
-            'seo_title' => 'nullable|string|max:255',
-            'seo_description' => 'nullable|string',
-            'variants' => 'nullable|array',
-        ]);
+        $validated = $request->validate($this->rules((int) $product->id), $this->messages());
+        if (array_key_exists('slug', $validated) && empty($validated['slug'])) {
+            unset($validated['slug']);
+        }
+        if (array_key_exists('sku', $validated) && empty($validated['sku'])) {
+            unset($validated['sku']);
+        }
 
         DB::beginTransaction();
         try {
@@ -240,56 +302,97 @@ class ProductController extends Controller
             $product->update($validated);
 
             if ($variantsData !== null) {
-                // Delete removed or recreate
-                $product->variants()->delete();
-                $variantStockSum = 0;
-                foreach ($variantsData as $v) {
-                    $vSku = !empty($v['sku']) ? $v['sku'] : $product->sku . '-' . strtoupper(Str::random(4));
-                    $vStock = isset($v['stock']) ? (int) $v['stock'] : 10;
-                    $variantStockSum += $vStock;
-
-                    $product->variants()->create([
-                        'sku' => $vSku,
-                        'title' => $v['title'] ?? 'Standard',
-                        'price' => $v['price'] ?? $product->price,
-                        'compare_at_price' => $v['compare_at_price'] ?? $product->compare_at_price,
-                        'stock' => $vStock,
-                        'color' => $v['color'] ?? null,
-                        'color_code' => $v['color_code'] ?? null,
-                        'size' => $v['size'] ?? null,
-                        'image' => $v['image'] ?? $product->featured_image,
-                        'is_active' => $v['is_active'] ?? true,
-                    ]);
-                }
-                if ($variantStockSum > 0) {
-                    $product->update(['stock' => $variantStockSum]);
+                $sum = $this->syncVariants($product, $variantsData);
+                if (! empty($variantsData)) {
+                    $product->update(['stock' => $sum]);
                 }
             }
 
-            ActivityLog::create([
-                'user_id' => $request->user()?->id,
-                'action' => 'update_product',
-                'model_type' => Product::class,
-                'model_id' => $product->id,
-                'description' => "Updated product '{$product->name}'",
-                'ip_address' => $request->ip(),
-                'user_agent' => $request->userAgent(),
-            ]);
+            $this->log($request, 'update_product', $product->id, "Updated product '{$product->name}'");
 
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Product updated successfully',
-                'data' => $product->load(['category', 'brand', 'variants']),
+                'message' => 'পণ্য আপডেট হয়েছে',
+                'data' => $product->fresh(['category', 'brand', 'variants']),
             ]);
         } catch (Exception $e) {
             DB::rollBack();
+            report($e);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update product: ' . $e->getMessage(),
+                'message' => 'পণ্য সেভ করা যায়নি: ' . $e->getMessage(),
             ], 500);
         }
+    }
+
+    /** Copy a product (with its sizes/colours) as a draft, so a similar item takes seconds to add. */
+    public function duplicate(Request $request, string|int $id): JsonResponse
+    {
+        $source = Product::with('variants')->findOrFail($id);
+
+        $copy = DB::transaction(function () use ($source) {
+            $copy = $source->replicate(['slug', 'sku']);
+            $copy->name = $source->name . ' (কপি)';
+            $copy->slug = $this->uniqueSlug($source->slug . '-copy');
+            $copy->sku = $source->sku . '-C' . strtoupper(Str::random(3));
+            $copy->status = 'draft';
+            $copy->save();
+
+            foreach ($source->variants as $v) {
+                $nv = $v->replicate(['sku']);
+                $nv->product_id = $copy->id;
+                $nv->sku = $copy->sku . '-' . strtoupper(Str::random(4));
+                $nv->save();
+            }
+
+            return $copy;
+        });
+
+        $this->log($request, 'create_product', $copy->id, "Duplicated product '{$source->name}' as draft");
+
+        return response()->json([
+            'success' => true,
+            'message' => 'কপি তৈরি হয়েছে (ড্রাফট হিসেবে)',
+            'data' => $copy->load(['category', 'brand', 'variants']),
+        ], 201);
+    }
+
+    /** Publish / unpublish / archive / delete several products at once. */
+    public function bulk(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'ids' => 'required|array|min:1|max:200',
+            'ids.*' => 'integer',
+            'action' => 'required|in:published,draft,archived,delete',
+        ]);
+
+        $query = Product::whereIn('id', $data['ids']);
+        $count = $data['action'] === 'delete' ? $query->get()->each->delete()->count() : $query->update(['status' => $data['action']]);
+
+        $this->log($request, 'bulk_products', null, "Bulk '{$data['action']}' on {$count} products");
+
+        $labels = ['published' => 'প্রকাশ করা হয়েছে', 'draft' => 'ড্রাফট করা হয়েছে', 'archived' => 'আর্কাইভ করা হয়েছে', 'delete' => 'মুছে ফেলা হয়েছে'];
+
+        return response()->json([
+            'success' => true,
+            'message' => "{$count}টি পণ্য {$labels[$data['action']]}",
+            'data' => ['count' => $count],
+        ]);
+    }
+
+    private function uniqueSlug(string $base): string
+    {
+        $base = Str::slug($base) ?: 'product';
+        $slug = $base;
+        $i = 2;
+        while (Product::withTrashed()->where('slug', $slug)->exists()) {
+            $slug = $base . '-' . $i++;
+        }
+
+        return $slug;
     }
 
     public function destroy(Request $request, string|int $id): JsonResponse

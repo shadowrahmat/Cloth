@@ -223,43 +223,6 @@
                   <p class="text-[11px] text-[#A89B8A]">হোম ডেলিভারিতে পোশাক হাতে পেয়ে নগদ বা মোবাইল ব্যাংকিংয়ে টাকা দিন।</p>
                 </div>
               </label>
-
-              <label
-                :class="[
-                  'flex items-center gap-3 p-4 border cursor-pointer transition-all',
-                  form.payment_method === 'stripe' ? 'border-[#111111] bg-[#F7F5F0]' : 'border-[#D8CCBC]/50 bg-white'
-                ]"
-              >
-                <input
-                  type="radio"
-                  name="payment_method"
-                  value="stripe"
-                  v-model="form.payment_method"
-                  class="text-[#111111] focus:ring-black"
-                />
-                <div>
-                  <h5 class="text-xs font-semibold text-[#111111]">অনলাইন পেমেন্ট / কার্ড (ভিসা, মাস্টারকার্ড, বিকাশ)</h5>
-                  <p class="text-[11px] text-[#A89B8A]">নিরাপদ ডিজিটাল গেটওয়ের মাধ্যমে সরাসরি পেমেন্ট করুন।</p>
-                </div>
-              </label>
-
-              <!-- Simulated Card Fields if Card selected -->
-              <div v-if="form.payment_method === 'stripe'" class="p-4 bg-white border border-[#D8CCBC] space-y-3 text-xs mt-2">
-                <div>
-                  <label class="block font-semibold mb-1">কার্ড নম্বর</label>
-                  <input type="text" placeholder="•••• •••• •••• 4242" class="w-full px-3 py-2 border border-[#D8CCBC]" />
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                  <div>
-                    <label class="block font-semibold mb-1">মেয়াদ (MM/YY)</label>
-                    <input type="text" placeholder="12/28" class="w-full px-3 py-2 border border-[#D8CCBC]" />
-                  </div>
-                  <div>
-                    <label class="block font-semibold mb-1">CVV সিকিউরিটি কোড</label>
-                    <input type="text" placeholder="•••" class="w-full px-3 py-2 border border-[#D8CCBC]" />
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
 

@@ -128,6 +128,12 @@ class OrderController extends Controller
 
             DB::commit();
 
+            // Tell the customer (confirmed / shipped / delivered / cancelled) unless the admin unticked it.
+            $template = \App\Support\EmailTemplateDefaults::STATUS_TEMPLATES[$newOrderStatus] ?? null;
+            if ($template && $newOrderStatus !== $oldOrderStatus && $request->boolean('notify_customer', true)) {
+                \App\Services\StoreMailer::afterResponse($template, $order->id);
+            }
+
             return response()->json([
                 'success' => true,
                 'message' => 'Order status updated successfully',

@@ -81,7 +81,9 @@ class CartService
 
         if ($variantId) {
             $variant = ProductVariant::where('product_id', $productId)->findOrFail($variantId);
-            if ($variant->price && $variant->price > 0) {
+            // A variant price only wins when it is a genuinely different price for that variant.
+            // Variants that just repeat the product's regular price must not cancel its sale price.
+            if ($variant->price && $variant->price > 0 && abs((float) $variant->price - (float) $product->price) > 0.009) {
                 $price = (float) $variant->price;
             }
             if (!$color && $variant->color) {

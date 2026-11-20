@@ -41,7 +41,7 @@ class CheckoutController extends Controller
             'postal_code' => 'required|string|max:30',
             'country' => 'nullable|string|max:100',
             'shipping_method' => 'nullable|string',
-            'payment_method' => 'required|in:cod,stripe,card',
+            'payment_method' => 'required|in:cod',   // online payment isn't connected yet; add it here once a real gateway verifies payments
             'coupon_code' => 'nullable|string',
             'order_notes' => 'nullable|string',
         ]);
@@ -51,6 +51,10 @@ class CheckoutController extends Controller
 
         try {
             $order = $this->checkoutService->processCheckout($cart, $request->all(), $userId);
+
+            // Confirmation to the buyer and a heads-up to the shop, sent after the response.
+            \App\Services\StoreMailer::afterResponse('order_placed', $order->id);
+            \App\Services\StoreMailer::afterResponse('admin_new_order', $order->id);
 
             return response()->json([
                 'success' => true,

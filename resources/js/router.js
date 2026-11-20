@@ -43,6 +43,8 @@ const CouponsPage = () => import('./pages/admin/CouponsPage.vue');
 const MessagesPage = () => import('./pages/admin/MessagesPage.vue');
 const ReturnsPage = () => import('./pages/admin/ReturnsPage.vue');
 const LogisticsPage = () => import('./pages/admin/LogisticsPage.vue');
+const DeliveryChargesPage = () => import('./pages/admin/DeliveryChargesPage.vue');
+const EmailTemplatesPage = () => import('./pages/admin/EmailTemplatesPage.vue');
 const ReviewsPage = () => import('./pages/admin/ReviewsPage.vue');
 const CategoriesPage = () => import('./pages/admin/CategoriesPage.vue');
 const ContentCMSPage = () => import('./pages/admin/ContentCMSPage.vue');
@@ -211,6 +213,18 @@ const routes = [
         name: 'admin.logistics',
         component: LogisticsPage,
         meta: { title: 'Logistics & Steadfast Courier' }
+      },
+      {
+        path: 'delivery-charges',
+        name: 'admin.delivery-charges',
+        component: DeliveryChargesPage,
+        meta: { title: 'ডেলিভারি চার্জ' }
+      },
+      {
+        path: 'email-templates',
+        name: 'admin.email-templates',
+        component: EmailTemplatesPage,
+        meta: { title: 'ইমেইল টেমপ্লেট' }
       },
       {
         path: 'customers',

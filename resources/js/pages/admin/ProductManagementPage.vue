@@ -1,375 +1,207 @@
 <template>
-  <div class="space-y-6">
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+  <div class="space-y-5">
+    <!-- ============================================================ header -->
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
       <div>
-        <span class="text-xs uppercase tracking-[0.25em] text-[#A89B8A] font-medium block">Catalog Management</span>
-        <h1 class="font-serif text-3xl text-[#111111]">Garments & Silhouettes</h1>
+        <h2 class="text-xl font-bold tracking-tight text-admin-text">পণ্য</h2>
+        <p class="text-xs text-admin-muted mt-0.5">সব পণ্য, দাম, সাইজ-রং আর স্টক এক জায়গায়। নাম বা ছবিতে ক্লিক করলে এডিট খুলবে।</p>
       </div>
-
-      <div class="flex flex-wrap items-center gap-2.5">
-        <button
-          type="button"
-          :disabled="exporting"
-          @click="exportCsv"
-          class="px-4 py-2 border border-[#D8CCBC] hover:border-[#111111] bg-white text-[#111111] text-xs uppercase tracking-wider font-semibold transition-colors shadow-2xs inline-flex items-center gap-1.5"
-        >
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-          </svg>
-          <span>{{ exporting ? 'Exporting...' : 'Export CSV' }}</span>
+      <div class="flex flex-wrap items-center gap-2">
+        <button type="button" class="adm-btn" :disabled="exporting" @click="exportCsv">
+          <Download :size="15" /> {{ exporting ? 'এক্সপোর্ট হচ্ছে…' : 'CSV এক্সপোর্ট' }}
         </button>
-
-        <button
-          type="button"
-          @click="importModalOpen = true"
-          class="px-4 py-2 border border-[#D8CCBC] hover:border-[#111111] bg-white text-[#111111] text-xs uppercase tracking-wider font-semibold transition-colors shadow-2xs inline-flex items-center gap-1.5"
-        >
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-          </svg>
-          <span>Import Products</span>
+        <button type="button" class="adm-btn" @click="importModalOpen = true">
+          <Upload :size="15" /> ইমপোর্ট
         </button>
-
-        <button
-          type="button"
-          @click="openCreateModal"
-          class="px-5 py-2 bg-[#111111] hover:bg-black text-white text-xs uppercase tracking-wider font-semibold transition-colors shadow-xs inline-flex items-center gap-2"
-        >
-          <span>+ Add New Product</span>
+        <button type="button" class="adm-btn adm-btn-primary" @click="openCreate">
+          <Plus :size="16" /> নতুন পণ্য
         </button>
       </div>
     </div>
 
-    <!-- Data Table -->
-    <DataTable
-      :columns="columns"
-      :items="products"
-      :loading="loading"
-      :meta="meta"
-      v-model:search="searchQuery"
-      search-placeholder="Search by product name, SKU, or slug..."
-      :sort-by="sortBy"
-      :sort-direction="sortDirection"
-      @sort="handleSort"
-      @page="fetchProducts"
-      @edit="openEditModal"
-      @delete="confirmDelete"
-    >
-      <template #filters>
-        <div class="flex items-center gap-2">
-          <select
-            v-model="selectedCategoryFilter"
-            @change="fetchProducts(1)"
-            class="px-3 py-2 bg-[#F7F5F0] border border-[#D8CCBC]/60 text-xs text-[#111111] focus:outline-none focus:border-[#111111] rounded-xs"
-          >
-            <option value="">সকল ক্যাটাগরি (All Categories)</option>
-            <option v-for="cat in categories" :key="cat.id" :value="cat.id">
-              {{ cat.name }} ({{ cat.products_count ?? 0 }})
-            </option>
-          </select>
-          <button
-            v-if="selectedCategoryFilter"
-            type="button"
-            @click="selectedCategoryFilter = ''; fetchProducts(1)"
-            class="p-2 text-xs text-rose-600 hover:bg-rose-50 rounded"
-            title="ক্যাটাগরি ফিল্টার ক্লিয়ার করুন"
-          >
-            ✕
-          </button>
-        </div>
-      </template>
+    <!-- ============================================================ filter chips -->
+    <div class="flex flex-wrap items-center gap-2">
+      <button
+        v-for="f in statusFilters"
+        :key="f.key"
+        type="button"
+        @click="setQuickFilter(f)"
+        :class="['pm-chip', isQuickActive(f) && 'is-active', f.tone && `tone-${f.tone}`]"
+      >
+        {{ f.label }}
+        <span class="pm-chip-count">{{ bnNumber(counts[f.countKey] ?? 0) }}</span>
+      </button>
+    </div>
 
-      <template #col-category="{ item }">
-        <button
-          v-if="item.category"
-          type="button"
-          @click="selectedCategoryFilter = item.category_id; fetchProducts(1)"
-          class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 transition-colors"
-          :title="'Filter by ' + item.category.name"
-        >
-          <span>📁</span>
-          <span>{{ item.category.name }}</span>
+    <div class="adm-card overflow-hidden">
+      <!-- ============================================================ toolbar -->
+      <div class="flex flex-col lg:flex-row lg:items-center gap-3 p-4 border-b border-admin-border">
+        <div class="relative flex-1 min-w-0">
+          <Search :size="16" class="absolute left-3 top-1/2 -translate-y-1/2 text-admin-muted pointer-events-none" />
+          <input v-model="searchQuery" type="search" class="adm-input pl-9" placeholder="নাম, SKU বা লিংক দিয়ে খুঁজুন…" />
+        </div>
+        <select v-model="categoryFilter" class="adm-input lg:w-56" aria-label="ক্যাটাগরি">
+          <option value="">সব ক্যাটাগরি</option>
+          <option v-for="c in categoryOptions" :key="c.id" :value="c.id">{{ c.label }}</option>
+        </select>
+        <select v-model="sortKey" class="adm-input lg:w-48" aria-label="সাজানো">
+          <option v-for="s in sortOptions" :key="s.key" :value="s.key">{{ s.label }}</option>
+        </select>
+        <button v-if="hasFilters" type="button" class="adm-btn adm-btn-ghost text-admin-muted" @click="clearFilters">
+          <X :size="14" /> ফিল্টার মুছুন
         </button>
-        <span v-else class="text-slate-400 italic text-[11px]">No category</span>
-      </template>
+      </div>
 
-      <template #col-price="{ item }">
-        <span class="font-medium">${{ Number(item.sale_price || item.price).toFixed(2) }}</span>
-        <span v-if="item.sale_price" class="text-[10px] text-[#A89B8A] line-through ml-1.5">
-          ${{ Number(item.price).toFixed(2) }}
-        </span>
-      </template>
+      <!-- ============================================================ bulk bar -->
+      <div v-if="selected.length" class="flex flex-wrap items-center gap-2 px-4 py-2.5 bg-[#EEF6F1] border-b border-admin-border text-xs">
+        <span class="font-semibold text-admin-sidebar mr-2">{{ bnNumber(selected.length) }}টি বাছাই করা</span>
+        <button type="button" class="adm-btn" @click="bulk('published')"><Eye :size="14" /> প্রকাশ করুন</button>
+        <button type="button" class="adm-btn" @click="bulk('draft')"><EyeOff :size="14" /> ড্রাফট করুন</button>
+        <button type="button" class="adm-btn" @click="bulk('archived')"><Archive :size="14" /> আর্কাইভ</button>
+        <button type="button" class="adm-btn adm-btn-danger" @click="bulk('delete')"><Trash2 :size="14" /> মুছুন</button>
+        <button type="button" class="adm-btn adm-btn-ghost ml-auto" @click="selected = []">বাছাই বাতিল</button>
+      </div>
 
-      <template #col-stock="{ item }">
-        <span :class="[
-          'px-2 py-0.5 text-[10px] font-semibold tracking-wider uppercase',
-          item.stock <= 5 ? 'bg-rose-100 text-rose-800' : 'bg-emerald-100 text-emerald-800'
-        ]">
-          {{ item.stock }} in stock
-        </span>
-      </template>
-    </DataTable>
-
-    <!-- Create / Edit Product Modal -->
-    <BaseModal
-      :is-open="formModalOpen"
-      :title="isEdit ? 'Edit Product' : 'Add New Product'"
-      max-width="4xl"
-      @close="formModalOpen = false"
-    >
-      <form @submit.prevent="saveProduct" class="space-y-6 text-xs">
-        <div class="grid grid-cols-12 gap-4">
-          <!-- Name & SKU -->
-          <div class="col-span-12 sm:col-span-8">
-            <label class="block font-semibold uppercase tracking-wider mb-1">Product Title *</label>
-            <input type="text" v-model="form.name" required class="w-full px-3 py-2 border border-[#D8CCBC]" />
-          </div>
-          <div class="col-span-12 sm:col-span-4">
-            <label class="block font-semibold uppercase tracking-wider mb-1">SKU Code</label>
-            <input type="text" v-model="form.sku" placeholder="Auto-generated if empty" class="w-full px-3 py-2 border border-[#D8CCBC]" />
-          </div>
-
-          <!-- Category & Brand -->
-          <div class="col-span-12 sm:col-span-6">
-            <label class="block font-semibold uppercase tracking-wider mb-1">Category / Department *</label>
-            <select v-model="form.category_id" required class="w-full px-3 py-2 border border-[#D8CCBC]">
-              <option :value="null">-- Select Category --</option>
-              <option v-for="cat in categories" :key="cat.id" :value="cat.id">
-                {{ cat.name }} {{ cat.parent ? `(${cat.parent.name})` : '' }}
-              </option>
-            </select>
-          </div>
-          <div class="col-span-12 sm:col-span-6">
-            <label class="block font-semibold uppercase tracking-wider mb-1">Brand House</label>
-            <select v-model="form.brand_id" class="w-full px-3 py-2 border border-[#D8CCBC]">
-              <option :value="null">-- Select Brand --</option>
-              <option v-for="b in brands" :key="b.id" :value="b.id">{{ b.name }}</option>
-            </select>
-          </div>
-
-          <!-- Pricing -->
-          <div class="col-span-12 sm:col-span-4">
-            <label class="block font-semibold uppercase tracking-wider mb-1">Regular Price ($) *</label>
-            <input type="number" step="0.01" v-model.number="form.price" required class="w-full px-3 py-2 border border-[#D8CCBC]" />
-          </div>
-          <div class="col-span-12 sm:col-span-4">
-            <label class="block font-semibold uppercase tracking-wider mb-1">Sale Price ($)</label>
-            <input type="number" step="0.01" v-model.number="form.sale_price" class="w-full px-3 py-2 border border-[#D8CCBC]" />
-          </div>
-          <div class="col-span-12 sm:col-span-4">
-            <label class="block font-semibold uppercase tracking-wider mb-1">Total Stock *</label>
-            <input type="number" v-model.number="form.stock" required class="w-full px-3 py-2 border border-[#D8CCBC]" />
-          </div>
-
-          <!-- Featured Image -->
-          <div class="col-span-12">
-            <label class="block font-semibold uppercase tracking-wider mb-1">Primary Featured Image URL</label>
-            <MediaPicker v-model="form.featured_image" />
-          </div>
-
-          <!-- Product Gallery Images -->
-          <div class="col-span-12">
-            <div class="flex items-center justify-between mb-2">
-              <label class="block font-semibold uppercase tracking-wider">Additional Product Photos / Gallery</label>
-              <button
-                type="button"
-                @click="addGalleryImage"
-                class="px-2.5 py-1 bg-[#F7F5F0] hover:bg-[#EAE5DC] text-[11px] uppercase tracking-wider font-semibold text-[#111111] border border-[#D8CCBC] transition"
-              >
-                + Add Another Photo
-              </button>
-            </div>
-            <div v-if="form.gallery && form.gallery.length" class="space-y-3">
-              <div v-for="(img, idx) in form.gallery" :key="idx" class="flex items-center gap-2 p-2 bg-[#F7F5F0]/60 border border-[#D8CCBC]/50">
-                <div class="flex-1">
-                  <MediaPicker v-model="form.gallery[idx]" />
+      <!-- ============================================================ table -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-[13px] min-w-[860px]">
+          <thead class="bg-admin-bg text-[11.5px] text-admin-muted font-semibold">
+            <tr>
+              <th class="w-10 pl-4 py-3">
+                <input type="checkbox" class="w-4 h-4 accent-[#14382A]" :checked="allOnPageSelected" :indeterminate.prop="someOnPageSelected" @change="toggleAll" aria-label="সব বাছাই" />
+              </th>
+              <th class="py-3 px-3">পণ্য</th>
+              <th class="py-3 px-3">ক্যাটাগরি</th>
+              <th class="py-3 px-3">দাম</th>
+              <th class="py-3 px-3">স্টক</th>
+              <th class="py-3 px-3">অবস্থা</th>
+              <th class="py-3 px-3 text-right pr-4">কাজ</th>
+            </tr>
+          </thead>
+          <tbody v-if="loading">
+            <tr v-for="n in 6" :key="n" class="border-t border-admin-border">
+              <td colspan="7" class="px-4 py-3"><div class="h-12 rounded-lg bg-admin-bg animate-pulse"></div></td>
+            </tr>
+          </tbody>
+          <tbody v-else-if="products.length">
+            <tr
+              v-for="p in products"
+              :key="p.id"
+              :class="['border-t border-admin-border transition-colors', selected.includes(p.id) ? 'bg-[#F3FAF6]' : 'hover:bg-admin-bg/60']"
+            >
+              <td class="pl-4 py-3 align-middle">
+                <input type="checkbox" class="w-4 h-4 accent-[#14382A]" :value="p.id" v-model="selected" :aria-label="p.name + ' বাছাই'" />
+              </td>
+              <td class="py-3 px-3">
+                <button type="button" class="flex items-center gap-3 text-left group" @click="openEdit(p)">
+                  <span class="w-11 h-14 rounded-md bg-admin-bg overflow-hidden shrink-0 border border-admin-border">
+                    <img v-if="p.featured_image" :src="p.featured_image" alt="" class="w-full h-full object-cover" loading="lazy" />
+                  </span>
+                  <span class="min-w-0">
+                    <span class="block font-semibold text-admin-text group-hover:text-admin-accent truncate max-w-[280px]">{{ p.name }}</span>
+                    <span class="block text-[11.5px] text-admin-muted font-mono mt-0.5">{{ p.sku }}<template v-if="p.variants?.length"> · <span class="font-sans">{{ bnNumber(p.variants.length) }}টি সাইজ/রং</span></template></span>
+                    <span v-if="p.is_new || p.is_bestseller || p.is_featured" class="flex gap-1 mt-1">
+                      <span v-if="p.is_new" class="adm-chip bg-sky-50 text-sky-700">নতুন</span>
+                      <span v-if="p.is_bestseller" class="adm-chip bg-amber-50 text-amber-700">বেস্টসেলার</span>
+                      <span v-if="p.is_featured" class="adm-chip bg-violet-50 text-violet-700">হোমপেজে</span>
+                    </span>
+                  </span>
+                </button>
+              </td>
+              <td class="py-3 px-3">
+                <button v-if="p.category" type="button" class="text-admin-text hover:text-admin-accent hover:underline" @click="categoryFilter = p.category_id" :title="p.category.name + ' দিয়ে ফিল্টার'">
+                  {{ p.category.name }}
+                </button>
+                <span v-else class="text-admin-muted">—</span>
+              </td>
+              <td class="py-3 px-3 whitespace-nowrap">
+                <template v-if="isOnSale(p)">
+                  <span class="font-semibold text-admin-text">{{ money(p.sale_price) }}</span>
+                  <span class="block text-[11.5px] text-admin-muted"><s>{{ money(p.price) }}</s> · <span class="text-rose-600 font-semibold">{{ bnNumber(discountPct(p.price, p.sale_price)) }}% ছাড়</span></span>
+                </template>
+                <span v-else class="font-semibold text-admin-text">{{ money(p.price) }}</span>
+              </td>
+              <td class="py-3 px-3 whitespace-nowrap">
+                <span :class="['adm-chip', stockTone(p.stock)]">
+                  <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
+                  {{ p.stock <= 0 ? 'স্টক শেষ' : bnNumber(p.stock) + 'টি' }}
+                </span>
+              </td>
+              <td class="py-3 px-3">
+                <span :class="['adm-chip', statusMeta[p.status]?.chip || 'bg-slate-100 text-slate-600']">{{ statusMeta[p.status]?.label || p.status }}</span>
+              </td>
+              <td class="py-3 px-3 pr-4">
+                <div class="flex items-center justify-end gap-0.5">
+                  <button type="button" class="pm-icon" title="এডিট" @click="openEdit(p)"><Pencil :size="16" /></button>
+                  <button type="button" class="pm-icon" title="কপি করে নতুন পণ্য" @click="duplicate(p)"><Copy :size="16" /></button>
+                  <a :href="`/product/${p.slug}`" target="_blank" rel="noopener" class="pm-icon" title="সাইটে দেখুন"><ExternalLink :size="16" /></a>
+                  <button type="button" class="pm-icon hover:!text-rose-600 hover:!bg-rose-50" title="মুছুন" @click="remove(p)"><Trash2 :size="16" /></button>
                 </div>
-                <button
-                  type="button"
-                  @click="removeGalleryImage(idx)"
-                  class="px-2 py-1 text-rose-600 hover:text-rose-800 text-xs font-bold shrink-0 hover:bg-rose-50"
-                  title="Remove image"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-            <p v-else class="text-[11px] text-[#A89B8A] italic">
-              No extra gallery photos added. Click "+ Add Another Photo" to add more views or color angles.
-            </p>
-          </div>
+              </td>
+            </tr>
+          </tbody>
+          <tbody v-else>
+            <tr>
+              <td colspan="7" class="px-4 py-16 text-center">
+                <PackageSearch :size="36" class="mx-auto text-admin-muted/60" :stroke-width="1.5" />
+                <p class="mt-3 text-sm font-semibold text-admin-text">{{ hasFilters ? 'এই ফিল্টারে কোনো পণ্য নেই' : 'এখনো কোনো পণ্য নেই' }}</p>
+                <p class="text-xs text-admin-muted mt-1">
+                  <button v-if="hasFilters" type="button" class="text-admin-accent font-semibold hover:underline" @click="clearFilters">ফিল্টার মুছুন</button>
+                  <button v-else type="button" class="text-admin-accent font-semibold hover:underline" @click="openCreate">প্রথম পণ্য যোগ করুন</button>
+                </p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
-          <!-- Short Description -->
-          <div class="col-span-12">
-            <label class="block font-semibold uppercase tracking-wider mb-1">Short Editorial Summary</label>
-            <input type="text" v-model="form.short_description" class="w-full px-3 py-2 border border-[#D8CCBC]" />
-          </div>
-
-          <!-- Full Description -->
-          <div class="col-span-12">
-            <label class="block font-semibold uppercase tracking-wider mb-1">Full Description & Craftsmanship</label>
-            <textarea rows="4" v-model="form.description" class="w-full px-3 py-2 border border-[#D8CCBC]"></textarea>
-          </div>
-
-          <!-- Fashion Variant Matrix (Sizes & Colors) -->
-          <div class="col-span-12 border-t border-[#D8CCBC]/40 pt-4 space-y-3">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div>
-                <label class="block font-semibold uppercase tracking-wider text-xs">Product Variants Matrix</label>
-                <p class="text-[11px] text-[#A89B8A]">Configure individual sizes, colorways, SKUs, and inventory allocations</p>
-              </div>
-              <div class="flex items-center gap-2">
-                <button
-                  type="button"
-                  @click="generateStandardSizes"
-                  class="px-2.5 py-1 bg-[#F7F8FA] border border-[#D8CCBC] hover:border-[#111111] text-[10px] font-semibold uppercase tracking-wider text-[#14382A]"
-                >
-                  + Standard Sizes (XS-XL)
-                </button>
-                <button
-                  type="button"
-                  @click="addVariantRow"
-                  class="px-2.5 py-1 bg-[#14382A] text-white text-[10px] font-semibold uppercase tracking-wider hover:bg-[#16A36A]"
-                >
-                  + Add Single Variant
-                </button>
-              </div>
-            </div>
-
-            <!-- Variant Rows Table -->
-            <div v-if="form.variants && form.variants.length" class="overflow-x-auto border border-[#D8CCBC]/50">
-              <table class="w-full text-left text-xs">
-                <thead class="bg-[#F7F8FA] text-[10px] uppercase font-semibold text-[#69736E] border-b border-[#D8CCBC]/50">
-                  <tr>
-                    <th class="p-2">Size</th>
-                    <th class="p-2">Color Name</th>
-                    <th class="p-2">Color Hex</th>
-                    <th class="p-2">SKU Code</th>
-                    <th class="p-2">Price ($)</th>
-                    <th class="p-2">Stock</th>
-                    <th class="p-2 text-center">Action</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-[#D8CCBC]/30">
-                  <tr v-for="(v, vIdx) in form.variants" :key="vIdx" class="hover:bg-[#F7F8FA]/50">
-                    <td class="p-2">
-                      <input type="text" v-model="v.size" placeholder="e.g. M" class="w-16 px-2 py-1 border border-[#D8CCBC]" />
-                    </td>
-                    <td class="p-2">
-                      <input type="text" v-model="v.color" placeholder="e.g. Noir" class="w-24 px-2 py-1 border border-[#D8CCBC]" />
-                    </td>
-                    <td class="p-2">
-                      <div class="flex items-center gap-1.5">
-                        <input type="color" v-model="v.color_code" class="w-6 h-6 border-0 cursor-pointer p-0 bg-transparent" />
-                        <input type="text" v-model="v.color_code" placeholder="#000000" class="w-20 px-1.5 py-1 border border-[#D8CCBC] text-[11px] font-mono" />
-                      </div>
-                    </td>
-                    <td class="p-2">
-                      <input type="text" v-model="v.sku" placeholder="Auto" class="w-28 px-2 py-1 border border-[#D8CCBC] font-mono text-[11px]" />
-                    </td>
-                    <td class="p-2">
-                      <input type="number" step="0.01" v-model.number="v.price" class="w-20 px-2 py-1 border border-[#D8CCBC]" />
-                    </td>
-                    <td class="p-2">
-                      <input type="number" v-model.number="v.stock" class="w-16 px-2 py-1 border border-[#D8CCBC]" />
-                    </td>
-                    <td class="p-2 text-center">
-                      <button
-                        type="button"
-                        @click="removeVariantRow(vIdx)"
-                        class="text-rose-600 hover:text-rose-800 text-xs font-bold px-2 py-1 hover:bg-rose-50"
-                        title="Remove variant"
-                      >
-                        ✕
-                      </button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div v-else class="p-4 bg-[#F7F8FA] border border-dashed border-[#D8CCBC] text-center text-[11px] text-[#69736E]">
-              No custom variants configured. The main price and stock above will apply to this piece.
-            </div>
-          </div>
-
-          <!-- Toggles -->
-          <div class="col-span-12 flex flex-wrap gap-6 pt-2 border-t border-[#D8CCBC]/40">
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" v-model="form.is_featured" class="rounded border-[#D8CCBC]" />
-              <span>Featured on Homepage</span>
-            </label>
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" v-model="form.is_bestseller" class="rounded border-[#D8CCBC]" />
-              <span>Mark as Bestseller</span>
-            </label>
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" v-model="form.is_new" class="rounded border-[#D8CCBC]" />
-              <span>Mark as New Release</span>
-            </label>
-          </div>
-        </div>
-
-        <div class="flex justify-end gap-3 pt-6 border-t border-[#D8CCBC]/40">
+      <!-- ============================================================ pagination -->
+      <div v-if="meta && meta.total > 0" class="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-admin-border text-xs text-admin-muted">
+        <span>মোট {{ bnNumber(meta.total) }}টি পণ্যের মধ্যে {{ bnNumber(rangeFrom) }}–{{ bnNumber(rangeTo) }}</span>
+        <div v-if="meta.last_page > 1" class="flex items-center gap-1">
+          <button type="button" class="adm-btn px-2.5" :disabled="meta.current_page <= 1" @click="fetchProducts(meta.current_page - 1)" aria-label="আগের পাতা"><ChevronLeft :size="15" /></button>
           <button
+            v-for="n in pageNumbers"
+            :key="n"
             type="button"
-            @click="formModalOpen = false"
-            class="px-5 py-2.5 border border-[#D8CCBC] text-xs uppercase tracking-wider"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            :disabled="saving"
-            class="px-7 py-2.5 bg-[#111111] text-white text-xs uppercase tracking-wider font-semibold hover:bg-black"
-          >
-            {{ saving ? 'Saving...' : 'Save Product' }}
-          </button>
+            :class="['adm-btn px-3', n === meta.current_page && 'adm-btn-primary']"
+            :disabled="n === '…'"
+            @click="n !== '…' && fetchProducts(n)"
+          >{{ n === '…' ? '…' : bnNumber(n) }}</button>
+          <button type="button" class="adm-btn px-2.5" :disabled="meta.current_page >= meta.last_page" @click="fetchProducts(meta.current_page + 1)" aria-label="পরের পাতা"><ChevronRight :size="15" /></button>
         </div>
-      </form>
-    </BaseModal>
+      </div>
+    </div>
 
-    <!-- Bulk Product Import Modal -->
-    <BaseModal
-      :is-open="importModalOpen"
-      title="Bulk Product Import (CSV / Excel)"
-      max-width="lg"
-      @close="importModalOpen = false"
-    >
-      <div class="space-y-4 text-xs">
-        <p class="text-[#69736E]">
-          Upload a CSV or Excel (.xlsx) file containing your product catalog. Supported columns:
-          <span class="font-mono text-[11px] block mt-1 text-[#171C1A]">ID, Name, SKU, Slug, Category, Price, Sale Price, Stock, Status, Is Featured</span>
+    <!-- ============================================================ editor -->
+    <ProductEditor
+      v-if="editorOpen"
+      :product="editing"
+      :categories="categories"
+      :brands="brands"
+      @close="editorOpen = false"
+      @saved="onSaved"
+      @duplicate="duplicate"
+      @delete="remove"
+    />
+
+    <!-- ============================================================ import -->
+    <BaseModal :is-open="importModalOpen" title="পণ্য ইমপোর্ট (CSV / Excel)" max-width="lg" @close="importModalOpen = false">
+      <div class="space-y-4 text-sm">
+        <p class="text-admin-muted text-xs leading-relaxed">
+          আগে “CSV এক্সপোর্ট” করে ফাইলটা দেখে নিন, একই কলামে লিখে আপলোড করুন। একই SKU বা লিংকের পণ্য থাকলে সেটা আপডেট হবে, না থাকলে নতুন তৈরি হবে।
+          <span class="font-mono text-[11px] block mt-2 text-admin-text">ID, Name, SKU, Slug, Category, Price, Sale Price, Stock, Status, Is Featured</span>
         </p>
-
-        <div class="border-2 border-dashed border-[#D8CCBC] p-6 text-center bg-[#F7F8FA]">
-          <input
-            type="file"
-            ref="importInputRef"
-            accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
-            @change="handleImportFileChange"
-            class="block w-full text-xs text-[#69736E] file:mr-4 file:py-2 file:px-4 file:border-0 file:text-xs file:font-semibold file:bg-[#14382A] file:text-white hover:file:bg-[#16A36A] cursor-pointer"
-          />
-          <p v-if="selectedImportFile" class="mt-2 text-emerald-700 font-semibold">
-            Selected: {{ selectedImportFile.name }} ({{ (selectedImportFile.size / 1024).toFixed(1) }} KB)
-          </p>
-        </div>
-
-        <div class="flex justify-end gap-3 pt-4 border-t border-[#D8CCBC]/40">
-          <button
-            type="button"
-            @click="importModalOpen = false"
-            class="px-4 py-2 border border-[#D8CCBC] text-xs uppercase tracking-wider"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            :disabled="!selectedImportFile || importing"
-            @click="submitImport"
-            class="px-5 py-2 bg-[#14382A] text-white text-xs uppercase tracking-wider font-semibold hover:bg-[#16A36A] disabled:opacity-50"
-          >
-            {{ importing ? 'Importing...' : 'Upload & Process Import' }}
+        <label class="block border-2 border-dashed border-admin-border rounded-xl p-6 text-center cursor-pointer hover:border-admin-accent transition-colors">
+          <Upload :size="22" class="mx-auto text-admin-muted" />
+          <span class="block mt-2 text-xs font-semibold text-admin-text">{{ selectedImportFile ? selectedImportFile.name : 'ফাইল বাছাই করুন' }}</span>
+          <span class="block text-[11px] text-admin-muted mt-0.5">.csv, .xlsx — সর্বোচ্চ ১০ MB</span>
+          <input ref="importInputRef" type="file" class="sr-only" accept=".csv,.xlsx,.xls" @change="selectedImportFile = $event.target.files?.[0] || null" />
+        </label>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" class="adm-btn" @click="importModalOpen = false">বাতিল</button>
+          <button type="button" class="adm-btn adm-btn-primary" :disabled="!selectedImportFile || importing" @click="submitImport">
+            {{ importing ? 'ইমপোর্ট হচ্ছে…' : 'আপলোড করুন' }}
           </button>
         </div>
       </div>
@@ -378,282 +210,252 @@
 </template>
 
 <script setup>
-import { useAdminDeepLink } from '../../composables/useAdminDeepLink';
-import { ref, reactive, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
+import {
+  Plus, Download, Upload, Search, X, Eye, EyeOff, Archive, Trash2, Pencil, Copy, ExternalLink,
+  ChevronLeft, ChevronRight, PackageSearch,
+} from 'lucide-vue-next';
 import api from '../../api';
-import DataTable from '../../components/admin/DataTable.vue';
 import BaseModal from '../../components/common/BaseModal.vue';
-import MediaPicker from '../../components/admin/MediaPicker.vue';
+import ProductEditor from '../../components/admin/ProductEditor.vue';
 import { useToastStore } from '../../stores/toast';
+import { useAdminDeepLink } from '../../composables/useAdminDeepLink';
+import { money, bnNumber } from '../../admin-nav';
 
-const route = useRoute();
 const toast = useToastStore();
+
 const products = ref([]);
 const categories = ref([]);
 const brands = ref([]);
-const loading = ref(true);
-const saving = ref(false);
 const meta = ref(null);
+const counts = ref({});
+const loading = ref(true);
+const selected = ref([]);
+
 const searchQuery = ref('');
-const selectedCategoryFilter = ref(route.query.category_id ? Number(route.query.category_id) : '');
-const sortBy = ref('created_at');
-const sortDirection = ref('desc');
+// Categories page links here with ?category_id=…
+const categoryFilter = ref(useRoute().query.category_id ? Number(useRoute().query.category_id) : '');
+const statusFilter = ref('');
+const stockFilter = ref('');
+const sortKey = ref('newest');
 
-const formModalOpen = ref(false);
-const isEdit = ref(false);
-const currentId = ref(null);
+const statusMeta = {
+  published: { label: 'প্রকাশিত', chip: 'bg-emerald-50 text-emerald-700' },
+  draft: { label: 'ড্রাফট', chip: 'bg-slate-100 text-slate-600' },
+  archived: { label: 'আর্কাইভ', chip: 'bg-stone-100 text-stone-500' },
+};
 
-// Bulk Import & Export state
+const statusFilters = [
+  { key: 'all', label: 'সব', countKey: 'all' },
+  { key: 'published', label: 'প্রকাশিত', countKey: 'published', status: 'published' },
+  { key: 'draft', label: 'ড্রাফট', countKey: 'draft', status: 'draft' },
+  { key: 'archived', label: 'আর্কাইভ', countKey: 'archived', status: 'archived' },
+  { key: 'low', label: 'স্টক কম', countKey: 'low_stock', stock: 'low_stock', tone: 'warn' },
+  { key: 'out', label: 'স্টক শেষ', countKey: 'out_of_stock', stock: 'out_of_stock', tone: 'danger' },
+];
+
+const sortOptions = [
+  { key: 'newest', label: 'নতুন আগে', by: 'created_at', dir: 'desc' },
+  { key: 'oldest', label: 'পুরনো আগে', by: 'created_at', dir: 'asc' },
+  { key: 'updated', label: 'সম্প্রতি এডিট করা', by: 'updated_at', dir: 'desc' },
+  { key: 'name', label: 'নাম (A–Z)', by: 'name', dir: 'asc' },
+  { key: 'price_low', label: 'দাম: কম থেকে বেশি', by: 'price', dir: 'asc' },
+  { key: 'price_high', label: 'দাম: বেশি থেকে কম', by: 'price', dir: 'desc' },
+  { key: 'stock_low', label: 'স্টক: কম আগে', by: 'stock', dir: 'asc' },
+];
+
+const isQuickActive = (f) => {
+  if (f.key === 'all') return !statusFilter.value && !stockFilter.value;
+  if (f.status) return statusFilter.value === f.status;
+  return stockFilter.value === f.stock;
+};
+const setQuickFilter = (f) => {
+  statusFilter.value = f.status || '';
+  stockFilter.value = f.stock || '';
+};
+
+const hasFilters = computed(() => Boolean(searchQuery.value || categoryFilter.value || statusFilter.value || stockFilter.value));
+const clearFilters = () => {
+  searchQuery.value = '';
+  categoryFilter.value = '';
+  statusFilter.value = '';
+  stockFilter.value = '';
+};
+
+/** Parent categories first, their children indented under them. */
+const categoryOptions = computed(() => {
+  const list = categories.value;
+  const roots = list.filter((c) => !c.parent_id);
+  const out = [];
+  roots.forEach((r) => {
+    out.push({ id: r.id, label: r.name });
+    list.filter((c) => c.parent_id === r.id).forEach((c) => out.push({ id: c.id, label: '— ' + c.name }));
+  });
+  list.filter((c) => c.parent_id && !list.some((r) => r.id === c.parent_id)).forEach((c) => out.push({ id: c.id, label: c.name }));
+  return out;
+});
+
+const isOnSale = (p) => p.sale_price && Number(p.sale_price) > 0 && Number(p.sale_price) < Number(p.price);
+const discountPct = (price, sale) => Math.round((1 - Number(sale) / Number(price)) * 100);
+const stockTone = (s) => (s <= 0 ? 'bg-rose-50 text-rose-700' : s <= 5 ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700');
+
+// ------------------------------------------------------------------ loading
+let reqId = 0;
+const fetchProducts = async (page = 1) => {
+  const id = ++reqId;
+  loading.value = true;
+  const sort = sortOptions.find((s) => s.key === sortKey.value) || sortOptions[0];
+  try {
+    const res = await api.get('/admin/products', {
+      params: {
+        page,
+        per_page: 15,
+        search: searchQuery.value || undefined,
+        category_id: categoryFilter.value || undefined,
+        status: statusFilter.value || undefined,
+        stock_status: stockFilter.value || undefined,
+        sort_by: sort.by,
+        sort_direction: sort.dir,
+      },
+    });
+    if (id !== reqId) return;
+    products.value = res.data.data || [];
+    meta.value = res.data.meta || null;
+    counts.value = res.data.meta?.counts || {};
+    selected.value = selected.value.filter((sid) => products.value.some((p) => p.id === sid));
+  } catch (err) {
+    if (id === reqId) toast.error('পণ্যের তালিকা লোড হয়নি');
+  } finally {
+    if (id === reqId) loading.value = false;
+  }
+};
+
+let searchTimer;
+watch(searchQuery, () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => fetchProducts(1), 300);
+});
+watch([categoryFilter, statusFilter, stockFilter, sortKey], () => fetchProducts(1));
+
+const rangeFrom = computed(() => (meta.value ? (meta.value.current_page - 1) * meta.value.per_page + 1 : 0));
+const rangeTo = computed(() => (meta.value ? Math.min(meta.value.total, meta.value.current_page * meta.value.per_page) : 0));
+const pageNumbers = computed(() => {
+  if (!meta.value) return [];
+  const { current_page: c, last_page: l } = meta.value;
+  const set = new Set([1, l, c - 1, c, c + 1].filter((n) => n >= 1 && n <= l));
+  const sorted = [...set].sort((a, b) => a - b);
+  const out = [];
+  sorted.forEach((n, i) => {
+    if (i && n - sorted[i - 1] > 1) out.push('…');
+    out.push(n);
+  });
+  return out;
+});
+
+// ------------------------------------------------------------------ selection + bulk
+const allOnPageSelected = computed(() => products.value.length > 0 && products.value.every((p) => selected.value.includes(p.id)));
+const someOnPageSelected = computed(() => !allOnPageSelected.value && products.value.some((p) => selected.value.includes(p.id)));
+const toggleAll = () => {
+  selected.value = allOnPageSelected.value ? [] : products.value.map((p) => p.id);
+};
+
+const bulk = async (action) => {
+  const n = bnNumber(selected.value.length);
+  if (action === 'delete' && !confirm(`${n}টি পণ্য মুছে ফেলবেন? এটা ফেরানো যাবে না।`)) return;
+  try {
+    const res = await api.post('/admin/products/bulk', { ids: selected.value, action });
+    toast.success(res.data.message);
+    selected.value = [];
+    fetchProducts(meta.value?.current_page || 1);
+  } catch (err) {
+    toast.error(err.response?.data?.message || 'কাজটি করা যায়নি');
+  }
+};
+
+// ------------------------------------------------------------------ row actions
+const editorOpen = ref(false);
+const editing = ref(null);
+
+const openCreate = () => {
+  editing.value = null;
+  editorOpen.value = true;
+};
+const openEdit = (p) => {
+  editing.value = p;
+  editorOpen.value = true;
+};
+const onSaved = (product, { close }) => {
+  if (close) editorOpen.value = false;
+  else editing.value = product;
+  fetchProducts(meta.value?.current_page || 1);
+};
+
+const duplicate = async (p) => {
+  try {
+    const res = await api.post(`/admin/products/${p.id}/duplicate`);
+    toast.success(res.data.message);
+    await fetchProducts(1);
+    openEdit(res.data.data);
+  } catch (err) {
+    toast.error(err.response?.data?.message || 'কপি করা যায়নি');
+  }
+};
+
+const remove = async (p) => {
+  if (!confirm(`“${p.name}” মুছে ফেলবেন?`)) return;
+  try {
+    await api.delete(`/admin/products/${p.id}`);
+    toast.success('পণ্য মুছে ফেলা হয়েছে');
+    editorOpen.value = false;
+    fetchProducts(meta.value?.current_page || 1);
+  } catch (err) {
+    toast.error('মুছে ফেলা যায়নি');
+  }
+};
+
+// ------------------------------------------------------------------ import / export
 const exporting = ref(false);
 const importModalOpen = ref(false);
 const selectedImportFile = ref(null);
 const importing = ref(false);
 const importInputRef = ref(null);
 
-const columns = [
-  { key: 'featured_image', label: 'Image', type: 'image' },
-  { key: 'name', label: 'Product Title', sortable: true },
-  { key: 'sku', label: 'SKU' },
-  { key: 'category', label: 'Category', type: 'relation', relationField: 'name' },
-  { key: 'price', label: 'Price' },
-  { key: 'stock', label: 'Inventory' },
-  { key: 'status', label: 'Status' },
-];
-
-const form = reactive({
-  name: '',
-  sku: '',
-  category_id: null,
-  brand_id: null,
-  price: 0,
-  sale_price: null,
-  stock: 10,
-  featured_image: '',
-  gallery: [],
-  variants: [],
-  short_description: '',
-  description: '',
-  is_featured: false,
-  is_bestseller: false,
-  is_new: true,
-  status: 'published',
-});
-
-const addVariantRow = () => {
-  if (!Array.isArray(form.variants)) form.variants = [];
-  form.variants.push({
-    size: 'M',
-    color: 'Standard',
-    color_code: '#14382A',
-    sku: form.sku ? `${form.sku}-VAR-${form.variants.length + 1}` : '',
-    price: form.price || 0,
-    stock: 10,
-  });
-};
-
-const removeVariantRow = (idx) => {
-  if (Array.isArray(form.variants)) {
-    form.variants.splice(idx, 1);
-  }
-};
-
-const generateStandardSizes = () => {
-  if (!Array.isArray(form.variants)) form.variants = [];
-  const standardSizes = ['XS', 'S', 'M', 'L', 'XL'];
-  standardSizes.forEach((sz) => {
-    form.variants.push({
-      size: sz,
-      color: 'Noir',
-      color_code: '#111111',
-      sku: form.sku ? `${form.sku}-${sz}` : '',
-      price: form.price || 0,
-      stock: 5,
-    });
-  });
-  toast.success('Added 5 standard size variants');
-};
-
 const exportCsv = async () => {
   exporting.value = true;
   try {
     const res = await api.get('/admin/products/export', { responseType: 'blob' });
-    const blob = new Blob([res.data], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `catalog-products-${new Date().toISOString().slice(0, 10)}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
-    toast.success('Product catalog CSV exported successfully');
-  } catch (err) {
-    console.error(err);
-    toast.error('Failed to export catalog');
+    const url = URL.createObjectURL(new Blob([res.data], { type: 'text/csv' }));
+    const a = Object.assign(document.createElement('a'), { href: url, download: `products-${new Date().toISOString().slice(0, 10)}.csv` });
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    toast.success('CSV ফাইল ডাউনলোড হয়েছে');
+  } catch {
+    toast.error('এক্সপোর্ট করা যায়নি');
   } finally {
     exporting.value = false;
   }
-};
-
-const handleImportFileChange = (e) => {
-  const file = e.target.files?.[0];
-  selectedImportFile.value = file || null;
 };
 
 const submitImport = async () => {
   if (!selectedImportFile.value) return;
   importing.value = true;
   try {
-    const formData = new FormData();
-    formData.append('file', selectedImportFile.value);
-    const res = await api.post('/admin/products/import', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
-    toast.success(res.data.message || 'Catalog imported successfully');
+    const fd = new FormData();
+    fd.append('file', selectedImportFile.value);
+    const res = await api.post('/admin/products/import', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+    const d = res.data.data || {};
+    toast.success(`ইমপোর্ট হয়েছে: নতুন ${bnNumber(d.imported ?? 0)}টি, আপডেট ${bnNumber(d.updated ?? 0)}টি`);
     importModalOpen.value = false;
     selectedImportFile.value = null;
     if (importInputRef.value) importInputRef.value.value = '';
     fetchProducts(1);
   } catch (err) {
-    console.error(err);
-    toast.error(err.response?.data?.message || 'Failed to process import');
+    toast.error(err.response?.data?.message || 'ইমপোর্ট করা যায়নি');
   } finally {
     importing.value = false;
-  }
-};
-
-const fetchProducts = async (page = 1) => {
-  loading.value = true;
-  try {
-    const params = {
-      page,
-      search: searchQuery.value || undefined,
-      category_id: selectedCategoryFilter.value || undefined,
-      sort_by: sortBy.value,
-      sort_direction: sortDirection.value,
-    };
-    const res = await api.get('/admin/products', { params });
-    products.value = res.data.data || [];
-    meta.value = res.data.meta || null;
-  } catch (err) {
-    console.error('Failed to load products', err);
-  } finally {
-    loading.value = false;
-  }
-};
-
-const handleSort = (key) => {
-  if (sortBy.value === key) {
-    sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc';
-  } else {
-    sortBy.value = key;
-    sortDirection.value = 'asc';
-  }
-  fetchProducts(1);
-};
-
-const addGalleryImage = () => {
-  if (!Array.isArray(form.gallery)) form.gallery = [];
-  form.gallery.push('');
-};
-
-const removeGalleryImage = (idx) => {
-  if (Array.isArray(form.gallery)) {
-    form.gallery.splice(idx, 1);
-  }
-};
-
-const openCreateModal = () => {
-  isEdit.value = false;
-  currentId.value = null;
-  Object.assign(form, {
-    name: '',
-    sku: '',
-    category_id: null,
-    brand_id: null,
-    price: 0,
-    sale_price: null,
-    stock: 10,
-    featured_image: '',
-    gallery: [],
-    variants: [],
-    short_description: '',
-    description: '',
-    is_featured: false,
-    is_bestseller: false,
-    is_new: true,
-    status: 'published',
-  });
-  formModalOpen.value = true;
-};
-
-const openEditModal = (item) => {
-  isEdit.value = true;
-  currentId.value = item.id;
-  Object.assign(form, {
-    name: item.name,
-    sku: item.sku,
-    category_id: item.category_id,
-    brand_id: item.brand_id,
-    price: Number(item.price),
-    sale_price: item.sale_price ? Number(item.sale_price) : null,
-    stock: item.stock,
-    featured_image: item.featured_image || '',
-    gallery: Array.isArray(item.gallery) ? [...item.gallery] : [],
-    variants: Array.isArray(item.variants)
-      ? item.variants.map((v) => ({
-          size: v.size || 'M',
-          color: v.color || 'Standard',
-          color_code: v.color_code || '#14382A',
-          sku: v.sku || '',
-          price: Number(v.price || item.price),
-          stock: Number(v.stock || 0),
-        }))
-      : [],
-    short_description: item.short_description || '',
-    description: item.description || '',
-    is_featured: Boolean(item.is_featured),
-    is_bestseller: Boolean(item.is_bestseller),
-    is_new: Boolean(item.is_new),
-    status: item.status || 'published',
-  });
-  formModalOpen.value = true;
-};
-
-const saveProduct = async () => {
-  saving.value = true;
-  try {
-    const payload = {
-      ...form,
-      gallery: Array.isArray(form.gallery) ? form.gallery.filter((g) => Boolean(g && g.trim())) : [],
-      variants: Array.isArray(form.variants) ? form.variants : [],
-    };
-    if (isEdit.value) {
-      await api.put(`/admin/products/${currentId.value}`, payload);
-      toast.success(`Product '${form.name}' updated successfully`);
-    } else {
-      await api.post('/admin/products', payload);
-      toast.success(`Product '${form.name}' created successfully`);
-    }
-    formModalOpen.value = false;
-    fetchProducts(meta.value?.current_page || 1);
-  } catch (err) {
-    console.error(err);
-    toast.error(err.response?.data?.message || 'Error saving product');
-  } finally {
-    saving.value = false;
-  }
-};
-
-const confirmDelete = async (item) => {
-  if (!confirm(`Are you sure you want to delete '${item.name}'?`)) return;
-  try {
-    await api.delete(`/admin/products/${item.id}`);
-    toast.success(`Deleted product '${item.name}'`);
-    fetchProducts(meta.value?.current_page || 1);
-  } catch (err) {
-    toast.error('Failed to delete product');
   }
 };
 
@@ -664,14 +466,34 @@ onMounted(async () => {
       api.get('/admin/resources/categories?per_page=-1'),
       api.get('/admin/resources/brands?per_page=-1'),
     ]);
-    const rawCats = catRes.data?.data?.data || catRes.data?.data || catRes.data || [];
+    const rawCats = catRes.data?.data?.data || catRes.data?.data || [];
     categories.value = Array.isArray(rawCats) ? rawCats : [];
-    brands.value = brandRes.data?.data || [];
-  } catch (err) {
-    console.error(err);
+    const rawBrands = brandRes.data?.data?.data || brandRes.data?.data || [];
+    brands.value = Array.isArray(rawBrands) ? rawBrands : [];
+  } catch {
+    /* the editor still works without the lists */
   }
 });
 
-// Open from links like ?search=... or ?new=1 (sidebar, Ctrl+K, dashboard)
-useAdminDeepLink({ search: searchQuery, onNew: openCreateModal, reload: () => fetchProducts(1) });
+// ?search=… / ?new=1 from the sidebar, Ctrl+K and the dashboard
+useAdminDeepLink({ search: searchQuery, onNew: openCreate });
 </script>
+
+<style scoped>
+.pm-chip {
+  display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 999px;
+  font-size: 12.5px; font-weight: 600; color: var(--color-admin-muted); background: #fff; border: 1px solid var(--color-admin-border);
+  transition: all .15s;
+}
+.pm-chip:hover { color: var(--color-admin-text); border-color: #C9D2CD; }
+.pm-chip-count { font-size: 11px; padding: 0 7px; border-radius: 999px; background: var(--color-admin-bg); color: var(--color-admin-muted); line-height: 1.7; }
+.pm-chip.is-active { background: var(--color-admin-sidebar); border-color: var(--color-admin-sidebar); color: #fff; }
+.pm-chip.is-active .pm-chip-count { background: rgba(255, 255, 255, .18); color: #fff; }
+.pm-chip.tone-warn:not(.is-active) .pm-chip-count { background: #FEF3C7; color: #B45309; }
+.pm-chip.tone-danger:not(.is-active) .pm-chip-count { background: #FFE4E6; color: #BE123C; }
+.pm-icon {
+  display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px;
+  color: var(--color-admin-muted); transition: background .15s, color .15s;
+}
+.pm-icon:hover { background: var(--color-admin-bg); color: var(--color-admin-text); }
+</style>
