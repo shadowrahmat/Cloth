@@ -29,32 +29,42 @@ class PublicController extends Controller
                 if ($section->type === 'category_showcase') {
                     $section->setAttribute('showcase', $this->categoryShowcase((array) $section->content));
                 }
+                if ($section->type === 'favourites_carousel') {
+                    $section->setAttribute('carousel', $this->favouritesCarousel((array) $section->content));
+                }
             });
 
-        // New Arrivals (8 items)
+        // Admin-chosen numbers / categories for the automatic sections (Admin → হোমপেজ বিল্ডার)
+        $settings = fn (string $type) => (array) ($sections->firstWhere('type', $type)?->content ?? []);
+        $limit = fn (string $type) => max(4, min(12, (int) ($settings($type)['limit'] ?? 8)));
+
         $newArrivals = Product::with(['category', 'variants'])
             ->where('status', 'published')
-            ->latest()
-            ->take(8)
+            ->latest()->orderByDesc('id')
+            ->take($limit('new_arrivals'))
             ->get();
 
-        // Best Sellers (8 items)
         $bestSellers = Product::with(['category', 'variants'])
             ->where('status', 'published')
             ->where(function($q) {
                 $q->where('is_bestseller', true)
                   ->orWhere('stock', '>', 0);
             })
-            ->take(8)
+            ->orderByDesc('is_bestseller')
+            ->take($limit('best_sellers'))
             ->get();
 
-        // Featured Categories (Men, Women, Kids, Winter)
-        $featuredCategories = Category::with('children')
-            ->whereNull('parent_id')
-            ->where('is_active', true)
-            ->orderBy('display_order')
-            ->take(4)
-            ->get();
+        // Category grid: the categories picked in the builder (in that order), else the first 4 main categories
+        $gridSlugs = array_values(array_filter((array) ($settings('category_grid')['categories'] ?? []), 'is_string'));
+        $featuredCategories = $gridSlugs
+            ? Category::with('children')->where('is_active', true)->whereIn('slug', $gridSlugs)->get()
+                ->sortBy(fn ($c) => array_search($c->slug, $gridSlugs, true))->values()
+            : Category::with('children')
+                ->whereNull('parent_id')
+                ->where('is_active', true)
+                ->orderBy('display_order')
+                ->take(4)
+                ->get();
 
         // Testimonials
         $testimonials = Testimonial::where('is_active', true)
@@ -80,6 +90,55 @@ class PublicController extends Controller
                 'social_gallery' => $socialGallery,
             ],
         ]);
+    }
+
+    /**
+     * Products for the 3D "this week's favourites" carousel.
+     * content.source: new (default) | bestseller | sale | collection:{slug} | category:{slug}
+     * content.limit: 5–12
+     */
+    private function favouritesCarousel(array $content): array
+    {
+        $limit = max(5, min(12, (int) ($content['limit'] ?? 8)));
+        $source = (string) ($content['source'] ?? 'new');
+
+        $query = Product::with(['variants' => fn ($q) => $q->where('is_active', true)])
+            ->where('status', 'published')
+            ->whereNotNull('featured_image')->where('featured_image', '!=', '');
+
+        if ($source === 'bestseller') {
+            $query->where('is_bestseller', true);
+        } elseif ($source === 'sale') {
+            $query->where('sale_price', '>', 0)->whereColumn('sale_price', '<', 'price');
+        } elseif (str_starts_with($source, 'collection:')) {
+            $slug = substr($source, 11);
+            $query->whereHas('collections', fn ($q) => $q->where('slug', $slug));
+        } elseif (str_starts_with($source, 'category:')) {
+            $cat = Category::with('children:id,parent_id')->where('slug', substr($source, 9))->first();
+            $query->whereIn('category_id', $cat ? $cat->children->pluck('id')->push($cat->id) : [0]);
+        }
+
+        return $query->latest()->orderByDesc('id')->take($limit)->get()->map(function (Product $p) {
+            $sale = (float) $p->sale_price > 0 && (float) $p->sale_price < (float) $p->price;
+            $colors = $p->variants->filter(fn ($v) => $v->color && $v->color_code)
+                ->unique(fn ($v) => mb_strtolower($v->color))
+                ->map(fn ($v) => ['name' => $v->color, 'code' => $v->color_code])->values();
+
+            return [
+                'id' => $p->id,
+                'name' => $p->name,
+                'slug' => $p->slug,
+                'image' => $p->featured_image,
+                'price' => (float) ($sale ? $p->sale_price : $p->price),
+                'compare_at_price' => $sale ? (float) $p->price : null,
+                // badges come from real data only
+                'badge' => $sale ? 'sale' : ($p->is_new ? 'new' : null),
+                'colors' => $colors,
+                'in_stock' => (int) $p->stock > 0,
+                // one buyable variant (or none) = add straight to cart; otherwise the buyer must choose size/colour
+                'variants' => $p->variants->map(fn ($v) => ['id' => $v->id, 'size' => $v->size, 'color' => $v->color, 'stock' => (int) $v->stock])->values(),
+            ];
+        })->all();
     }
 
     /**

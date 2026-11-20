@@ -16,11 +16,11 @@
         <div class="flex items-center gap-3 mb-2">
           <span class="inline-block w-2 h-2 rounded-full bg-[#C5A880] animate-pulse"></span>
           <span class="text-[11px] uppercase tracking-[0.3em] text-[#C5A880] font-medium">
-            রানওয়ে লুকবুক • ২০২৬/২৭ কালেকশন
+            {{ t.kicker }}
           </span>
         </div>
         <h2 class="font-serif text-3xl sm:text-5xl lg:text-6xl text-white tracking-tight leading-none">
-          রানওয়ে এডিটোরিয়াল
+          {{ t.heading }}
         </h2>
       </div>
 
@@ -60,18 +60,18 @@
         <div class="w-[300px] sm:w-[360px] lg:w-[420px] shrink-0 bg-white/5 border border-white/10 p-8 sm:p-10 flex flex-col justify-between aspect-3/4 backdrop-blur-md">
           <div class="space-y-4">
             <span class="text-[10px] tracking-[0.3em] uppercase text-[#C5A880] font-semibold block">
-              কিউরেটেড সিলুয়েট
+              {{ t.intro_kicker }}
             </span>
             <h3 class="font-serif text-2xl sm:text-3xl text-white leading-snug">
-              সমসাময়িক তরুণদের জন্য নিখুঁত কাটিং ও টেইলারিং।
+              {{ t.intro_title }}
             </h3>
             <p class="text-xs sm:text-sm text-white/60 font-light leading-relaxed">
-              আমাদের প্রতিটি পোশাক প্রিমিয়াম কম্বড কটন ও আরামদায়ক ফেব্রিকে তৈরি, যা দৈনন্দিন ব্যবহারের জন্য সর্বোচ্চ স্বাচ্ছন্দ্য দেয়।
+              {{ t.intro_text }}
             </p>
           </div>
 
           <div class="pt-6 border-t border-white/10 flex items-center justify-between text-xs text-white/40">
-            <span class="uppercase tracking-widest text-[10px]">অটাম / উইন্টার</span>
+            <span class="uppercase tracking-widest text-[10px]">{{ t.season }}</span>
             <span class="inline-flex items-center gap-2 text-[#C5A880] font-medium text-xs">
               <span>সামনে দেখুন</span>
               <span>→</span>
@@ -112,9 +112,9 @@
                   {{ item.name }}
                 </h4>
                 <div class="text-xs text-white/90 font-mono">
-                  <span>BDT {{ item.sale_price || item.price }}</span>
-                  <span v-if="item.sale_price" class="text-white/40 line-through text-[10px] ml-1.5">
-                    BDT {{ item.price }}
+                  <span>{{ taka(item.sale_price && Number(item.sale_price) < Number(item.price) ? item.sale_price : item.price) }}</span>
+                  <span v-if="item.sale_price && Number(item.sale_price) < Number(item.price)" class="text-white/40 line-through text-[10px] ml-1.5">
+                    {{ taka(item.price) }}
                   </span>
                 </div>
               </div>
@@ -136,22 +136,22 @@
         <div class="w-[280px] sm:w-[340px] lg:w-[400px] shrink-0 bg-gradient-to-br from-[#1E1C1A] to-[#111111] border border-[#C5A880]/30 p-8 sm:p-10 flex flex-col justify-between aspect-3/4">
           <div class="space-y-4">
             <span class="text-[10px] tracking-[0.3em] uppercase text-[#C5A880] font-semibold block">
-              এক্সক্লুসিভ কালেকশন
+              {{ t.outro_kicker }}
             </span>
             <h3 class="font-serif text-3xl sm:text-4xl text-white leading-tight">
-              সম্পূর্ণ রানওয়ে ক্যাটালগ দেখুন
+              {{ t.outro_title }}
             </h3>
             <p class="text-xs sm:text-sm text-white/60 font-light leading-relaxed">
-              আমাদের সকল সিগনেচার ডিজাইন, প্রিমিয়াম টি-শার্ট, পাঞ্জাবি ও বটমস কালেকশন থেকে আপনার পছন্দের পোশাক অর্ডার করুন।
+              {{ t.outro_text }}
             </p>
           </div>
 
           <div class="pt-6">
             <router-link
-              to="/collections"
+              :to="t.outro_link"
               class="inline-flex items-center justify-center w-full py-3.5 px-6 bg-[#C5A880] text-[#111111] text-xs font-semibold hover:bg-white transition-colors duration-300 shadow-xl"
             >
-              <span>সকল পোশাক দেখুন</span>
+              <span>{{ t.outro_button }}</span>
               <span class="ml-2">→</span>
             </router-link>
           </div>
@@ -162,13 +162,13 @@
     <!-- Bottom Editorial Footer Strip -->
     <div class="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 lg:pb-8 flex items-center justify-between text-[11px] text-white/40 border-t border-white/10 pt-4">
       <div class="flex items-center gap-6">
-        <span>১০০% প্রিমিয়াম সুতি ও আরামদায়ক ফেব্রিক</span>
-        <span class="hidden sm:inline">•</span>
-        <span class="hidden sm:inline">সারা দেশে দ্রুত ডেলিভারি</span>
+        <span v-if="t.feature_1">{{ t.feature_1 }}</span>
+        <span v-if="t.feature_1 && t.feature_2" class="hidden sm:inline">•</span>
+        <span v-if="t.feature_2" class="hidden sm:inline">{{ t.feature_2 }}</span>
       </div>
       <div class="flex items-center gap-2">
         <span class="w-1.5 h-1.5 rounded-full bg-[#C5A880]"></span>
-        <span class="font-mono text-white/60">অটাম / উইন্টার ২০২৬</span>
+        <span class="text-white/60">{{ t.season }}</span>
       </div>
     </div>
   </section>
@@ -177,12 +177,21 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
 import { gsap, ScrollTrigger } from '../../utils/smoothScroll';
+import { taka } from '../../utils/bn';
+import { RUNWAY_DEFAULTS } from '../../utils/homeDefaults';
 
 const props = defineProps({
+  /** texts from Admin → হোমপেজ বিল্ডার → নতুন আগমন → রানওয়ে (empty fields fall back to the defaults) */
+  content: { type: Object, default: () => ({}) },
   products: {
     type: Array,
     default: () => [],
   },
+});
+
+const t = computed(() => {
+  const c = props.content || {};
+  return Object.fromEntries(Object.entries(RUNWAY_DEFAULTS).map(([k, v]) => [k, (c[k] ?? '').toString().trim() || v]));
 });
 
 const runwaySectionRef = ref(null);

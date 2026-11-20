@@ -331,7 +331,7 @@ class EcommerceApiTest extends TestCase
             ->assertJsonPath('success', true);
 
         $sections = $response->json('data');
-        $this->assertCount(13, $sections);
+        $this->assertCount(14, $sections);   // 13 seeded + the favourites carousel
 
         $sectionTypes = array_column($sections, 'type');
         $this->assertContains('hero', $sectionTypes);

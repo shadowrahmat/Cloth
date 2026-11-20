@@ -1,334 +1,311 @@
 <template>
-  <div class="space-y-6">
+  <div class="space-y-5">
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-      <div>
-        <span class="text-xs uppercase tracking-[0.25em] text-[#A89B8A] font-medium block">Fulfillment Operations</span>
-        <h1 class="font-serif text-3xl text-[#111111]">Client Orders</h1>
+    <div>
+      <h2 class="text-xl font-bold tracking-tight text-admin-text">অর্ডার</h2>
+      <p class="text-xs text-admin-muted mt-0.5">নতুন অর্ডার কনফার্ম করুন, কুরিয়ারে দিন, ডেলিভারি হলে আপডেট করুন। স্ট্যাটাস বদলালে গ্রাহক ইমেইল পাবে।</p>
+    </div>
+
+    <!-- Status tabs -->
+    <div class="flex flex-wrap gap-2">
+      <button v-for="s in statusTabs" :key="s.key" type="button" @click="statusFilter = s.key"
+        :class="['om-chip', statusFilter === s.key && 'is-active']">
+        {{ s.label }}
+        <span class="om-chip-count" :class="s.key === 'pending' && (counts.pending || 0) > 0 && statusFilter !== 'pending' && 'is-alert'">{{ bnNumber(s.key ? counts[s.key] || 0 : counts.all || 0) }}</span>
+      </button>
+    </div>
+
+    <div class="adm-card overflow-hidden">
+      <div class="p-4 border-b border-admin-border">
+        <div class="relative max-w-md">
+          <Search :size="16" class="absolute left-3 top-1/2 -translate-y-1/2 text-admin-muted pointer-events-none" />
+          <input v-model="searchQuery" type="search" class="adm-input pl-9" placeholder="অর্ডার নম্বর, নাম, ফোন বা ইমেইল…" />
+        </div>
       </div>
 
-      <!-- Status Filters Tabs -->
-      <div class="flex flex-wrap gap-2 text-xs">
-        <button
-          v-for="st in ['all', 'pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled']"
-          :key="st"
-          type="button"
-          @click="statusFilter = st === 'all' ? '' : st; fetchOrders(1)"
-          :class="[
-            'px-3 py-1.5 uppercase tracking-wider font-semibold border transition-colors',
-            (statusFilter === st || (st === 'all' && !statusFilter))
-              ? 'bg-[#111111] text-white border-[#111111]'
-              : 'bg-white text-[#111111] border-[#D8CCBC]/60 hover:border-[#111111]'
-          ]"
-        >
-          {{ st }}
-        </button>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-[13px] min-w-[820px]">
+          <thead class="bg-admin-bg text-[11.5px] text-admin-muted">
+            <tr>
+              <th class="font-semibold px-4 py-3">অর্ডার</th>
+              <th class="font-semibold px-3 py-3">গ্রাহক</th>
+              <th class="font-semibold px-3 py-3">পণ্য</th>
+              <th class="font-semibold px-3 py-3">মোট</th>
+              <th class="font-semibold px-3 py-3">পেমেন্ট</th>
+              <th class="font-semibold px-3 py-3">অবস্থা</th>
+              <th class="font-semibold px-3 py-3 pr-4 text-right">কাজ</th>
+            </tr>
+          </thead>
+          <tbody v-if="loading">
+            <tr v-for="n in 6" :key="n" class="border-t border-admin-border"><td colspan="7" class="px-4 py-3"><div class="h-10 rounded-lg bg-admin-bg animate-pulse"></div></td></tr>
+          </tbody>
+          <tbody v-else-if="orders.length">
+            <tr v-for="o in orders" :key="o.id" class="border-t border-admin-border hover:bg-admin-bg/60 cursor-pointer" @click="openDetail(o)">
+              <td class="px-4 py-3">
+                <span class="block font-mono font-semibold text-admin-text text-[12.5px]">{{ o.order_number }}</span>
+                <span class="block text-[11.5px] text-admin-muted mt-0.5" :title="new Date(o.created_at).toLocaleString()">{{ ago(o.created_at) }}</span>
+              </td>
+              <td class="px-3 py-3">
+                <span class="block font-medium text-admin-text">{{ o.customer_name }}</span>
+                <span class="block text-[11.5px] text-admin-muted">{{ o.customer_phone || o.customer_email }}</span>
+              </td>
+              <td class="px-3 py-3 text-admin-muted text-[12.5px]">{{ bnNumber(itemCount(o)) }}টি</td>
+              <td class="px-3 py-3 font-semibold text-admin-text whitespace-nowrap">{{ money(o.total) }}</td>
+              <td class="px-3 py-3"><span :class="['adm-chip', payMeta(o.payment_status).chip]">{{ payMeta(o.payment_status).label }}</span></td>
+              <td class="px-3 py-3"><span :class="['adm-chip', statusMeta(o.order_status).chip]">{{ statusMeta(o.order_status).label }}</span></td>
+              <td class="px-3 py-3 pr-4" @click.stop>
+                <div class="flex justify-end gap-1">
+                  <button type="button" class="adm-btn !py-1.5" @click="openDetail(o)">দেখুন</button>
+                  <button type="button" class="adm-btn !py-1.5 !px-2.5" title="ইনভয়েস PDF" @click="downloadInvoice(o)"><FileDown :size="15" /></button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+          <tbody v-else>
+            <tr><td colspan="7" class="px-4 py-16 text-center">
+              <ShoppingBag :size="34" class="mx-auto text-admin-muted/60" :stroke-width="1.5" />
+              <p class="mt-3 text-sm font-semibold text-admin-text">{{ searchQuery || statusFilter ? 'এই ফিল্টারে কোনো অর্ডার নেই' : 'এখনো কোনো অর্ডার আসেনি' }}</p>
+            </td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div v-if="meta && meta.last_page > 1" class="flex items-center justify-between px-4 py-3 border-t border-admin-border text-xs text-admin-muted">
+        <span>মোট {{ bnNumber(meta.total) }}টি</span>
+        <div class="flex items-center gap-1">
+          <button type="button" class="adm-btn px-2.5" :disabled="meta.current_page <= 1" @click="fetchOrders(meta.current_page - 1)"><ChevronLeft :size="15" /></button>
+          <span class="px-3">{{ bnNumber(meta.current_page) }} / {{ bnNumber(meta.last_page) }}</span>
+          <button type="button" class="adm-btn px-2.5" :disabled="meta.current_page >= meta.last_page" @click="fetchOrders(meta.current_page + 1)"><ChevronRight :size="15" /></button>
+        </div>
       </div>
     </div>
 
-    <!-- Data Table -->
-    <DataTable
-      :columns="columns"
-      :items="orders"
-      :loading="loading"
-      :meta="meta"
-      v-model:search="searchQuery"
-      search-placeholder="Search by order number or client email..."
-      @page="fetchOrders"
-      @edit="openDetailModal"
-    >
-      <template #col-order_number="{ item }">
-        <span class="font-mono font-bold text-[#111111]">{{ item.order_number }}</span>
-      </template>
-
-      <template #col-total="{ item }">
-        <span class="font-semibold">${{ Number(item.total).toFixed(2) }}</span>
-      </template>
-
-      <template #col-payment_status="{ item }">
-        <span :class="[
-          'px-2 py-0.5 text-[10px] uppercase font-semibold tracking-wider',
-          item.payment_status === 'paid' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
-        ]">
-          {{ item.payment_status }}
-        </span>
-      </template>
-
-      <template #col-order_status="{ item }">
-        <span :class="[
-          'px-2.5 py-1 text-[10px] uppercase font-bold tracking-wider',
-          statusBadgeClass(item.order_status)
-        ]">
-          {{ item.order_status }}
-        </span>
-      </template>
-
-      <template #row-actions="{ item }">
-        <div class="flex items-center gap-2">
-          <button
-            type="button"
-            @click="openDetailModal(item)"
-            class="px-3 py-1 bg-[#111111] text-white text-[11px] uppercase tracking-wider font-semibold hover:bg-black"
-          >
-            Inspect Order
-          </button>
-          <button
-            type="button"
-            @click="downloadInvoice(item)"
-            title="Download PDF Invoice"
-            class="px-2 py-1 border border-[#D8CCBC] text-[#111111] hover:bg-[#F7F5F0] text-[11px] font-medium"
-          >
-            PDF
-          </button>
-        </div>
-      </template>
-    </DataTable>
-
-    <!-- Order Detail & Fulfillment Modal -->
-    <BaseModal
-      :is-open="detailModalOpen"
-      title="Order Details & Status Fulfillment"
-      max-width="3xl"
-      @close="detailModalOpen = false"
-    >
-      <div v-if="selectedOrder" class="space-y-6 text-xs text-[#111111]">
-        <!-- Overview Grid -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-[#F7F5F0] border border-[#D8CCBC]/40">
-          <div>
-            <span class="text-[10px] text-[#A89B8A] uppercase">Order Reference</span>
-            <p class="font-mono font-bold text-sm">{{ selectedOrder.order_number }}</p>
-          </div>
-          <div>
-            <span class="text-[10px] text-[#A89B8A] uppercase">Placed Date</span>
-            <p class="font-medium">{{ new Date(selectedOrder.created_at).toLocaleDateString() }}</p>
-          </div>
-          <div>
-            <span class="text-[10px] text-[#A89B8A] uppercase">Payment Method</span>
-            <p class="font-semibold uppercase">{{ selectedOrder.payment_method }} ({{ selectedOrder.payment_status }})</p>
-          </div>
-          <div>
-            <span class="text-[10px] text-[#A89B8A] uppercase">Fulfillment Status</span>
-            <p class="font-bold text-emerald-800 uppercase">{{ selectedOrder.order_status }}</p>
-          </div>
-        </div>
-
-        <!-- Ordered Items Table -->
-        <div>
-          <h5 class="font-serif text-base text-[#111111] mb-2">Ordered Garments ({{ selectedOrder.items?.length || 0 }})</h5>
-          <div class="border border-[#D8CCBC]/40 divide-y divide-[#D8CCBC]/30">
-            <div
-              v-for="item in selectedOrder.items"
-              :key="item.id"
-              class="p-3 flex items-center justify-between"
-            >
-              <div class="flex items-center gap-3">
-                <img v-if="item.image" :src="item.image" class="w-10 h-12 object-cover bg-[#F7F5F0]" />
-                <div>
-                  <h6 class="font-serif text-xs font-semibold">{{ item.product_name }}</h6>
-                  <p class="text-[10px] text-[#A89B8A]">
-                    SKU: {{ item.sku }} • Size: {{ item.size || 'N/A' }} • Color: {{ item.color || 'N/A' }}
-                  </p>
-                </div>
+    <!-- Detail -->
+    <BaseModal :is-open="detailOpen" :title="selected ? `অর্ডার ${selected.order_number}` : 'অর্ডার'" max-width="4xl" @close="detailOpen = false">
+      <div v-if="selected" class="grid md:grid-cols-[minmax(0,1fr)_300px] gap-5 text-[13px] text-admin-text">
+        <div class="space-y-4 min-w-0">
+          <!-- Items -->
+          <div class="rounded-xl border border-admin-border overflow-hidden">
+            <div v-for="it in selected.items" :key="it.id" class="flex items-center gap-3 p-3 border-b border-admin-border last:border-b-0">
+              <img v-if="it.image" :src="it.image" alt="" class="w-11 h-14 rounded-md object-cover bg-admin-bg shrink-0" />
+              <div class="min-w-0 flex-1">
+                <p class="font-semibold truncate">{{ it.product_name }}</p>
+                <p class="text-[11.5px] text-admin-muted">{{ [it.size && 'সাইজ ' + it.size, it.color].filter(Boolean).join(' · ') || '—' }} · <span class="font-mono">{{ it.sku }}</span></p>
               </div>
-              <div class="text-right">
-                <span class="font-medium">${{ Number(item.subtotal).toFixed(2) }}</span>
-                <span class="text-[10px] text-[#A89B8A] block">Qty: {{ item.quantity }} × ${{ item.price }}</span>
+              <div class="text-right whitespace-nowrap">
+                <p class="font-semibold">{{ money(it.subtotal) }}</p>
+                <p class="text-[11.5px] text-admin-muted">{{ bnNumber(it.quantity) }} × {{ money(it.price) }}</p>
               </div>
             </div>
-          </div>
-        </div>
-
-        <!-- Delivery & Customer Details -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div class="p-4 bg-white border border-[#D8CCBC]/40 space-y-3">
-            <div>
-              <h6 class="font-semibold uppercase tracking-wider text-[11px] mb-2">Shipping Destination</h6>
-              <p class="font-medium">{{ selectedOrder.customer_name }}</p>
-              <p>{{ selectedOrder.shipping_address?.address_line_1 }}</p>
-              <p>{{ selectedOrder.shipping_address?.city }}, {{ selectedOrder.shipping_address?.state }} {{ selectedOrder.shipping_address?.postal_code }}</p>
-              <p>{{ selectedOrder.shipping_address?.country }}</p>
-              <p class="text-[#A89B8A] pt-1">Tel: {{ selectedOrder.customer_phone }}</p>
-            </div>
-            <div class="pt-2 border-t border-[#D8CCBC]/40">
-              <button
-                type="button"
-                :disabled="downloadingInvoice"
-                @click="downloadInvoice(selectedOrder)"
-                class="w-full py-2 bg-white hover:bg-[#F7F5F0] text-[#14382A] border border-[#14382A] font-semibold uppercase tracking-wider text-[10px] transition flex items-center justify-center gap-1.5"
-              >
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <span>{{ downloadingInvoice ? 'Generating PDF...' : 'Download Official PDF Invoice' }}</span>
-              </button>
+            <div class="bg-admin-bg p-3 space-y-1 text-[12.5px]">
+              <div class="flex justify-between"><span class="text-admin-muted">পণ্যের দাম</span><span>{{ money(selected.subtotal) }}</span></div>
+              <div v-if="Number(selected.discount_amount) > 0" class="flex justify-between text-emerald-700"><span>ডিসকাউন্ট {{ selected.coupon_code ? `(${selected.coupon_code})` : '' }}</span><span>− {{ money(selected.discount_amount) }}</span></div>
+              <div class="flex justify-between"><span class="text-admin-muted">ডেলিভারি ({{ selected.shipping_method || '—' }})</span><span>{{ Number(selected.shipping_amount) > 0 ? money(selected.shipping_amount) : 'ফ্রি' }}</span></div>
+              <div class="flex justify-between font-bold text-[14px] pt-1.5 border-t border-admin-border"><span>সর্বমোট</span><span>{{ money(selected.total) }}</span></div>
             </div>
           </div>
 
-          <!-- Status Update Controls -->
-          <div class="p-4 bg-[#F7F5F0] border border-[#D8CCBC]/40 space-y-3">
-            <h6 class="font-semibold uppercase tracking-wider text-[11px]">Update Fulfillment Status</h6>
-            <div>
-              <label class="block text-[10px] uppercase font-semibold mb-1">Order Status</label>
-              <select v-model="statusUpdateForm.order_status" class="w-full px-3 py-1.5 bg-white border border-[#D8CCBC]">
-                <option value="pending">Pending</option>
-                <option value="confirmed">Confirmed</option>
-                <option value="processing">Processing / Tailoring</option>
-                <option value="shipped">Shipped</option>
-                <option value="delivered">Delivered</option>
-                <option value="cancelled">Cancelled (Restore Stock)</option>
-              </select>
+          <!-- Customer -->
+          <div class="grid sm:grid-cols-2 gap-4">
+            <div class="rounded-xl border border-admin-border p-4">
+              <p class="text-[11.5px] font-semibold text-admin-muted mb-2">গ্রাহক</p>
+              <p class="font-semibold">{{ selected.customer_name }}</p>
+              <p v-if="selected.customer_phone" class="mt-1"><a :href="`tel:${selected.customer_phone}`" class="text-admin-sidebar font-medium hover:underline inline-flex items-center gap-1"><Phone :size="13" /> {{ selected.customer_phone }}</a></p>
+              <p class="text-admin-muted text-[12px] mt-0.5 break-all">{{ selected.customer_email }}</p>
             </div>
-            <div>
-              <label class="block text-[10px] uppercase font-semibold mb-1">Payment Status</label>
-              <select v-model="statusUpdateForm.payment_status" class="w-full px-3 py-1.5 bg-white border border-[#D8CCBC]">
-                <option value="unpaid">Unpaid</option>
-                <option value="pending">Pending</option>
-                <option value="paid">Paid</option>
-                <option value="refunded">Refunded</option>
-              </select>
+            <div class="rounded-xl border border-admin-border p-4">
+              <p class="text-[11.5px] font-semibold text-admin-muted mb-2">ডেলিভারি ঠিকানা</p>
+              <p class="leading-relaxed">
+                {{ selected.shipping_address?.address_line_1 }}<template v-if="selected.shipping_address?.address_line_2">, {{ selected.shipping_address.address_line_2 }}</template><br />
+                {{ [selected.shipping_address?.city, selected.shipping_address?.state, selected.shipping_address?.postal_code].filter(Boolean).join(', ') }}
+              </p>
             </div>
-            <div>
-              <label class="block text-[10px] uppercase font-semibold mb-1">Tracking Number / Waybill</label>
-              <input type="text" v-model="statusUpdateForm.tracking_number" placeholder="e.g. DHL-982347192" class="w-full px-3 py-1.5 bg-white border border-[#D8CCBC]" />
-            </div>
-            <button
-              type="button"
-              :disabled="updatingStatus"
-              @click="submitStatusUpdate"
-              class="w-full py-2 bg-[#111111] text-white font-semibold uppercase tracking-wider text-[10px] hover:bg-black"
-            >
-              {{ updatingStatus ? 'Updating...' : 'Save Status Update' }}
-            </button>
           </div>
+          <div v-if="selected.order_notes" class="rounded-xl border border-amber-200 bg-amber-50 p-3 text-[12.5px]">
+            <strong>গ্রাহকের নোট:</strong> {{ selected.order_notes }}
+          </div>
+          <p class="text-[11.5px] text-admin-muted">অর্ডার করা হয়েছে: {{ new Date(selected.created_at).toLocaleString('bn-BD', { dateStyle: 'long', timeStyle: 'short' }) }} · পেমেন্ট: {{ payMethod(selected.payment_method) }}</p>
         </div>
+
+        <!-- Update -->
+        <form class="rounded-xl bg-admin-bg border border-admin-border p-4 space-y-4 self-start" @submit.prevent="submitStatus">
+          <p class="text-[13px] font-semibold">অবস্থা আপডেট</p>
+          <div>
+            <label class="adm-label" for="om-status">অর্ডারের অবস্থা</label>
+            <select id="om-status" v-model="form.order_status" class="adm-input">
+              <option v-for="s in statusOptions" :key="s.key" :value="s.key">{{ s.label }}</option>
+            </select>
+            <p v-if="form.order_status === 'cancelled' && selected.order_status !== 'cancelled'" class="adm-help text-amber-700">বাতিল করলে পণ্যগুলো আবার স্টকে ফিরে যাবে।</p>
+          </div>
+          <div>
+            <label class="adm-label" for="om-pay">পেমেন্ট</label>
+            <select id="om-pay" v-model="form.payment_status" class="adm-input">
+              <option value="pending">বাকি (ডেলিভারিতে নেবে)</option>
+              <option value="paid">টাকা পাওয়া গেছে</option>
+              <option value="unpaid">পরিশোধ হয়নি</option>
+              <option value="refunded">ফেরত দেওয়া হয়েছে</option>
+            </select>
+          </div>
+          <div>
+            <label class="adm-label" for="om-track">ট্র্যাকিং নম্বর</label>
+            <input id="om-track" v-model.trim="form.tracking_number" class="adm-input font-mono text-[12.5px]" placeholder="কুরিয়ারের কনসাইনমেন্ট নম্বর" />
+          </div>
+          <label v-if="emailFor(form.order_status) && form.order_status !== selected.order_status" class="flex items-start gap-2 text-[12.5px] cursor-pointer">
+            <input v-model="form.notify_customer" type="checkbox" class="w-4 h-4 mt-0.5 accent-[#14382A]" />
+            <span>গ্রাহককে “{{ emailFor(form.order_status) }}” ইমেইল পাঠান</span>
+          </label>
+          <button type="submit" class="adm-btn adm-btn-primary w-full" :disabled="updating || !statusDirty">{{ updating ? 'সেভ হচ্ছে…' : 'আপডেট করুন' }}</button>
+          <button type="button" class="adm-btn w-full" :disabled="downloading" @click="downloadInvoice(selected)"><FileDown :size="15" /> {{ downloading ? 'তৈরি হচ্ছে…' : 'ইনভয়েস PDF' }}</button>
+        </form>
       </div>
     </BaseModal>
   </div>
 </template>
 
 <script setup>
-import { useAdminDeepLink } from '../../composables/useAdminDeepLink';
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, computed, onMounted, watch } from 'vue';
+import { Search, FileDown, ChevronLeft, ChevronRight, ShoppingBag, Phone } from 'lucide-vue-next';
 import api from '../../api';
-import DataTable from '../../components/admin/DataTable.vue';
 import BaseModal from '../../components/common/BaseModal.vue';
 import { useToastStore } from '../../stores/toast';
+import { useAdminDeepLink } from '../../composables/useAdminDeepLink';
+import { money, bnNumber } from '../../admin-nav';
 
 const toast = useToastStore();
 const orders = ref([]);
 const loading = ref(true);
 const meta = ref(null);
+const counts = ref({});
 const searchQuery = ref('');
 const statusFilter = ref('');
-const detailModalOpen = ref(false);
-const selectedOrder = ref(null);
-const updatingStatus = ref(false);
-const downloadingInvoice = ref(false);
 
-const columns = [
-  { key: 'order_number', label: 'Order #', sortable: true },
-  { key: 'customer_name', label: 'Client Name', sortable: true },
-  { key: 'customer_email', label: 'Email' },
-  { key: 'total', label: 'Total' },
-  { key: 'payment_status', label: 'Payment' },
-  { key: 'order_status', label: 'Fulfillment' },
-  { key: 'created_at', label: 'Placed Date', sortable: true },
+const statusOptions = [
+  { key: 'pending', label: 'নতুন (কনফার্ম বাকি)', chip: 'bg-amber-50 text-amber-700' },
+  { key: 'confirmed', label: 'কনফার্মড', chip: 'bg-sky-50 text-sky-700' },
+  { key: 'processing', label: 'প্যাক হচ্ছে', chip: 'bg-violet-50 text-violet-700' },
+  { key: 'ready_to_ship', label: 'কুরিয়ারে বুক করা', chip: 'bg-indigo-50 text-indigo-700' },
+  { key: 'shipped', label: 'শিপড (পথে আছে)', chip: 'bg-blue-50 text-blue-700' },
+  { key: 'delivered', label: 'ডেলিভারড', chip: 'bg-emerald-50 text-emerald-700' },
+  { key: 'cancelled', label: 'বাতিল', chip: 'bg-rose-50 text-rose-700' },
+  { key: 'refunded', label: 'রিফান্ড', chip: 'bg-stone-100 text-stone-600' },
 ];
+const statusTabs = [
+  { key: '', label: 'সব' },
+  ...statusOptions.filter((s) => ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'].includes(s.key)).map((s) => ({ key: s.key, label: s.key === 'pending' ? 'নতুন' : s.label.replace(/ \(.*\)/, '') })),
+];
+const statusMeta = (k) => statusOptions.find((s) => s.key === k) || { label: k, chip: 'bg-slate-100 text-slate-600' };
+const PAY = {
+  paid: { label: 'পরিশোধিত', chip: 'bg-emerald-50 text-emerald-700' },
+  pending: { label: 'ডেলিভারিতে', chip: 'bg-slate-100 text-slate-600' },
+  unpaid: { label: 'পরিশোধ হয়নি', chip: 'bg-amber-50 text-amber-700' },
+  failed: { label: 'ব্যর্থ', chip: 'bg-rose-50 text-rose-700' },
+  refunded: { label: 'ফেরত', chip: 'bg-stone-100 text-stone-600' },
+};
+const payMeta = (k) => PAY[k] || { label: k || '—', chip: 'bg-slate-100 text-slate-600' };
+const payMethod = (m) => ({ cod: 'ক্যাশ অন ডেলিভারি', bkash: 'বিকাশ', nagad: 'নগদ' }[m] || m || '—');
+const EMAILS = { confirmed: 'অর্ডার কনফার্ম হয়েছে', shipped: 'অর্ডার কুরিয়ারে দেওয়া হয়েছে', delivered: 'অর্ডার ডেলিভারি হয়েছে', cancelled: 'অর্ডার বাতিল' };
+const emailFor = (s) => EMAILS[s];
+const itemCount = (o) => (o.items || []).reduce((n, i) => n + Number(i.quantity || 0), 0);
 
-const statusUpdateForm = reactive({
-  order_status: 'pending',
-  payment_status: 'unpaid',
-  tracking_number: '',
-});
-
-const statusBadgeClass = (status) => {
-  switch (status) {
-    case 'delivered': return 'bg-emerald-100 text-emerald-800';
-    case 'shipped': return 'bg-blue-100 text-blue-800';
-    case 'processing': return 'bg-amber-100 text-amber-800';
-    case 'cancelled': return 'bg-rose-100 text-rose-800';
-    default: return 'bg-[#F7F5F0] text-[#111111]';
-  }
+const ago = (iso) => {
+  const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+  if (mins < 1) return 'এইমাত্র';
+  if (mins < 60) return `${bnNumber(mins)} মিনিট আগে`;
+  const h = Math.round(mins / 60);
+  if (h < 24) return `${bnNumber(h)} ঘণ্টা আগে`;
+  const d = Math.round(h / 24);
+  if (d < 7) return `${bnNumber(d)} দিন আগে`;
+  return new Date(iso).toLocaleDateString('bn-BD', { day: 'numeric', month: 'short', year: 'numeric' });
 };
 
+let reqId = 0;
 const fetchOrders = async (page = 1) => {
+  const id = ++reqId;
   loading.value = true;
   try {
-    const params = {
-      page,
-      search: searchQuery.value || undefined,
-      order_status: statusFilter.value || undefined,
-    };
-    const res = await api.get('/admin/orders', { params });
+    const res = await api.get('/admin/orders', { params: { page, search: searchQuery.value || undefined, order_status: statusFilter.value || undefined } });
+    if (id !== reqId) return;
     orders.value = res.data.data || [];
     meta.value = res.data.meta || null;
-  } catch (err) {
-    console.error('Failed to load orders', err);
+    counts.value = res.data.meta?.counts || {};
+  } catch {
+    if (id === reqId) toast.error('অর্ডার লোড হয়নি');
   } finally {
-    loading.value = false;
+    if (id === reqId) loading.value = false;
+  }
+};
+let t;
+watch(searchQuery, () => { clearTimeout(t); t = setTimeout(() => fetchOrders(1), 300); });
+watch(statusFilter, () => fetchOrders(1));
+
+// ------------------------------------------------------------------ detail
+const detailOpen = ref(false);
+const selected = ref(null);
+const updating = ref(false);
+const downloading = ref(false);
+const form = reactive({ order_status: 'pending', payment_status: 'pending', tracking_number: '', notify_customer: true });
+const statusDirty = computed(() => selected.value && (
+  form.order_status !== selected.value.order_status
+  || form.payment_status !== selected.value.payment_status
+  || (form.tracking_number || '') !== (selected.value.tracking_number || '')
+));
+
+const openDetail = async (o) => {
+  try {
+    const res = await api.get(`/admin/orders/${o.id}`);
+    selected.value = res.data.data;
+    Object.assign(form, { order_status: selected.value.order_status, payment_status: selected.value.payment_status, tracking_number: selected.value.tracking_number || '', notify_customer: true });
+    detailOpen.value = true;
+  } catch {
+    toast.error('অর্ডারের তথ্য লোড হয়নি');
   }
 };
 
-const openDetailModal = async (item) => {
+const submitStatus = async () => {
+  updating.value = true;
   try {
-    const res = await api.get(`/admin/orders/${item.id}`);
-    selectedOrder.value = res.data.data;
-    statusUpdateForm.order_status = selectedOrder.value.order_status;
-    statusUpdateForm.payment_status = selectedOrder.value.payment_status;
-    statusUpdateForm.tracking_number = selectedOrder.value.tracking_number || '';
-    detailModalOpen.value = true;
-  } catch (err) {
-    toast.error('Failed to load order details');
-  }
-};
-
-const downloadInvoice = async (order) => {
-  if (!order) return;
-  downloadingInvoice.value = true;
-  try {
-    const res = await api.get(`/admin/orders/${order.id}/invoice`, {
-      responseType: 'blob'
-    });
-    const blob = new Blob([res.data], { type: 'application/pdf' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `invoice-${order.order_number}.pdf`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
-    toast.success(`Invoice downloaded for #${order.order_number}`);
-  } catch (err) {
-    console.error(err);
-    toast.error('Failed to generate PDF invoice');
-  } finally {
-    downloadingInvoice.value = false;
-  }
-};
-
-const submitStatusUpdate = async () => {
-  if (!selectedOrder.value) return;
-  updatingStatus.value = true;
-  try {
-    await api.put(`/admin/orders/${selectedOrder.value.id}/status`, statusUpdateForm);
-    selectedOrder.value.order_status = statusUpdateForm.order_status;
-    selectedOrder.value.payment_status = statusUpdateForm.payment_status;
-    selectedOrder.value.tracking_number = statusUpdateForm.tracking_number;
-    detailModalOpen.value = false;
-    toast.success(`Order #${selectedOrder.value.order_number} status updated to ${statusUpdateForm.order_status}`);
+    const res = await api.put(`/admin/orders/${selected.value.id}/status`, { ...form });
+    const emailed = form.notify_customer && emailFor(form.order_status) && form.order_status !== selected.value.order_status;
+    selected.value = { ...selected.value, ...res.data.data };
+    toast.success(`অর্ডার আপডেট হয়েছে${emailed ? ' — গ্রাহককে ইমেইল যাচ্ছে' : ''}`);
+    detailOpen.value = false;
     fetchOrders(meta.value?.current_page || 1);
-  } catch (err) {
-    toast.error(err.response?.data?.message || 'Error updating status');
+  } catch (e) {
+    toast.error(e.response?.data?.message || 'আপডেট হয়নি');
   } finally {
-    updatingStatus.value = false;
+    updating.value = false;
   }
 };
 
-onMounted(() => {
-  fetchOrders(1);
-});
+const downloadInvoice = async (o) => {
+  downloading.value = true;
+  try {
+    const res = await api.get(`/admin/orders/${o.id}/invoice`, { responseType: 'blob' });
+    const url = URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+    const a = Object.assign(document.createElement('a'), { href: url, download: `invoice-${o.order_number}.pdf` });
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  } catch {
+    toast.error('ইনভয়েস তৈরি করা যায়নি');
+  } finally {
+    downloading.value = false;
+  }
+};
 
-// Open from links like ?search=... or ?new=1 (sidebar, Ctrl+K, dashboard)
+onMounted(() => fetchOrders(1));
 useAdminDeepLink({ search: searchQuery, reload: () => fetchOrders(1) });
 </script>
+
+<style scoped>
+.om-chip {
+  display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 999px;
+  font-size: 12.5px; font-weight: 600; color: var(--color-admin-muted); background: #fff; border: 1px solid var(--color-admin-border); transition: all .15s;
+}
+.om-chip:hover { color: var(--color-admin-text); border-color: #C9D2CD; }
+.om-chip-count { font-size: 11px; padding: 0 7px; border-radius: 999px; background: var(--color-admin-bg); line-height: 1.7; }
+.om-chip-count.is-alert { background: #FEF3C7; color: #B45309; }
+.om-chip.is-active { background: var(--color-admin-sidebar); border-color: var(--color-admin-sidebar); color: #fff; }
+.om-chip.is-active .om-chip-count { background: rgba(255, 255, 255, .18); color: #fff; }
+</style>

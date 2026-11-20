@@ -6,7 +6,7 @@
         {{ content.heading || 'গ্রাহকদের পছন্দের DRAWER লুক' }}
       </h3>
       <a
-        href="https://instagram.com"
+        :href="`https://instagram.com/${(content.handle || '@drawerclothing').replace(/^@/, '')}`"
         target="_blank"
         rel="noopener"
         class="text-xs uppercase tracking-widest text-[#A89B8A] hover:text-[#111111] transition-colors inline-block"

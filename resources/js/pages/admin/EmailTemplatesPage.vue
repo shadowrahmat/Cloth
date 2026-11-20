@@ -4,7 +4,7 @@
     <div class="flex flex-col md:flex-row md:items-end justify-between gap-3">
       <div>
         <h2 class="text-xl font-bold tracking-tight text-admin-text">ইমেইল টেমপ্লেট</h2>
-        <p class="text-xs text-admin-muted mt-0.5">অর্ডারের পর গ্রাহক আর আপনার কাছে যে ইমেইল যায়, তার লেখা এখান থেকে বদলান। ডানে সাথে সাথে দেখতে পাবেন কেমন দেখাবে।</p>
+        <p class="text-xs text-admin-muted mt-0.5">অর্ডারের পর গ্রাহক আর আপনার কাছে যে ইমেইল যায়, তার লেখা এখান থেকে বদলান। প্রিভিউতে সাথে সাথে দেখতে পাবেন কেমন দেখাবে।</p>
       </div>
       <nav class="inline-flex p-1 rounded-xl bg-white border border-admin-border self-start md:self-auto" role="tablist">
         <button v-for="t in tabs" :key="t.key" type="button" role="tab" :aria-selected="tab === t.key" @click="tab = t.key"
@@ -513,7 +513,7 @@ const logMeta = {
 const templateName = (key) => templates.value.find((t) => t.key === key)?.name || key;
 const fmtTime = (iso) => {
   const d = new Date(iso);
-  return bnNumber(d.toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true }));
+  return d.toLocaleString('bn-BD', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
 };
 const loadLogs = async (page = 1) => {
   logsLoaded = true;

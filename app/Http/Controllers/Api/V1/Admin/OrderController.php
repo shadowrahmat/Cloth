@@ -24,7 +24,8 @@ class OrderController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('order_number', 'like', "%{$search}%")
                   ->orWhere('customer_name', 'like', "%{$search}%")
-                  ->orWhere('customer_email', 'like', "%{$search}%");
+                  ->orWhere('customer_email', 'like', "%{$search}%")
+                  ->orWhere('customer_phone', 'like', "%{$search}%");
             });
         }
 
@@ -47,6 +48,9 @@ class OrderController extends Controller
                 'last_page' => $orders->lastPage(),
                 'per_page' => $orders->perPage(),
                 'total' => $orders->total(),
+                // numbers for the status tabs
+                'counts' => Order::selectRaw('order_status, count(*) as c')->groupBy('order_status')->pluck('c', 'order_status')
+                    ->map(fn ($c) => (int) $c)->put('all', Order::count()),
             ],
         ]);
     }
@@ -72,7 +76,7 @@ class OrderController extends Controller
         }
 
         $validated = $request->validate([
-            'order_status' => 'nullable|in:pending,confirmed,processing,shipped,delivered,cancelled,refunded',
+            'order_status' => 'nullable|in:pending,confirmed,processing,ready_to_ship,shipped,delivered,cancelled,refunded',
             'payment_status' => 'nullable|in:unpaid,pending,paid,failed,refunded',
             'tracking_number' => 'nullable|string|max:100',
             'order_notes' => 'nullable|string',
@@ -155,7 +159,8 @@ class OrderController extends Controller
             return response()->json(['success' => false, 'message' => 'Order not found'], 404);
         }
 
-        $pdf = Pdf::loadView('pdf.invoice', compact('order'));
+        $shop = self::invoiceShop();
+        $pdf = Pdf::loadView('pdf.invoice', compact('order', 'shop'));
         $pdf->setPaper('a4', 'portrait');
 
         $fileName = "invoice-{$order->order_number}.pdf";
@@ -165,5 +170,21 @@ class OrderController extends Controller
         }
 
         return $pdf->download($fileName);
+    }
+    /** Seller details printed on invoices (Settings → Invoice). PDF fonts are Latin-only, so these are kept in English. */
+    public static function invoiceShop(): array
+    {
+        $s = \App\Models\SiteSetting::whereIn('key', ['invoice_business_name', 'invoice_address', 'invoice_phone', 'invoice_email', 'vat_bin_number', 'invoice_prefix', 'invoice_note'])->pluck('value', 'key');
+        $pick = fn (string $k, string $default) => trim((string) ($s[$k] ?? '')) !== '' ? trim((string) $s[$k]) : $default;
+
+        return [
+            'name' => $pick('invoice_business_name', 'DRAWER CLOTHING'),
+            'address' => $pick('invoice_address', 'Dhaka, Bangladesh'),
+            'phone' => $pick('invoice_phone', ''),
+            'email' => $pick('invoice_email', ''),
+            'bin' => $pick('vat_bin_number', ''),
+            'prefix' => $pick('invoice_prefix', 'INV-'),
+            'note' => $pick('invoice_note', 'Thank you for shopping with us. Size or fit not right? Exchange within 7 days of delivery.'),
+        ];
     }
 }

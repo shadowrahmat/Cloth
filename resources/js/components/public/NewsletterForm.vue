@@ -22,7 +22,7 @@
             type="email"
             v-model="email"
             required
-            placeholder="আপনার ইমেইল লিখুন..."
+            :placeholder="content.placeholder || 'আপনার ইমেইল লিখুন...'"
             class="flex-1 px-4 py-3 bg-white border border-[#D8CCBC] text-xs text-[#111111] placeholder:text-[#A89B8A] focus:outline-none focus:border-[#111111] transition-colors"
           />
           <button

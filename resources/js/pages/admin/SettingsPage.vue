@@ -1,393 +1,157 @@
 <template>
-  <div class="space-y-6">
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E7EBE8]">
-      <div>
-        <h2 class="text-xl font-bold tracking-tight text-[#171C1A]">Central Settings Console</h2>
-        <p class="text-xs text-[#69736E] mt-0.5">Configure store branding, payment gateways, delivery rules, invoices, SMTP, and SMS providers.</p>
-      </div>
+  <div class="space-y-6 max-w-5xl">
+    <div>
+      <h2 class="text-xl font-bold tracking-tight text-admin-text">স্টোর সেটিংস</h2>
+      <p class="text-xs text-admin-muted mt-0.5">দোকানের সব সেটিং কোথায় আছে, আর ইনভয়েসে কী ছাপা হবে।</p>
+    </div>
 
-      <div class="flex items-center gap-3">
-        <button
-          type="button"
-          :disabled="saving"
-          @click="saveSettings"
-          class="inline-flex items-center gap-1.5 px-5 py-2.5 bg-[#14382A] hover:bg-[#16A36A] text-white text-xs font-semibold rounded-md transition-all shadow-xs disabled:opacity-50"
-        >
-          <span v-if="saving" class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-          <span>{{ saving ? 'Saving Console Settings...' : 'Save All Settings' }}</span>
+    <!-- Where everything lives -->
+    <section>
+      <h3 class="text-[13px] font-semibold text-admin-text mb-3">সেটিং খুঁজছেন?</h3>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <router-link v-for="l in links" :key="l.to" :to="l.to" class="adm-card p-4 flex items-start gap-3 hover:border-admin-accent transition-colors group">
+          <span class="w-9 h-9 rounded-lg bg-[#EEF6F1] text-admin-sidebar flex items-center justify-center shrink-0"><component :is="l.icon" :size="18" :stroke-width="1.8" /></span>
+          <span class="min-w-0">
+            <span class="block text-[13px] font-semibold text-admin-text group-hover:text-admin-accent">{{ l.label }}</span>
+            <span class="block text-[11.5px] text-admin-muted leading-snug mt-0.5">{{ l.help }}</span>
+          </span>
+        </router-link>
+      </div>
+    </section>
+
+    <!-- Invoice -->
+    <form class="adm-card" @submit.prevent="save">
+      <header class="adm-card-head">
+        <div>
+          <h3 class="adm-card-title">ইনভয়েস (PDF)</h3>
+          <p class="adm-card-sub">অর্ডার পেজ থেকে ডাউনলোড করা ইনভয়েসের ওপরে ও নিচে এগুলো ছাপা হয়। PDF-এ বাংলা অক্ষর ঠিকমতো আসে না, তাই ইংরেজিতে লিখুন।</p>
+        </div>
+        <button type="button" class="adm-btn shrink-0" :disabled="previewing" @click="previewInvoice">
+          <FileText :size="15" /> {{ previewing ? 'খুলছে…' : 'নমুনা দেখুন' }}
         </button>
-      </div>
-    </div>
-
-    <!-- 7-Tab Navigation -->
-    <div class="flex border-b border-[#E7EBE8] space-x-1 text-xs overflow-x-auto no-scrollbar bg-white p-1 rounded-t-lg">
-      <button
-        v-for="tab in tabs"
-        :key="tab.id"
-        type="button"
-        @click="activeTab = tab.id"
-        :class="[
-          'px-4 py-2.5 font-medium rounded-md whitespace-nowrap transition-all text-xs flex items-center gap-2',
-          activeTab === tab.id ? 'bg-[#14382A] text-white shadow-xs' : 'text-[#69736E] hover:text-[#171C1A] hover:bg-[#F7F8FA]'
-        ]"
-      >
-        <span>{{ tab.icon }}</span>
-        <span>{{ tab.label }}</span>
-      </button>
-    </div>
-
-    <!-- Tab 1: General Branding -->
-    <div v-if="activeTab === 'branding'" class="bg-white p-6 rounded-b-lg border border-[#E7EBE8] shadow-xs space-y-4 text-xs">
-      <h3 class="text-sm font-semibold text-[#171C1A] pb-2 border-b border-[#E7EBE8]">Brand Identity & Currency</h3>
-      
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      </header>
+      <div class="adm-card-body grid sm:grid-cols-2 gap-4">
         <div>
-          <label class="block font-semibold text-[#171C1A] mb-1">Store / Brand Name</label>
-          <input type="text" v-model="settings.site_name" class="w-full px-3 py-2 border border-[#E7EBE8] rounded-md focus:ring-1 focus:ring-[#16A36A]" />
+          <label class="adm-label" for="s-name">ব্যবসার নাম</label>
+          <input id="s-name" v-model.trim="form.invoice_business_name" class="adm-input" placeholder="DRAWER CLOTHING" />
         </div>
         <div>
-          <label class="block font-semibold text-[#171C1A] mb-1">Brand Tagline</label>
-          <input type="text" v-model="settings.site_tagline" class="w-full px-3 py-2 border border-[#E7EBE8] rounded-md focus:ring-1 focus:ring-[#16A36A]" />
+          <label class="adm-label" for="s-bin">BIN / ভ্যাট নম্বর <span class="font-normal text-admin-muted">(না থাকলে খালি)</span></label>
+          <input id="s-bin" v-model.trim="form.vat_bin_number" class="adm-input" />
         </div>
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div>
-          <label class="block font-semibold text-[#171C1A] mb-1">Currency Code (e.g. BDT, USD)</label>
-          <input type="text" v-model="settings.currency_code" class="w-full px-3 py-2 border border-[#E7EBE8] rounded-md focus:ring-1 focus:ring-[#16A36A]" />
+        <div class="sm:col-span-2">
+          <label class="adm-label" for="s-addr">ঠিকানা</label>
+          <textarea id="s-addr" v-model="form.invoice_address" rows="2" class="adm-input" placeholder="House 42, Road 11, Gulshan, Dhaka 1212"></textarea>
         </div>
         <div>
-          <label class="block font-semibold text-[#171C1A] mb-1">Currency Symbol (e.g. ৳, $)</label>
-          <input type="text" v-model="settings.currency_symbol" class="w-full px-3 py-2 border border-[#E7EBE8] rounded-md focus:ring-1 focus:ring-[#16A36A]" />
+          <label class="adm-label" for="s-phone">ফোন</label>
+          <input id="s-phone" v-model.trim="form.invoice_phone" class="adm-input" placeholder="+880 1700 000000" />
         </div>
         <div>
-          <label class="block font-semibold text-[#171C1A] mb-1">Low-Stock Alert Threshold</label>
-          <input type="number" v-model="settings.low_stock_threshold" class="w-full px-3 py-2 border border-[#E7EBE8] rounded-md focus:ring-1 focus:ring-[#16A36A]" />
+          <label class="adm-label" for="s-email">ইমেইল</label>
+          <input id="s-email" v-model.trim="form.invoice_email" type="email" class="adm-input" placeholder="support@yourshop.com" />
+        </div>
+        <div>
+          <label class="adm-label" for="s-prefix">ইনভয়েস নম্বরের শুরু</label>
+          <input id="s-prefix" v-model.trim="form.invoice_prefix" class="adm-input font-mono" placeholder="INV-" maxlength="12" />
+          <p class="adm-help">যেমন: {{ form.invoice_prefix || 'INV-' }}ORD-20261120-AB12C</p>
+        </div>
+        <div class="sm:col-span-2">
+          <label class="adm-label" for="s-note">নিচের লেখা</label>
+          <textarea id="s-note" v-model="form.invoice_note" rows="2" class="adm-input" placeholder="Thank you for shopping with us. Size or fit not right? Exchange within 7 days of delivery."></textarea>
+        </div>
+        <div class="sm:col-span-2 flex items-center gap-3 pt-2 border-t border-admin-border">
+          <button type="submit" class="adm-btn adm-btn-primary" :disabled="saving || !dirty"><Check :size="15" /> {{ saving ? 'সেভ হচ্ছে…' : 'সেভ করুন' }}</button>
+          <span v-if="dirty" class="text-[11.5px] text-amber-700">সেভ হয়নি এমন পরিবর্তন আছে</span>
         </div>
       </div>
-    </div>
+    </form>
 
-    <!-- Tab 2: Delivery & Shipping -->
-    <div v-else-if="activeTab === 'shipping'" class="bg-white p-6 rounded-b-lg border border-[#E7EBE8] shadow-xs space-y-4 text-xs">
-      <h3 class="text-sm font-semibold text-[#171C1A] pb-2 border-b border-[#E7EBE8]">Logistics & Delivery Thresholds</h3>
-      
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <!-- Not connected yet -->
+    <section class="grid md:grid-cols-2 gap-3">
+      <div class="adm-card p-4 flex items-start gap-3">
+        <span class="w-9 h-9 rounded-lg bg-admin-bg text-admin-muted flex items-center justify-center shrink-0"><Wallet :size="18" /></span>
         <div>
-          <label class="block font-semibold text-[#171C1A] mb-1">Inside City Delivery Charge (৳ / $)</label>
-          <input type="number" step="0.01" v-model="settings.inside_city_charge" class="w-full px-3 py-2 border border-[#E7EBE8] rounded-md focus:ring-1 focus:ring-[#16A36A]" />
-        </div>
-        <div>
-          <label class="block font-semibold text-[#171C1A] mb-1">Outside City Delivery Charge (৳ / $)</label>
-          <input type="number" step="0.01" v-model="settings.outside_city_charge" class="w-full px-3 py-2 border border-[#E7EBE8] rounded-md focus:ring-1 focus:ring-[#16A36A]" />
-        </div>
-        <div>
-          <label class="block font-semibold text-[#171C1A] mb-1">Free Shipping Threshold Amount</label>
-          <input type="number" step="0.01" v-model="settings.free_shipping_threshold" class="w-full px-3 py-2 border border-[#E7EBE8] rounded-md focus:ring-1 focus:ring-[#16A36A]" />
+          <p class="text-[13px] font-semibold text-admin-text">পেমেন্ট: শুধু ক্যাশ অন ডেলিভারি</p>
+          <p class="text-[11.5px] text-admin-muted leading-snug mt-0.5">অনলাইন পেমেন্ট (bKash / SSLCommerz) চালু করতে মার্চেন্ট অ্যাকাউন্ট লাগবে। অ্যাকাউন্ট হলে আসল যাচাইসহ যোগ করা হবে।</p>
         </div>
       </div>
-
-      <!-- Critical Option: Delivery Charge To Be Added Later -->
-      <div class="p-4 bg-emerald-50/60 border border-emerald-200 rounded-lg">
-        <label class="flex items-start gap-3 cursor-pointer">
-          <input type="checkbox" v-model="settings.delivery_charge_later" class="rounded border-emerald-300 text-[#16A36A] focus:ring-[#16A36A] mt-0.5" />
-          <div>
-            <span class="font-semibold text-[#14382A] block text-xs">Enable "Delivery Charge To Be Added Later" Mode</span>
-            <span class="text-[11px] text-[#69736E] leading-relaxed block mt-0.5">
-              When checked, checkout displays "Delivery charge to be calculated upon courier handover" and prevents erroneous shipping charge calculations.
-            </span>
-          </div>
-        </label>
-      </div>
-    </div>
-
-    <!-- Tab 3: Payment Gateways -->
-    <div v-else-if="activeTab === 'payment'" class="bg-white p-6 rounded-b-lg border border-[#E7EBE8] shadow-xs space-y-6 text-xs">
-      <h3 class="text-sm font-semibold text-[#171C1A] pb-2 border-b border-[#E7EBE8]">Payment Gateway Integrations</h3>
-
-      <!-- bKash Gateway -->
-      <div class="p-4 border border-[#E7EBE8] rounded-lg bg-[#F7F8FA] space-y-3">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <span class="w-2.5 h-2.5 rounded-full bg-pink-600"></span>
-            <span class="font-bold text-sm text-[#171C1A]">bKash Payment Gateway</span>
-          </div>
-          <label class="flex items-center gap-2 cursor-pointer font-medium text-xs">
-            <input type="checkbox" v-model="settings.enable_bkash" class="rounded text-pink-600 focus:ring-pink-600" />
-            <span>Enable bKash</span>
-          </label>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" v-if="settings.enable_bkash">
-          <div>
-            <label class="block font-medium mb-1 text-[11px]">App Key</label>
-            <input type="password" v-model="settings.bkash_app_key" class="w-full px-3 py-1.5 border border-[#E7EBE8] rounded bg-white" />
-          </div>
-          <div>
-            <label class="block font-medium mb-1 text-[11px]">App Secret</label>
-            <input type="password" v-model="settings.bkash_app_secret" class="w-full px-3 py-1.5 border border-[#E7EBE8] rounded bg-white" />
-          </div>
+      <div class="adm-card p-4 flex items-start gap-3">
+        <span class="w-9 h-9 rounded-lg bg-admin-bg text-admin-muted flex items-center justify-center shrink-0"><MessageSquareText :size="18" /></span>
+        <div>
+          <p class="text-[13px] font-semibold text-admin-text">SMS: এখনো চালু নেই</p>
+          <p class="text-[11.5px] text-admin-muted leading-snug mt-0.5">কোন SMS সার্ভিস (যেমন BulkSMSBD, SSL Wireless) নেবেন ঠিক হলে অর্ডারের SMS যোগ করা যাবে। ততক্ষণ ইমেইল টেমপ্লেট ব্যবহার করুন।</p>
         </div>
       </div>
-
-      <!-- Nagad Gateway -->
-      <div class="p-4 border border-[#E7EBE8] rounded-lg bg-[#F7F8FA] space-y-3">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <span class="w-2.5 h-2.5 rounded-full bg-amber-600"></span>
-            <span class="font-bold text-sm text-[#171C1A]">Nagad Merchant Gateway</span>
-          </div>
-          <label class="flex items-center gap-2 cursor-pointer font-medium text-xs">
-            <input type="checkbox" v-model="settings.enable_nagad" class="rounded text-amber-600 focus:ring-amber-600" />
-            <span>Enable Nagad</span>
-          </label>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" v-if="settings.enable_nagad">
-          <div>
-            <label class="block font-medium mb-1 text-[11px]">Merchant ID</label>
-            <input type="text" v-model="settings.nagad_merchant_id" class="w-full px-3 py-1.5 border border-[#E7EBE8] rounded bg-white" />
-          </div>
-          <div>
-            <label class="block font-medium mb-1 text-[11px]">Public Key</label>
-            <input type="password" v-model="settings.nagad_public_key" class="w-full px-3 py-1.5 border border-[#E7EBE8] rounded bg-white" />
-          </div>
-        </div>
-      </div>
-
-      <!-- SSLCommerz Gateway -->
-      <div class="p-4 border border-[#E7EBE8] rounded-lg bg-[#F7F8FA] space-y-3">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
-            <span class="font-bold text-sm text-[#171C1A]">SSLCommerz Gateway</span>
-          </div>
-          <label class="flex items-center gap-2 cursor-pointer font-medium text-xs">
-            <input type="checkbox" v-model="settings.enable_sslcommerz" class="rounded text-blue-600 focus:ring-blue-600" />
-            <span>Enable SSLCommerz</span>
-          </label>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" v-if="settings.enable_sslcommerz">
-          <div>
-            <label class="block font-medium mb-1 text-[11px]">Store ID</label>
-            <input type="text" v-model="settings.ssl_store_id" class="w-full px-3 py-1.5 border border-[#E7EBE8] rounded bg-white" />
-          </div>
-          <div>
-            <label class="block font-medium mb-1 text-[11px]">Store Password</label>
-            <input type="password" v-model="settings.ssl_store_password" class="w-full px-3 py-1.5 border border-[#E7EBE8] rounded bg-white" />
-          </div>
-        </div>
-      </div>
-
-      <!-- Cash on Delivery -->
-      <div class="p-4 border border-[#E7EBE8] rounded-lg bg-[#F7F8FA] flex items-center justify-between">
-        <div>
-          <span class="font-bold text-sm text-[#171C1A] block">Cash on Delivery (White Glove Handover)</span>
-          <span class="text-[11px] text-[#69736E]">Allow customers to settle payment upon physical courier handover.</span>
-        </div>
-        <label class="flex items-center gap-2 cursor-pointer font-medium text-xs">
-          <input type="checkbox" v-model="settings.enable_cod" class="rounded text-[#16A36A] focus:ring-[#16A36A]" />
-          <span>Active</span>
-        </label>
-      </div>
-    </div>
-
-    <!-- Tab 4: Invoice Settings -->
-    <div v-else-if="activeTab === 'invoice'" class="bg-white p-6 rounded-b-lg border border-[#E7EBE8] shadow-xs space-y-4 text-xs">
-      <h3 class="text-sm font-semibold text-[#171C1A] pb-2 border-b border-[#E7EBE8]">Legal Invoice & Billing Configuration</h3>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label class="block font-semibold text-[#171C1A] mb-1">Registered Business Name</label>
-          <input type="text" v-model="settings.invoice_business_name" class="w-full px-3 py-2 border border-[#E7EBE8] rounded-md focus:ring-1 focus:ring-[#16A36A]" />
-        </div>
-        <div>
-          <label class="block font-semibold text-[#171C1A] mb-1">VAT / BIN Registration Number</label>
-          <input type="text" v-model="settings.vat_bin_number" class="w-full px-3 py-2 border border-[#E7EBE8] rounded-md focus:ring-1 focus:ring-[#16A36A]" />
-        </div>
-      </div>
-
-      <div>
-        <label class="block font-semibold text-[#171C1A] mb-1">Registered Official Address</label>
-        <input type="text" v-model="settings.invoice_address" class="w-full px-3 py-2 border border-[#E7EBE8] rounded-md focus:ring-1 focus:ring-[#16A36A]" />
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label class="block font-semibold text-[#171C1A] mb-1">Invoice Number Prefix (e.g. DH-)</label>
-          <input type="text" v-model="settings.invoice_prefix" class="w-full px-3 py-2 border border-[#E7EBE8] rounded-md focus:ring-1 focus:ring-[#16A36A]" />
-        </div>
-        <div>
-          <label class="block font-semibold text-[#171C1A] mb-1">Billing Support Email</label>
-          <input type="email" v-model="settings.invoice_email" class="w-full px-3 py-2 border border-[#E7EBE8] rounded-md focus:ring-1 focus:ring-[#16A36A]" />
-        </div>
-      </div>
-    </div>
-
-    <!-- Tab 5: Email Configuration & SMTP -->
-    <div v-else-if="activeTab === 'email'" class="bg-white p-6 rounded-b-lg border border-[#E7EBE8] shadow-xs space-y-4 text-xs">
-      <h3 class="text-sm font-semibold text-[#171C1A] pb-2 border-b border-[#E7EBE8]">SMTP Server & Email Delivery</h3>
-
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div>
-          <label class="block font-semibold text-[#171C1A] mb-1">SMTP Host</label>
-          <input type="text" v-model="settings.smtp_host" placeholder="smtp.mailtrap.io" class="w-full px-3 py-2 border border-[#E7EBE8] rounded-md focus:ring-1 focus:ring-[#16A36A]" />
-        </div>
-        <div>
-          <label class="block font-semibold text-[#171C1A] mb-1">Port</label>
-          <input type="number" v-model="settings.smtp_port" placeholder="587" class="w-full px-3 py-2 border border-[#E7EBE8] rounded-md focus:ring-1 focus:ring-[#16A36A]" />
-        </div>
-        <div>
-          <label class="block font-semibold text-[#171C1A] mb-1">Encryption</label>
-          <select v-model="settings.smtp_encryption" class="w-full px-3 py-2 border border-[#E7EBE8] rounded-md focus:ring-1 focus:ring-[#16A36A]">
-            <option value="tls">TLS</option>
-            <option value="ssl">SSL</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label class="block font-semibold text-[#171C1A] mb-1">SMTP Username</label>
-          <input type="text" v-model="settings.smtp_username" class="w-full px-3 py-2 border border-[#E7EBE8] rounded-md focus:ring-1 focus:ring-[#16A36A]" />
-        </div>
-        <div>
-          <label class="block font-semibold text-[#171C1A] mb-1">SMTP Password</label>
-          <input type="password" v-model="settings.smtp_password" class="w-full px-3 py-2 border border-[#E7EBE8] rounded-md focus:ring-1 focus:ring-[#16A36A]" />
-        </div>
-      </div>
-    </div>
-
-    <!-- Tab 6: SMS Configuration -->
-    <div v-else-if="activeTab === 'sms'" class="bg-white p-6 rounded-b-lg border border-[#E7EBE8] shadow-xs space-y-4 text-xs">
-      <h3 class="text-sm font-semibold text-[#171C1A] pb-2 border-b border-[#E7EBE8]">SMS Notifications Gateway</h3>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label class="block font-semibold text-[#171C1A] mb-1">SMS Gateway Provider</label>
-          <select v-model="settings.sms_provider" class="w-full px-3 py-2 border border-[#E7EBE8] rounded-md focus:ring-1 focus:ring-[#16A36A]">
-            <option value="greenweb">Greenweb SMS</option>
-            <option value="mimsms">MiMSMS Bangladesh</option>
-            <option value="twilio">Twilio Global</option>
-          </select>
-        </div>
-        <div>
-          <label class="block font-semibold text-[#171C1A] mb-1">Registered Sender ID (Masking)</label>
-          <input type="text" v-model="settings.sms_sender_id" placeholder="e.g. ATELIER" class="w-full px-3 py-2 border border-[#E7EBE8] rounded-md focus:ring-1 focus:ring-[#16A36A]" />
-        </div>
-      </div>
-
-      <div>
-        <label class="block font-semibold text-[#171C1A] mb-1">SMS API Token / Key</label>
-        <input type="password" v-model="settings.sms_api_key" class="w-full px-3 py-2 border border-[#E7EBE8] rounded-md focus:ring-1 focus:ring-[#16A36A]" />
-      </div>
-    </div>
-
-    <!-- Tab 7: reCAPTCHA v3 -->
-    <div v-else-if="activeTab === 'recaptcha'" class="bg-white p-6 rounded-b-lg border border-[#E7EBE8] shadow-xs space-y-4 text-xs">
-      <h3 class="text-sm font-semibold text-[#171C1A] pb-2 border-b border-[#E7EBE8]">Google reCAPTCHA v3 Bot Defense</h3>
-
-      <div class="flex items-center gap-2 mb-2">
-        <input type="checkbox" v-model="settings.enable_recaptcha" id="recaptcha_active" class="rounded text-[#16A36A] focus:ring-[#16A36A]" />
-        <label for="recaptcha_active" class="font-semibold text-xs text-[#171C1A]">Enable reCAPTCHA v3 verification on checkout and contact forms</label>
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label class="block font-semibold text-[#171C1A] mb-1">Site Key</label>
-          <input type="text" v-model="settings.recaptcha_site_key" class="w-full px-3 py-2 border border-[#E7EBE8] rounded-md focus:ring-1 focus:ring-[#16A36A]" />
-        </div>
-        <div>
-          <label class="block font-semibold text-[#171C1A] mb-1">Secret Key</label>
-          <input type="password" v-model="settings.recaptcha_secret_key" class="w-full px-3 py-2 border border-[#E7EBE8] rounded-md focus:ring-1 focus:ring-[#16A36A]" />
-        </div>
-      </div>
-    </div>
+    </section>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { useToastStore } from '../../stores/toast';
+import { reactive, ref, computed, onMounted } from 'vue';
+import { Check, FileText, Palette, Banknote, Mail, Ruler, UserCog, Truck, Wallet, MessageSquareText } from 'lucide-vue-next';
 import api from '../../api';
+import { useToastStore } from '../../stores/toast';
 
 const toast = useToastStore();
-const activeTab = ref('branding');
-const saving = ref(false);
 
-const tabs = [
-  { id: 'branding', label: '1. General Branding', icon: '🏷️' },
-  { id: 'shipping', label: '2. Delivery & Shipping', icon: '🚚' },
-  { id: 'payment', label: '3. Payment Gateways', icon: '💳' },
-  { id: 'invoice', label: '4. Invoice Settings', icon: '🧾' },
-  { id: 'email', label: '5. Email & SMTP', icon: '✉️' },
-  { id: 'sms', label: '6. SMS Gateway', icon: '📱' },
-  { id: 'recaptcha', label: '7. Bot Defense v3', icon: '🛡️' },
+const links = [
+  { label: 'নাম, লোগো ও যোগাযোগ', help: 'সাইটের নাম, লোগো, ফোন, ঠিকানা, সোশ্যাল লিংক', to: '/admin/appearance', icon: Palette },
+  { label: 'ডেলিভারি চার্জ', help: 'ঢাকার ভেতরে/বাইরে চার্জ, সময়, ফ্রি ডেলিভারি', to: '/admin/delivery-charges', icon: Banknote },
+  { label: 'ইমেইল ও SMTP', help: 'অর্ডারের ইমেইল, কোন অ্যাকাউন্ট থেকে যাবে', to: '/admin/email-templates', icon: Mail },
+  { label: 'সাইজ চার্ট', help: 'ক্যাটাগরি অনুযায়ী মাপের টেবিল', to: '/admin/appearance?tab=sizes', icon: Ruler },
+  { label: 'কুরিয়ার', help: 'Steadfast পার্সেল ও ট্র্যাকিং', to: '/admin/logistics', icon: Truck },
+  { label: 'স্টাফ ও পাসওয়ার্ড', help: 'কে অ্যাডমিনে ঢুকতে পারবে', to: '/admin/users', icon: UserCog },
 ];
 
-const settings = ref({
-  site_name: 'ATELIER ÉTOILE',
-  site_tagline: 'Haute Prêt-à-Porter',
-  currency_code: 'BDT',
-  currency_symbol: '৳',
-  low_stock_threshold: 5,
-  inside_city_charge: 80,
-  outside_city_charge: 150,
-  free_shipping_threshold: 2500,
-  delivery_charge_later: false,
-  enable_bkash: true,
-  bkash_app_key: '',
-  bkash_app_secret: '',
-  enable_nagad: true,
-  nagad_merchant_id: '',
-  nagad_public_key: '',
-  enable_sslcommerz: true,
-  ssl_store_id: '',
-  ssl_store_password: '',
-  enable_cod: true,
-  invoice_business_name: 'Atelier Etoile Ltd.',
-  vat_bin_number: 'BIN-002918291-0101',
-  invoice_address: 'Level 12, Gulshan Fashion Avenue, Dhaka 1212',
-  invoice_prefix: 'DH-',
-  invoice_email: 'concierge@atelieretoile.com',
-  smtp_host: 'smtp.mailtrap.io',
-  smtp_port: 587,
-  smtp_encryption: 'tls',
-  smtp_username: '',
-  smtp_password: '',
-  sms_provider: 'greenweb',
-  sms_sender_id: 'ATELIER',
-  sms_api_key: '',
-  enable_recaptcha: false,
-  recaptcha_site_key: '',
-  recaptcha_secret_key: '',
-});
+const KEYS = ['invoice_business_name', 'invoice_address', 'invoice_phone', 'invoice_email', 'vat_bin_number', 'invoice_prefix', 'invoice_note'];
+const form = reactive(Object.fromEntries(KEYS.map((k) => [k, ''])));
+const original = ref('');
+const dirty = computed(() => JSON.stringify(form) !== original.value);
+const saving = ref(false);
+const previewing = ref(false);
 
-const fetchSettings = async () => {
+onMounted(async () => {
   try {
     const res = await api.get('/admin/settings');
-    if (res.data?.data) {
-      settings.value = { ...settings.value, ...res.data.data };
-    }
-  } catch (err) {
-    console.error('Failed to load settings', err);
+    const d = res.data?.data || {};
+    KEYS.forEach((k) => (form[k] = d[k] ?? ''));
+  } catch {
+    toast.error('সেটিং লোড হয়নি');
   }
-};
+  original.value = JSON.stringify(form);
+});
 
-const saveSettings = async () => {
+const save = async () => {
   saving.value = true;
   try {
-    await api.post('/admin/settings', settings.value);
-    toast.success('Central settings console updated successfully');
-  } catch (err) {
-    toast.error('Failed to save settings');
+    await api.post('/admin/settings', { group: 'invoice', settings: { ...form } });
+    original.value = JSON.stringify(form);
+    toast.success('ইনভয়েসের তথ্য সেভ হয়েছে');
+  } catch {
+    toast.error('সেভ হয়নি');
   } finally {
     saving.value = false;
   }
 };
 
-onMounted(() => {
-  fetchSettings();
-});
+/** Open the latest order's invoice so the owner sees exactly what gets printed. */
+const previewInvoice = async () => {
+  if (dirty.value) await save();
+  previewing.value = true;
+  try {
+    const list = await api.get('/admin/orders', { params: { per_page: 1 } });
+    const order = (list.data?.data?.data || list.data?.data || [])[0];
+    if (!order) {
+      toast.warning('এখনো কোনো অর্ডার নেই — প্রথম অর্ডারের পর নমুনা দেখা যাবে');
+      return;
+    }
+    const pdf = await api.get(`/admin/orders/${order.id}/invoice`, { params: { stream: 1 }, responseType: 'blob' });
+    window.open(URL.createObjectURL(new Blob([pdf.data], { type: 'application/pdf' })), '_blank');
+  } catch {
+    toast.error('ইনভয়েস খোলা যায়নি');
+  } finally {
+    previewing.value = false;
+  }
+};
 </script>

@@ -13,12 +13,16 @@
           :key="slide.id"
           class="absolute inset-0 w-full h-full"
         >
-          <img
-            :src="slide.image"
-            :alt="slide.title"
-            class="w-full h-full object-cover object-center scale-100 transition-transform duration-[6000ms] ease-out will-change-transform"
-            :class="{ 'scale-105': currentSlideIndex === idx }"
-          />
+          <picture>
+            <source v-if="slide.mobileImage" media="(max-width: 767px)" :srcset="slide.mobileImage" />
+            <img
+              :src="slide.image"
+              :alt="slide.title"
+              :loading="idx === 0 ? 'eager' : 'lazy'"
+              class="w-full h-full object-cover object-center scale-100 transition-transform duration-[6000ms] ease-out will-change-transform"
+              :class="{ 'scale-105': currentSlideIndex === idx }"
+            />
+          </picture>
         </div>
       </transition-group>
     </div>
@@ -29,6 +33,7 @@
 
     <!-- Floating Navigation Arrows (Left & Right) -->
     <button
+      v-if="slides.length > 1"
       type="button"
       @click="prevSlide"
       class="absolute left-4 sm:left-8 top-1/2 -translate-y-1/2 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-black/40 hover:bg-black/75 text-white backdrop-blur-md flex items-center justify-center border border-white/20 text-2xl transition-all shadow-xl active:scale-95 cursor-pointer z-30 group"
@@ -39,6 +44,7 @@
     </button>
 
     <button
+      v-if="slides.length > 1"
       type="button"
       @click="nextSlide"
       class="absolute right-4 sm:right-8 top-1/2 -translate-y-1/2 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-black/40 hover:bg-black/75 text-white backdrop-blur-md flex items-center justify-center border border-white/20 text-2xl transition-all shadow-xl active:scale-95 cursor-pointer z-30 group"
@@ -69,7 +75,7 @@
           </p>
 
           <!-- White Pill CTA Button -->
-          <div class="pt-2">
+          <div v-if="currentSlide.cta" class="pt-2">
             <router-link
               :to="currentSlide.link"
               class="inline-flex items-center gap-3 px-7 sm:px-8 py-3.5 sm:py-4 bg-white text-[#111111] hover:bg-[#14382A] hover:text-white rounded-full font-bold text-xs sm:text-sm tracking-wider uppercase transition-all duration-300 shadow-2xl group cursor-pointer"
@@ -83,7 +89,7 @@
         <!-- ============================================== -->
         <!-- BOTTOM-RIGHT: Category Tabs with Circular Progress Timer -->
         <!-- ============================================== -->
-        <div class="flex items-center gap-5 sm:gap-7 lg:gap-8 overflow-x-auto pb-2 lg:pb-0 scrollbar-none">
+        <div v-if="slides.length > 1" class="flex items-center gap-5 sm:gap-7 lg:gap-8 overflow-x-auto pb-2 lg:pb-0 scrollbar-none">
           <div
             v-for="(slide, idx) in slides"
             :key="slide.id"
@@ -146,6 +152,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { HERO_DEFAULT_SLIDES, HERO_DEFAULT_SECONDS } from '../../utils/homeDefaults';
 
 const props = defineProps({
   content: {
@@ -158,43 +165,27 @@ const currentSlideIndex = ref(0);
 const progressPercent = ref(0);
 const isPaused = ref(false);
 
-const SLIDE_DURATION = 6000; // 6 seconds per slide
 const TICK_INTERVAL = 40; // 40ms interval for smooth 60fps radial ring
 let elapsed = 0;
 let timer = null;
 
-// 16:9 Widescreen Banner-dimensioned Images
-const slides = [
-  {
-    id: 'slide-01',
-    tabName: 'আউটডোর জ্যাকেট',
-    title: 'Own the Rain',
-    subtitle: 'প্রিমিয়াম টেক-ফ্লিস ও ওয়াটারপ্রুফ আউটারওয়্যার। শীত ও বৃষ্টির প্রতিটি দিনে আন্তর্জাতিক মানের স্বাচ্ছন্দ্য।',
-    cta: 'জ্যাকেট কালেকশন',
-    link: '/collections',
-    image: '/storage/banners/drawer-omega-hero-1920x1080.jpg',
-  },
-  {
-    id: 'slide-02',
-    tabName: 'পাঞ্জাবি সিরিজ',
-    title: 'Heritage Refined',
-    subtitle: 'বাঙালির ঐতিহ্য ও সমকালীন আভিজাত্যের নিখুঁত মেলবন্ধন। এক্সক্লুসিভ জ্যাকার্ড ও সুতি পাঞ্জাবি সংগ্রহ।',
-    cta: 'পাঞ্জাবি কালেকশন',
-    link: '/collection/panjabi',
-    image: '/storage/banners/drawer-panjabi-hero-16-9.jpg',
-  },
-  {
-    id: 'slide-03',
-    tabName: 'স্ট্রিটওয়্যার ও বক্সি',
-    title: 'Urban Silhouette',
-    subtitle: '২৬০ জিএসএম হেভিওয়েট কটন বক্সি টি-শার্ট এবং রিল্যাক্সড ওয়াইড-লেগ ব্যাগি প্যান্ট সিরিজ।',
-    cta: 'টি-শার্ট ও প্যান্ট',
-    link: '/collection/t-shirt',
-    image: '/storage/banners/drawer-streetwear-hero-16-9.jpg',
-  },
-];
+// Slides come from Admin → হোমপেজ বিল্ডার → হিরো ব্যানার; with none saved, the standard three show.
+const slides = computed(() => {
+  const saved = Array.isArray(props.content?.slides) ? props.content.slides.filter((s) => s && s.image) : [];
+  return (saved.length ? saved : HERO_DEFAULT_SLIDES).map((s, i) => ({
+    id: `slide-${i}`,
+    tabName: s.tab || s.title || `স্লাইড ${i + 1}`,
+    title: s.title || '',
+    subtitle: s.subtitle || '',
+    cta: s.cta || '',
+    link: s.link || '/collections',
+    image: s.image,
+    mobileImage: s.mobile_image || '',
+  }));
+});
+const SLIDE_DURATION = Math.min(15, Math.max(3, Number(props.content?.seconds) || HERO_DEFAULT_SECONDS)) * 1000;
 
-const currentSlide = computed(() => slides[currentSlideIndex.value]);
+const currentSlide = computed(() => slides.value[currentSlideIndex.value] || slides.value[0]);
 
 const setSlide = (index) => {
   currentSlideIndex.value = index;
@@ -203,12 +194,12 @@ const setSlide = (index) => {
 };
 
 const nextSlide = () => {
-  const nextIdx = (currentSlideIndex.value + 1) % slides.length;
+  const nextIdx = (currentSlideIndex.value + 1) % slides.value.length;
   setSlide(nextIdx);
 };
 
 const prevSlide = () => {
-  const prevIdx = (currentSlideIndex.value - 1 + slides.length) % slides.length;
+  const prevIdx = (currentSlideIndex.value - 1 + slides.value.length) % slides.value.length;
   setSlide(prevIdx);
 };
 

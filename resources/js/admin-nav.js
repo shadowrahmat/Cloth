@@ -4,7 +4,7 @@
 import {
   LayoutDashboard, ChartColumn, TrendingUp, FolderTree, Shirt, Package, Star, Image,
   ShoppingBag, Truck, Users, RotateCcw, TicketPercent, LayoutTemplate, MessageSquare,
-  FileText, Newspaper, Settings, UserCog, ShieldCheck, ScrollText, Palette, Banknote, Mail,
+  FileText, Newspaper, Settings, UserCog, ShieldCheck, ScrollText, Palette, Banknote, Mail, Quote, Instagram,
 } from 'lucide-vue-next';
 
 /**
@@ -57,7 +57,9 @@ export const navGroups = [
     label: 'ওয়েবসাইট',
     items: [
       { label: 'সাইট কাস্টমাইজ', hint: 'Logo, header, footer', to: '/admin/appearance', icon: Palette, permission: 'view_cms', keywords: 'logo header footer menu announcement contact social seo brand theme size chart সাইজ চার্ট' },
-      { label: 'হোমপেজ বিল্ডার', hint: 'Homepage', to: '/admin/homepage-builder', icon: LayoutTemplate, permission: 'view_cms', keywords: 'banner hero section' },
+      { label: 'হোমপেজ বিল্ডার', hint: 'Homepage', to: '/admin/homepage-builder', icon: LayoutTemplate, permission: 'view_cms', keywords: 'banner hero slider slide section runway newsletter হিরো ব্যানার স্লাইড' },
+      { label: 'গ্রাহকের মতামত', hint: 'Testimonials', to: '/admin/resources/testimonials', icon: Quote, permission: 'view_cms', keywords: 'testimonial review customer feedback homepage মতামত' },
+      { label: 'ইনস্টাগ্রাম ছবি', hint: 'Instagram gallery', to: '/admin/resources/social-gallery-items', icon: Instagram, permission: 'view_cms', keywords: 'instagram social gallery photo homepage' },
       { label: 'মিডিয়া লাইব্রেরি', hint: 'Media', to: '/admin/media', icon: Image, permission: 'view_media', keywords: 'image photo upload' },
       { label: 'পেজ ও পলিসি', hint: 'Pages', to: '/admin/content', icon: FileText, permission: 'view_cms', keywords: 'about policy terms cms' },
       { label: 'ব্লগ / জার্নাল', hint: 'Blog', to: '/admin/blog', icon: Newspaper, permission: 'view_cms', keywords: 'post article journal' },

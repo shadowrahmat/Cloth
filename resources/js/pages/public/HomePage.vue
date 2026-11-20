@@ -10,6 +10,9 @@
         :content="section.content || {}"
       />
 
+      <!-- 3D cover-flow “এই সপ্তাহের পছন্দ” (no v-reveal: a transform on the parent would flatten the 3D) -->
+      <FavouritesCarousel v-else-if="section.type === 'favourites_carousel'" :content="section.content || {}" :products="section.carousel || []" />
+
       <template v-else-if="section.type === 'new_arrivals'">
         <section class="py-16 lg:py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div class="flex items-end justify-between mb-8 sm:mb-12 gap-4" v-reveal>
@@ -25,7 +28,7 @@
           <ProductGrid :products="newArrivals" />
         </section>
         <!-- Runway lookbook follows New Arrivals; switch off with "show_runway" in the builder -->
-        <RunwayLookbook v-if="section.content?.show_runway !== false" :products="runwayProducts" />
+        <RunwayLookbook v-if="section.content?.show_runway !== false" :products="runwayProducts" :content="section.content?.runway || {}" />
       </template>
 
       <EditorialSection v-else-if="section.type === 'editorial'" v-reveal :content="section.content || {}" />
@@ -66,6 +69,7 @@ import RunwayLookbook from '../../components/public/RunwayLookbook.vue';
 import EditorialSection from '../../components/public/EditorialSection.vue';
 import ShopTheLook from '../../components/public/ShopTheLook.vue';
 import CategoryShowcase from '../../components/public/CategoryShowcase.vue';
+import FavouritesCarousel from '../../components/public/FavouritesCarousel.vue';
 import BrandStory from '../../components/public/BrandStory.vue';
 import TestimonialSlider from '../../components/public/TestimonialSlider.vue';
 import InstagramGallery from '../../components/public/InstagramGallery.vue';

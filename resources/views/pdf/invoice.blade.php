@@ -150,16 +150,18 @@
         <table style="width: 100%;">
             <tr>
                 <td style="vertical-align: top;">
-                    <img src="{{ public_path('images/logo.png') }}" style="height: 56px; width: auto; margin-bottom: 6px;" alt="DRAWER CLOTHING" />
+                    <img src="{{ public_path('images/logo.png') }}" style="height: 56px; width: auto; margin-bottom: 6px;" alt="{{ $shop['name'] }}" />
                     <div style="font-size: 10px; color: #69736E; margin-top: 2px;">
-                        Gulshan Avenue, Dhaka, Bangladesh<br/>
-                        concierge@drawerclothing.com | +880 1700 000000
+                        <strong style="color:#171C1A;">{{ $shop['name'] }}</strong><br/>
+                        {!! nl2br(e($shop['address'])) !!}<br/>
+                        {{ implode(' | ', array_filter([$shop['email'], $shop['phone']])) }}
+                        @if($shop['bin'])<br/>BIN: {{ $shop['bin'] }}@endif
                     </div>
                 </td>
                 <td class="invoice-title" style="vertical-align: top;">
                     <h2>TAX INVOICE</h2>
                     <div class="invoice-meta">
-                        <strong>Invoice No:</strong> INV-{{ $order->order_number }}<br/>
+                        <strong>Invoice No:</strong> {{ $shop['prefix'] }}{{ $order->order_number }}<br/>
                         <strong>Date:</strong> {{ $order->created_at->format('M d, Y') }}<br/>
                         <strong>Payment Status:</strong> 
                         <span class="status-badge {{ $order->payment_status === 'paid' ? 'badge-paid' : 'badge-unpaid' }}">
@@ -229,8 +231,8 @@
                         @endif
                     </td>
                     <td class="text-center">{{ $item->quantity }}</td>
-                    <td class="text-right">${{ number_format($item->price, 2) }}</td>
-                    <td class="text-right">${{ number_format($item->subtotal ?? ($item->price * $item->quantity), 2) }}</td>
+                    <td class="text-right">Tk {{ number_format($item->price, 2) }}</td>
+                    <td class="text-right">Tk {{ number_format($item->subtotal ?? ($item->price * $item->quantity), 2) }}</td>
                 </tr>
             @endforeach
         </tbody>
@@ -239,27 +241,27 @@
     <table class="totals-table">
         <tr>
             <td class="text-right"><strong>Subtotal:</strong></td>
-            <td class="text-right">${{ number_format($order->subtotal ?? $order->total, 2) }}</td>
+            <td class="text-right">Tk {{ number_format($order->subtotal ?? $order->total, 2) }}</td>
         </tr>
         @if(($order->discount_amount ?? 0) > 0)
         <tr>
             <td class="text-right" style="color: #15803D;"><strong>Discount ({{ $order->coupon_code ?? 'PROMO' }}):</strong></td>
-            <td class="text-right" style="color: #15803D;">-${{ number_format($order->discount_amount, 2) }}</td>
+            <td class="text-right" style="color: #15803D;">-Tk {{ number_format($order->discount_amount, 2) }}</td>
         </tr>
         @endif
         <tr>
             <td class="text-right"><strong>Shipping / Delivery:</strong></td>
-            <td class="text-right">${{ number_format($order->shipping_fee ?? 0, 2) }}</td>
+            <td class="text-right">Tk {{ number_format($order->shipping_amount ?? 0, 2) }}</td>
         </tr>
         @if(($order->tax_amount ?? 0) > 0)
         <tr>
             <td class="text-right"><strong>VAT / Tax:</strong></td>
-            <td class="text-right">${{ number_format($order->tax_amount, 2) }}</td>
+            <td class="text-right">Tk {{ number_format($order->tax_amount, 2) }}</td>
         </tr>
         @endif
         <tr class="grand-total">
             <td class="text-right">Total Payable:</td>
-            <td class="text-right">${{ number_format($order->total, 2) }}</td>
+            <td class="text-right">Tk {{ number_format($order->total, 2) }}</td>
         </tr>
     </table>
 
@@ -271,7 +273,7 @@
     @endif
 
     <div class="footer">
-        <p>Thank you for shopping with DRAWER CLOTHING. For alterations, sizing assistance or returns within 14 days, contact concierge@drawerclothing.com.</p>
+        <p>{{ $shop['note'] }}</p>
         <p style="font-size: 9px; color: #A89B8A;">Computer generated invoice. No signature required.</p>
     </div>
 </body>

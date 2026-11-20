@@ -34,6 +34,27 @@ class SiteCmsAndShopFilterTest extends TestCase
 
     // ---------------------------------------------------- category showcase
 
+    public function test_homepage_favourites_carousel_returns_real_products_with_badges(): void
+    {
+        $section = \App\Models\HomepageSection::where('type', 'favourites_carousel')->firstOrFail();
+        $section->update(['content' => ['source' => 'sale', 'limit' => 5]]);
+
+        $data = collect($this->getJson('/api/v1/public/homepage')->assertOk()->json('data.sections'))
+            ->firstWhere('type', 'favourites_carousel');
+
+        $this->assertLessThanOrEqual(5, count($data['carousel']));
+        foreach ($data['carousel'] as $p) {
+            $this->assertSame('sale', $p['badge']);                       // only on-sale products, badge from data
+            $this->assertGreaterThan($p['price'], $p['compare_at_price']);
+            $this->assertNotEmpty($p['image']);
+            $this->assertArrayHasKey('variants', $p);
+        }
+
+        // the section sits right after the category grid
+        $types = collect($this->getJson('/api/v1/public/homepage')->json('data.sections'))->pluck('type')->values()->all();
+        $this->assertSame(array_search('category_grid', $types) + 1, array_search('favourites_carousel', $types));
+    }
+
     public function test_homepage_category_showcase_returns_chosen_categories_in_order(): void
     {
         $tag = Str::lower(Str::random(5));
