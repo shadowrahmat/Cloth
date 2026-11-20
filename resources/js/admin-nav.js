@@ -4,7 +4,7 @@
 import {
   LayoutDashboard, ChartColumn, TrendingUp, FolderTree, Shirt, Package, Star, Image,
   ShoppingBag, Truck, Users, RotateCcw, TicketPercent, LayoutTemplate, MessageSquare,
-  FileText, Newspaper, Settings, UserCog, ShieldCheck, ScrollText, Palette, Banknote, Mail, Quote, Instagram,
+  FileText, Newspaper, Settings, UserCog, ShieldCheck, ScrollText, Palette, Banknote, Mail, Quote, Instagram, Send,
 } from 'lucide-vue-next';
 
 /**
@@ -38,6 +38,7 @@ export const navGroups = [
       { label: 'কুরিয়ার ও ডেলিভারি', hint: 'Logistics', to: '/admin/logistics', icon: Truck, permission: 'view_orders', keywords: 'steadfast courier shipment delivery' },
       { label: 'ডেলিভারি চার্জ', hint: 'Delivery charges', to: '/admin/delivery-charges', icon: Banknote, permission: 'manage_shipping', keywords: 'shipping rate fee dhaka free delivery' },
       { label: 'গ্রাহক', hint: 'Customers', to: '/admin/customers', icon: Users, permission: 'view_customers', keywords: 'client buyer' },
+      { label: 'নিউজলেটার সাবস্ক্রাইবার', hint: 'Subscribers', to: '/admin/resources/newsletter-subscribers', icon: Send, permission: 'view_customers', keywords: 'newsletter subscriber email list mailchimp নিউজলেটার' },
       { label: 'মেসেজ', hint: 'Messages', to: '/admin/messages', icon: MessageSquare, badge: 'new_inquiries', badgeTone: 'info', permission: 'view_customers', keywords: 'contact inquiry inbox' },
     ],
   },

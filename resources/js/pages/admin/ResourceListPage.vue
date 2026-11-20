@@ -1,18 +1,20 @@
 <template>
   <div v-if="config" class="space-y-6">
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
       <div>
-        <span class="text-xs uppercase tracking-[0.25em] text-[#A89B8A] font-medium block">Resource Management</span>
-        <h1 class="font-serif text-3xl text-[#111111]">{{ config.label }}</h1>
+        <h2 class="text-xl font-bold tracking-tight text-admin-text">{{ config.label }}</h2>
+        <p v-if="config.description" class="text-xs text-admin-muted mt-0.5 max-w-2xl">{{ config.description }}</p>
       </div>
 
-      <router-link
-        :to="`/admin/resources/${resourceKey}/create`"
-        class="px-5 py-2.5 bg-[#111111] hover:bg-black text-white text-xs uppercase tracking-wider font-semibold transition-colors shadow-xs shrink-0 inline-flex items-center gap-2"
-      >
-        <span>+ Add New {{ config.singular }}</span>
-      </router-link>
+      <div class="flex items-center gap-2 shrink-0">
+        <button v-if="config.exportUrl" type="button" class="adm-btn" :disabled="exporting" @click="exportCsv">
+          {{ exporting ? 'ডাউনলোড হচ্ছে…' : 'CSV ডাউনলোড' }}
+        </button>
+        <router-link v-if="config.canCreate !== false" :to="`/admin/resources/${resourceKey}/create`" class="adm-btn adm-btn-primary">
+          + নতুন {{ config.singular }}
+        </router-link>
+      </div>
     </div>
 
     <!-- Dynamic DataTable -->
@@ -34,26 +36,26 @@
     <!-- Delete Confirmation Modal -->
     <BaseModal
       :is-open="deleteModalOpen"
-      title="Confirm Record Deletion"
+      title="মুছে ফেলবেন?"
       max-width="sm"
       @close="deleteModalOpen = false"
     >
       <div class="space-y-4 text-xs text-[#111111]">
-        <p>Are you sure you want to permanently delete this {{ config.singular?.toLowerCase() }}? This action cannot be reversed.</p>
+        <p>এই {{ config.singular }} স্থায়ীভাবে মুছে যাবে, ফেরানো যাবে না।</p>
         <div class="flex justify-end gap-3 pt-4 border-t border-[#D8CCBC]/40">
           <button
             type="button"
             @click="deleteModalOpen = false"
             class="px-4 py-2 border border-[#D8CCBC] text-xs uppercase tracking-wider font-medium"
           >
-            Cancel
+            বাতিল
           </button>
           <button
             type="button"
             @click="executeDelete"
             class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs uppercase tracking-wider font-semibold"
           >
-            Delete
+            মুছে ফেলুন
           </button>
         </div>
       </div>
@@ -61,7 +63,7 @@
   </div>
 
   <div v-else class="py-24 text-center text-xs text-rose-600">
-    Unregistered resource '{{ route.params.resource }}'. Please check admin-resources.js configuration.
+    এই পেজটি পাওয়া যায়নি ({{ route.params.resource }})।
   </div>
 </template>
 
@@ -86,6 +88,25 @@ const searchQuery = ref('');
 const sortBy = ref('');
 const sortDirection = ref('asc');
 const deleteModalOpen = ref(false);
+const exporting = ref(false);
+
+/** Download the whole list as a CSV file (resources that set exportUrl). */
+const exportCsv = async () => {
+  exporting.value = true;
+  try {
+    const res = await api.get(config.value.exportUrl, { responseType: 'blob' });
+    const url = URL.createObjectURL(new Blob([res.data], { type: 'text/csv' }));
+    const a = Object.assign(document.createElement('a'), { href: url, download: `${resourceKey.value}-${new Date().toISOString().slice(0, 10)}.csv` });
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  } catch {
+    alert('ডাউনলোড করা যায়নি');
+  } finally {
+    exporting.value = false;
+  }
+};
 const itemToDelete = ref(null);
 let searchDebounce = null;
 
@@ -143,7 +164,7 @@ const executeDelete = async () => {
     itemToDelete.value = null;
     fetchData(meta.value?.current_page || 1);
   } catch (err) {
-    alert(err.response?.data?.message || 'Delete operation failed');
+    alert(err.response?.data?.message || 'মুছে ফেলা যায়নি');
   }
 };
 

@@ -57,7 +57,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/blog', [PublicBlogController::class, 'index']);
         Route::get('/blog/{slug}', [PublicBlogController::class, 'show']);
         Route::post('/contact', [PublicController::class, 'submitContact']);
-        Route::post('/newsletter/subscribe', [PublicController::class, 'subscribeNewsletter']);
+        Route::post('/newsletter/subscribe', [PublicController::class, 'subscribeNewsletter'])->middleware('throttle:5,1');
         Route::get('/settings', [PublicController::class, 'settings']);
         Route::get('/site', [PublicController::class, 'site']);
         Route::get('/shipping-methods', [CheckoutController::class, 'getShippingMethods']);
@@ -205,6 +205,20 @@ Route::prefix('v1')->group(function () {
             // System Settings
             Route::get('/settings', [SettingsController::class, 'index']);
             Route::post('/settings', [SettingsController::class, 'update']);
+
+            // Newsletter subscribers as a CSV (for Mailchimp etc.)
+            Route::get('/newsletter-subscribers/export', function () {
+                $rows = \App\Models\NewsletterSubscriber::orderByDesc('subscribed_at')->get(['email', 'is_active', 'subscribed_at']);
+
+                return response()->streamDownload(function () use ($rows) {
+                    $out = fopen('php://output', 'w');
+                    fputcsv($out, ['email', 'status', 'subscribed_at']);
+                    foreach ($rows as $r) {
+                        fputcsv($out, [$r->email, $r->is_active ? 'subscribed' : 'unsubscribed', optional($r->subscribed_at)->toDateTimeString()]);
+                    }
+                    fclose($out);
+                }, 'newsletter-subscribers-' . date('Y-m-d') . '.csv', ['Content-Type' => 'text/csv']);
+            });
 
             // Email templates, mail setup and sent-mail log
             Route::get('/email-templates', [EmailTemplateController::class, 'index']);

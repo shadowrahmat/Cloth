@@ -510,18 +510,31 @@ class PublicController extends Controller
 
     public function subscribeNewsletter(Request $request): JsonResponse
     {
-        $request->validate([
-            'email' => 'required|email|max:255',
-        ]);
+        // Bots fill every field; people never see this one.
+        if (filled($request->input('website'))) {
+            return response()->json(['success' => true, 'message' => 'ধন্যবাদ!']);
+        }
 
-        NewsletterSubscriber::firstOrCreate(
-            ['email' => $request->email],
-            ['is_active' => true, 'subscribed_at' => now()]
+        $data = $request->validate(
+            ['email' => 'required|email:rfc|max:255'],
+            ['email.required' => 'ইমেইল ঠিকানা লিখুন।', 'email.email' => 'সঠিক ইমেইল ঠিকানা লিখুন (যেমন name@gmail.com)।']
         );
+        $email = mb_strtolower(trim($data['email']));
+
+        $subscriber = NewsletterSubscriber::where('email', $email)->first();
+        $already = $subscriber && $subscriber->is_active;
+
+        if (! $subscriber) {
+            NewsletterSubscriber::create(['email' => $email, 'is_active' => true, 'subscribed_at' => now()]);
+        } elseif (! $subscriber->is_active) {
+            // came back after unsubscribing
+            $subscriber->update(['is_active' => true, 'subscribed_at' => now()]);
+        }
 
         return response()->json([
             'success' => true,
-            'message' => 'Thank you for subscribing to ATELIER journals.',
+            'already' => $already,
+            'message' => $already ? 'আপনি আগে থেকেই আমাদের তালিকায় আছেন — ধন্যবাদ!' : 'ধন্যবাদ! আপনি যুক্ত হয়েছেন।',
         ]);
     }
 

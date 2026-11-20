@@ -226,13 +226,26 @@
 
         <!-- ---------------------------------------------- newsletter -->
         <template v-else-if="editing.type === 'newsletter'">
-          <div><label class="adm-label">শিরোনাম</label><input v-model="form.content.heading" class="adm-input" placeholder="ফ্যাশন ও অফারের সাথে যুক্ত থাকুন" /></div>
-          <div><label class="adm-label">লেখা</label><textarea v-model="form.content.description" rows="2" class="adm-input"></textarea></div>
+          <div class="grid sm:grid-cols-3 gap-4">
+            <div><label class="adm-label">ছোট উপরের লেখা</label><input v-model="form.content.kicker" class="adm-input" placeholder="নিউজলেটার" /></div>
+            <div class="sm:col-span-2"><label class="adm-label">শিরোনাম</label><input v-model="form.content.heading" class="adm-input" placeholder="ফ্যাশন ও অফারের সাথে যুক্ত থাকুন" /></div>
+          </div>
+          <div><label class="adm-label">লেখা</label><textarea v-model="form.content.description" rows="2" class="adm-input" placeholder="নতুন কালেকশন রিলিজ, বিশেষ ডিসকাউন্ট এবং সিজনাল ক্যাম্পেইনের আপডেট সবার আগে পেতে যুক্ত হোন।"></textarea></div>
+          <div>
+            <div class="flex items-center justify-between gap-3 mb-1.5">
+              <p class="adm-label !mb-0">সুবিধার তালিকা (টিক চিহ্নসহ দেখায়)</p>
+              <label class="flex items-center gap-2 text-[12px] cursor-pointer"><input type="checkbox" class="hb-switch" :checked="form.content.show_benefits !== false" @change="form.content.show_benefits = $event.target.checked" /> দেখান</label>
+            </div>
+            <div v-if="form.content.show_benefits !== false" class="grid sm:grid-cols-3 gap-3">
+              <input v-for="(d, n) in NEWSLETTER_BENEFITS" :key="n" v-model="form.content.benefits[n]" class="adm-input" :placeholder="d" maxlength="60" :aria-label="`সুবিধা ${n + 1}`" />
+            </div>
+          </div>
           <div class="grid sm:grid-cols-2 gap-4">
             <div><label class="adm-label">ইমেইলের ঘরে লেখা</label><input v-model="form.content.placeholder" class="adm-input" placeholder="আপনার ইমেইল লিখুন..." /></div>
             <div><label class="adm-label">বোতামের লেখা</label><input v-model="form.content.button_text" class="adm-input" placeholder="সাবস্ক্রাইব" /></div>
           </div>
-          <div><label class="adm-label">নিচের ছোট লেখা</label><input v-model="form.content.disclaimer" class="adm-input" /></div>
+          <div><label class="adm-label">নিচের ছোট লেখা</label><input v-model="form.content.disclaimer" class="adm-input" placeholder="আপনার ইমেইল কারো সাথে শেয়ার করা হয় না। শুধু দরকারি খবর আর অফার পাঠাই।" /></div>
+          <router-link to="/admin/resources/newsletter-subscribers" class="hb-link"><Send :size="18" /> <span class="flex-1"><strong>সাবস্ক্রাইবারদের তালিকা দেখুন</strong><span class="block text-[12px] text-admin-muted">কারা ইমেইল দিয়েছেন — CSV ডাউনলোড করে অফার পাঠান</span></span> →</router-link>
         </template>
 
         <!-- ---------------------------------------------- anything else -->
@@ -261,7 +274,7 @@
 import { ref, reactive, onMounted, defineComponent, h } from 'vue';
 import {
   ExternalLink, ArrowUp, ArrowDown, Pencil, Plus, Trash2, Check, Quote, Instagram, X,
-  Image as ImageIcon, LayoutGrid, GalleryHorizontal, Sparkles, Newspaper, TrendingUp, Layers, BookOpen, Mail, Square,
+  Image as ImageIcon, LayoutGrid, GalleryHorizontal, Sparkles, Newspaper, TrendingUp, Layers, BookOpen, Mail, Square, Send,
 } from 'lucide-vue-next';
 import api from '../../api';
 import BaseModal from '../../components/common/BaseModal.vue';
@@ -286,6 +299,7 @@ const TYPES = {
   newsletter: { name: 'নিউজলেটার', desc: 'ইমেইল সাবস্ক্রিপশন বক্স', icon: Mail },
 };
 const meta = (s) => TYPES[s.type] || { name: s.title || s.type, desc: s.type, icon: Square };
+const NEWSLETTER_BENEFITS = ['নতুন কালেকশন সবার আগে দেখুন', 'শুধু সাবস্ক্রাইবারদের জন্য বিশেষ ছাড়', 'উৎসব ও সিজনাল অফারের খবর'];
 const STAT_DEFAULTS = [['১০০%', 'প্রিমিয়াম সুতি ও ফেব্রিক'], ['২৪/৭', 'সার্বক্ষণিক গ্রাহক সেবা'], ['৭ দিন', 'সহজ এক্সচেঞ্জ সুবিধা']];
 
 // ------------------------------------------------------------------ list
@@ -357,6 +371,7 @@ const openEdit = (section) => {
   if (section.type === 'favourites_carousel') { c.source ||= 'new'; c.limit ||= 8; }
   if (['new_arrivals', 'best_sellers'].includes(section.type)) c.limit = [4, 8, 12].includes(Number(c.limit)) ? Number(c.limit) : 8;
   if (section.type === 'new_arrivals') c.runway = { ...(c.runway || {}) };
+  if (section.type === 'newsletter') c.benefits = [0, 1, 2].map((i) => (Array.isArray(c.benefits) ? c.benefits[i] : '') || '');
 
   form.content = c;
   snapshot = JSON.stringify(form);
