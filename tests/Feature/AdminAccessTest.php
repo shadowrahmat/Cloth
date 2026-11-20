@@ -53,4 +53,35 @@ class AdminAccessTest extends TestCase
 
         $this->actingAs($admin, 'sanctum')->getJson('/api/v1/admin/dashboard')->assertStatus(200);
     }
+
+    public function test_manager_cannot_manage_users_roles_or_smtp_but_can_run_the_shop(): void
+    {
+        $manager = User::create([
+            'name' => 'Shop Manager',
+            'email' => 'manager-'.uniqid().'@example.test',
+            'password' => 'secret123',
+            'role' => 'manager',
+            'is_active' => true,
+        ]);
+        $this->actingAs($manager, 'sanctum');
+
+        // everyday shop work still allowed
+        $this->getJson('/api/v1/admin/dashboard')->assertOk();
+        $this->getJson('/api/v1/admin/orders')->assertOk();
+
+        // no way to grant themselves admin or read mail credentials
+        $this->postJson('/api/v1/admin/users', [
+            'name' => 'Sneaky',
+            'email' => 'sneaky-'.uniqid().'@example.test',
+            'password' => 'secret123',
+            'role' => 'admin',
+        ])->assertStatus(403);
+        $this->putJson("/api/v1/admin/users/{$manager->id}", [
+            'name' => $manager->name, 'email' => $manager->email, 'role' => 'admin',
+        ])->assertStatus(403);
+        $this->getJson('/api/v1/admin/roles')->assertStatus(403);
+        $this->getJson('/api/v1/admin/email-settings')->assertStatus(403);
+
+        $this->assertSame('manager', $manager->fresh()->role);
+    }
 }

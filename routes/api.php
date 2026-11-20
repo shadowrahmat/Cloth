@@ -226,8 +226,8 @@ Route::prefix('v1')->group(function () {
             Route::post('/email-templates/{key}/preview', [EmailTemplateController::class, 'preview']);
             Route::post('/email-templates/{key}/test', [EmailTemplateController::class, 'test'])->middleware('throttle:10,1');
             Route::post('/email-templates/{key}/reset', [EmailTemplateController::class, 'reset']);
-            Route::get('/email-settings', [EmailTemplateController::class, 'settings']);
-            Route::put('/email-settings', [EmailTemplateController::class, 'saveSettings']);
+            Route::get('/email-settings', [EmailTemplateController::class, 'settings'])->middleware('admin:full');
+            Route::put('/email-settings', [EmailTemplateController::class, 'saveSettings'])->middleware('admin:full');
             Route::get('/email-logs', [EmailTemplateController::class, 'logs']);
 
             // Site Customize (logo, header, footer, contact, SEO)
@@ -235,9 +235,11 @@ Route::prefix('v1')->group(function () {
             Route::put('/appearance', [AppearanceController::class, 'update']);
             Route::post('/appearance/reset', [AppearanceController::class, 'reset']);
 
-            // RBAC (Users & Roles)
-            Route::apiResource('users', UserController::class);
-            Route::apiResource('roles', RoleController::class);
+            // RBAC (Users & Roles): admins only, so a manager can't grant themselves admin.
+            Route::middleware('admin:full')->group(function () {
+                Route::apiResource('users', UserController::class);
+                Route::apiResource('roles', RoleController::class);
+            });
 
             // Generic Resource Registry CRUD
             Route::get('/resources/{resource}', [ResourceController::class, 'index']);

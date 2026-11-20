@@ -21,6 +21,11 @@ class ProductReview extends Model
         'is_approved',
     ];
 
+    /** Reviews are shown on public product pages; never expose the reviewer's email. */
+    protected $hidden = [
+        'author_email',
+    ];
+
     protected $casts = [
         'rating' => 'integer',
         'is_approved' => 'boolean',

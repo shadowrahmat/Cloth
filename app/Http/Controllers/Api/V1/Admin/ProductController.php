@@ -66,7 +66,7 @@ class ProductController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $products->items(),
+            'data' => collect($products->items())->each->makeVisible('cost_price')->all(),
             'meta' => [
                 'current_page' => $products->currentPage(),
                 'last_page' => $products->lastPage(),
@@ -256,7 +256,7 @@ class ProductController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'পণ্য যোগ হয়েছে',
-                'data' => $product->load(['category', 'brand', 'variants']),
+                'data' => $product->load(['category', 'brand', 'variants'])->makeVisible('cost_price'),
             ], 201);
         } catch (Exception $e) {
             DB::rollBack();
@@ -276,7 +276,7 @@ class ProductController extends Controller
             return response()->json(['success' => false, 'message' => 'Product not found'], 404);
         }
 
-        return response()->json(['success' => true, 'data' => $product]);
+        return response()->json(['success' => true, 'data' => $product->makeVisible('cost_price')]);
     }
 
     public function update(Request $request, string|int $id): JsonResponse
@@ -315,7 +315,7 @@ class ProductController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'পণ্য আপডেট হয়েছে',
-                'data' => $product->fresh(['category', 'brand', 'variants']),
+                'data' => $product->fresh(['category', 'brand', 'variants'])->makeVisible('cost_price'),
             ]);
         } catch (Exception $e) {
             DB::rollBack();
@@ -356,7 +356,7 @@ class ProductController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'কপি তৈরি হয়েছে (ড্রাফট হিসেবে)',
-            'data' => $copy->load(['category', 'brand', 'variants']),
+            'data' => $copy->load(['category', 'brand', 'variants'])->makeVisible('cost_price'),
         ], 201);
     }
 

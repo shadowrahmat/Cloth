@@ -25,3 +25,7 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Local-only files: stray SQLite DB copy and unrelated tool bundle
+/cloth
+/capcut-drafts.mcpb

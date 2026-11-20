@@ -50,8 +50,24 @@ class MediaController extends Controller
         ]);
     }
 
+    /**
+     * Uploads land in the public /storage folder on the same origin as the admin
+     * panel, so only inert file types are accepted. SVG, HTML and PHP are refused:
+     * they could run script in the admin's browser or on the server.
+     */
+    private const ALLOWED_EXTENSIONS = 'jpg,jpeg,png,webp,gif,avif,pdf,doc,docx';
+
+    private const MAX_KB = 20480; // 20 MB, matches the server's upload_max_filesize
+
     public function upload(Request $request): JsonResponse
     {
+        $rule = ['file', 'max:' . self::MAX_KB, 'mimes:' . self::ALLOWED_EXTENSIONS, 'extensions:' . self::ALLOWED_EXTENSIONS];
+        $messages = [
+            '*.mimes' => 'শুধু ছবি (JPG, PNG, WebP, GIF, AVIF), PDF বা Word ফাইল আপলোড করা যাবে।',
+            '*.extensions' => 'শুধু ছবি (JPG, PNG, WebP, GIF, AVIF), PDF বা Word ফাইল আপলোড করা যাবে।',
+            '*.max' => 'ফাইল ২০ MB-এর বেশি হতে পারবে না।',
+        ];
+
         // Check for multiple files
         $multipleFiles = $request->file('files');
         if (!$multipleFiles && is_array($request->file('file'))) {
@@ -59,28 +75,21 @@ class MediaController extends Controller
         }
 
         if ($multipleFiles && is_array($multipleFiles)) {
+            $key = $request->file('files') ? 'files' : 'file';
+            $request->validate([
+                $key => 'required|array|max:50',
+                "{$key}.*" => $rule,
+            ], [
+                "{$key}.*.mimes" => $messages['*.mimes'],
+                "{$key}.*.extensions" => $messages['*.extensions'],
+                "{$key}.*.max" => $messages['*.max'],
+            ]);
+
             $created = [];
             foreach ($multipleFiles as $file) {
                 if (!$file || !$file->isValid()) continue;
 
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-                $extension = $file->getClientOriginalExtension() ?: 'jpg';
-                $fileName = Str::slug($originalName) . '-' . time() . '-' . Str::random(4) . '.' . $extension;
-
-                $path = $file->storeAs('uploads', $fileName, 'public');
-
-                $media = MediaFile::create([
-                    'name' => $originalName,
-                    'file_name' => $fileName,
-                    'disk' => 'public',
-                    'path' => $path,
-                    'mime_type' => $file->getMimeType(),
-                    'size' => $file->getSize(),
-                    'alt_text' => $originalName,
-                    'uploaded_by' => $request->user()?->id,
-                ]);
-
-                $created[] = $media;
+                $created[] = $this->storeFile($request, $file, pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME));
             }
 
             ActivityLog::create([
@@ -101,28 +110,17 @@ class MediaController extends Controller
         }
 
         $request->validate([
-            'file' => 'required|file|max:51200', // 50MB max
+            'file' => array_merge(['required'], $rule),
             'alt_text' => 'nullable|string|max:255',
+        ], [
+            'file.mimes' => $messages['*.mimes'],
+            'file.extensions' => $messages['*.extensions'],
+            'file.max' => $messages['*.max'],
         ]);
 
         $file = $request->file('file');
         $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-        $extension = $file->getClientOriginalExtension() ?: 'jpg';
-        $fileName = Str::slug($originalName) . '-' . time() . '-' . Str::random(4) . '.' . $extension;
-
-        // Store file in public disk under 'uploads/'
-        $path = $file->storeAs('uploads', $fileName, 'public');
-
-        $media = MediaFile::create([
-            'name' => $originalName,
-            'file_name' => $fileName,
-            'disk' => 'public',
-            'path' => $path,
-            'mime_type' => $file->getMimeType(),
-            'size' => $file->getSize(),
-            'alt_text' => $request->input('alt_text', $originalName),
-            'uploaded_by' => $request->user()?->id,
-        ]);
+        $media = $this->storeFile($request, $file, $request->input('alt_text', $originalName));
 
         ActivityLog::create([
             'user_id' => $request->user()?->id,
@@ -139,6 +137,28 @@ class MediaController extends Controller
             'message' => 'Media file uploaded successfully',
             'data' => $media,
         ], 201);
+    }
+
+    /** Save a validated upload under uploads/ with a safe name and an extension taken from its real content. */
+    private function storeFile(Request $request, \Illuminate\Http\UploadedFile $file, string $altText): MediaFile
+    {
+        $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+        $extension = strtolower($file->guessExtension() ?: $file->getClientOriginalExtension());
+        $slug = Str::slug($originalName) ?: 'file';
+        $fileName = $slug . '-' . time() . '-' . Str::random(4) . '.' . $extension;
+
+        $path = $file->storeAs('uploads', $fileName, 'public');
+
+        return MediaFile::create([
+            'name' => $originalName,
+            'file_name' => $fileName,
+            'disk' => 'public',
+            'path' => $path,
+            'mime_type' => $file->getMimeType(),
+            'size' => $file->getSize(),
+            'alt_text' => $altText,
+            'uploaded_by' => $request->user()?->id,
+        ]);
     }
 
     public function destroy(Request $request, int $id): JsonResponse
@@ -188,7 +208,7 @@ class MediaController extends Controller
 
         try {
             $manager = new ImageManager(new Driver());
-            $image = $manager->read($fullPath);
+            $image = $manager->decodePath($fullPath);
 
             $width = (int) $request->input('width', 1200);
             if ($width > 0 && $width < $image->width()) {
@@ -203,7 +223,7 @@ class MediaController extends Controller
                 mkdir(dirname($webpFullPath), 0755, true);
             }
 
-            $image->toWebp(85)->save($webpFullPath);
+            $image->encode(new \Intervention\Image\Encoders\WebpEncoder(quality: 85))->save($webpFullPath);
 
             return response()->json([
                 'success' => true,

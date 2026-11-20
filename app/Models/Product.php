@@ -58,6 +58,11 @@ class Product extends Model
         'attributes' => 'array',
     ];
 
+    /** Purchase cost is private; the admin ProductController makes it visible again. */
+    protected $hidden = [
+        'cost_price',
+    ];
+
     protected $appends = [
         'effective_price',
         'is_on_sale',
