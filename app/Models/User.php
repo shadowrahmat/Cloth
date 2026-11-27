@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -32,6 +31,18 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
+
+    protected static function booted(): void
+    {
+        // A token must not outlive the thing that justified it: when a user is deactivated,
+        // deleted, moved to another role or gets a new password, every token they hold is revoked.
+        static::updated(function (User $user) {
+            if ($user->wasChanged('password', 'role') || ($user->wasChanged('is_active') && ! $user->is_active)) {
+                $user->tokens()->delete();
+            }
+        });
+        static::deleting(fn (User $user) => $user->tokens()->delete());
+    }
 
     protected function casts(): array
     {

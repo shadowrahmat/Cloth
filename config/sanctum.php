@@ -50,7 +50,8 @@ return [
     |
     */
 
-    'expiration' => null,
+    // Customer tokens last 30 days; admin tokens get their own, shorter expires_at at login.
+    'expiration' => (int) env('SANCTUM_EXPIRATION', 60 * 24 * 30),
 
     /*
     |--------------------------------------------------------------------------

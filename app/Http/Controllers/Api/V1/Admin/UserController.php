@@ -129,7 +129,10 @@ class UserController extends Controller
         $user->save();
 
         if (array_key_exists('role_ids', $validated)) {
-            $user->roles()->sync($validated['role_ids'] ?? []);
+            $changes = $user->roles()->sync($validated['role_ids'] ?? []);
+            if ($changes['attached'] || $changes['detached']) {
+                $user->tokens()->delete();
+            }
         }
 
         ActivityLog::create([

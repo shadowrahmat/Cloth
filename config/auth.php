@@ -15,6 +15,9 @@ return [
     |
     */
 
+    // Hours an admin/manager login token stays valid.
+    'admin_token_hours' => (int) env('ADMIN_TOKEN_HOURS', 12),
+
     'defaults' => [
         'guard' => env('AUTH_GUARD', 'web'),
         'passwords' => env('AUTH_PASSWORD_BROKER', 'users'),

@@ -15,6 +15,7 @@
 - **Test:** `user_id` set করা cart session ID দিয়ে নেওয়া যায় না; invalid ID reject হয়।
 
 ## H3 — Token কখনো expire বা revoke হয় না
+> **Status: fixed (আংশিক)।** Admin login token ১২ ঘণ্টায় expire হয় (`ADMIN_TOKEN_HOURS`), বাকি token ৩০ দিনে (`SANCTUM_EXPIRATION`)। `User` model-এ user deactivate, delete, role বা password বদলালে আর `UserController`-এ role assign বদলালে সব token delete হয়। Test: `tests/Feature/TokenLifecycleTest.php`। বাকি: token এখনো localStorage-এ; HttpOnly cookie (Sanctum SPA) করা হয়নি।
 - **কোথায়:** `config/sanctum.php` (`expiration => null`), `resources/js/stores/auth.js` (token localStorage-এ), `UserController`-এর update/destroy।
 - **সমস্যা:** Admin token চুরি হলে সেটা চিরকাল কাজ করবে। User deactivate, role change বা password change করলেও তার token revoke হয় না।
 - **Fix:** Expiry বসাও (admin-এর জন্য ৮–১২ ঘণ্টা)। Deactivate, delete, role change আর password change-এ user-এর সব token delete করো। Best: admin-এর জন্য Sanctum SPA cookie auth (HttpOnly)।

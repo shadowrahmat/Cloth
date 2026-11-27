@@ -41,7 +41,7 @@ class AuthController extends Controller
             ], 403);
         }
 
-        $token = $user->createToken('admin-token', ['admin'])->plainTextToken;
+        $token = $user->createToken('admin-token', ['admin'], now()->addHours((int) config('auth.admin_token_hours', 12)))->plainTextToken;
 
         ActivityLog::create([
             'user_id' => $user->id,
