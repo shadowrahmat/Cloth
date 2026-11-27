@@ -1,0 +1,19 @@
+{
+  "protectedBranches": [
+    "main"
+  ],
+  "blockAttribution": true,
+  "secretsAccess": "ask",
+  "protectedPush": "ask",
+  "localOnly": [
+    ".env",
+    ".env.backup",
+    ".env.production",
+    "auth.json",
+    "/cloth (stray SQLite DB copy)",
+    "/capcut-drafts.mcpb (unrelated tool bundle)"
+  ],
+  "formatCommand": "",
+  "bigFileKb": 100,
+  "contextNudgeKb": 400
+}

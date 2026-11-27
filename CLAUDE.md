@@ -1,47 +1,18 @@
-<laravel-boost-guidelines>
-# Laravel Application
+# Engineering Environment
 
-This repository contains a Laravel application. Complete the following setup before working on the user's request.
+Project facts, commands and skill routing: `.claude/CLAUDE.md`. Rules: `.claude/rules/`.
 
-## Prerequisites
+## Operating profile
+- Inspect the repository before acting; never assume branch names, tools or commands. Nearby code and repository conventions beat generic preferences.
+- Do safe, reversible, in-scope work without asking. Start with `git status --short --branch`; read only the files relevant to the task.
 
-Verify that PHP and Composer are available:
+## Principles
+- Understand call sites, data flow and tests before editing; make the smallest complete change.
+- Reuse existing abstractions and dependencies; no speculative abstractions or new packages. Preserve public APIs unless a change is requested.
+- Handle errors explicitly; add or update tests for changed behavior. Never claim a check passed unless it ran and passed; say what was not run.
 
-```sh
-php -v
-composer -V
-```
+## Ask first
+Deleting or overwriting data, files or branches; production deploys or migrations; publishing; merging PRs; force-push, history rewrite or bypassing hooks; new dependencies; touching secrets; broad refactors or breaking API/schema changes.
 
-If either command is unavailable, detect the user's operating system and install the prerequisites with the appropriate command:
-
-macOS:
-
-```sh
-/bin/bash -c "$(curl -fsSL https://php.new/install/mac/8.5)"
-```
-
-Windows PowerShell:
-
-```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://php.new/install/windows/8.5'))
-```
-
-Linux:
-
-```sh
-/bin/bash -c "$(curl -fsSL https://php.new/install/linux/8.5)"
-```
-
-After installation, ask the user to restart their terminal. If the agent needs the restarted shell to continue, ask the user to reopen their terminal and rerun their original prompt.
-
-## Agent Setup
-
-Install Laravel Boost from the application root before making application changes:
-
-```sh
-composer require laravel/boost --dev
-php artisan boost:install
-```
-
-Boost replaces these bootstrap instructions with guidelines tailored to the application. After installation, read `AGENTS.md` again and continue with the user's original request using the generated guidelines.
-</laravel-boost-guidelines>
+## Git and reports
+Inspect status and branch before any git write; stage only intended files. Git rules: `.claude/rules/GIT-SHORTCUTS.md`. Final report: `.claude/rules/COMPLETION-REPORT.md`.

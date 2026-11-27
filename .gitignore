@@ -29,3 +29,12 @@ Thumbs.db
 # Local-only files: stray SQLite DB copy and unrelated tool bundle
 /cloth
 /capcut-drafts.mcpb
+
+# claude-template (generated)
+/.claude/.init-backup/
+/.agents/rules
+/.agents/skills
+/.agents/agents
+/.codex/rules
+/.codex/skills
+/.codex/agents

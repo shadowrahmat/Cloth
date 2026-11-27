@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "model": "sonnet",
+  "permissions": {
+    "deny": [
+      "Read(./**/*.min.js)",
+      "Read(./**/*.map)",
+      "Read(./**/vendor/**)",
+      "Read(./**/storage/logs/**)",
+      "Read(./**/node_modules/**)",
+      "Read(./**/dist/**)",
+      "Read(./**/build/**)",
+      "Read(./**/.next/**)"
+    ],
+    "ask": [
+      "Read(./.env)",
+      "Read(./**/.env)",
+      "Read(./.env.local)",
+      "Read(./**/.env.local)",
+      "Read(./.env.production)",
+      "Read(./**/.env.production)",
+      "Read(./.env.development)",
+      "Read(./**/.env.development)",
+      "Read(./.env.staging)",
+      "Read(./**/.env.staging)",
+      "Read(./.env.test)",
+      "Read(./**/.env.test)",
+      "Read(./.env.production.local)",
+      "Read(./**/.env.production.local)",
+      "Read(./.env.development.local)",
+      "Read(./**/.env.development.local)",
+      "Read(./.env.test.local)",
+      "Read(./**/.env.test.local)",
+      "Read(./**/*.pem)",
+      "Read(./**/*.key)",
+      "Read(./**/id_rsa*)",
+      "Read(./**/id_ed25519*)",
+      "Read(./**/.npmrc)",
+      "Read(./**/.netrc)",
+      "Read(~/.ssh/**)",
+      "Read(~/.aws/**)",
+      "Read(./.env.backup)",
+      "Read(./auth.json)",
+      "Read(./cloth (stray SQLite DB copy))",
+      "Read(./capcut-drafts.mcpb (unrelated tool bundle))"
+    ],
+    "allow": [
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git remote -v)",
+      "Bash(git branch --show-current)",
+      "Bash(php artisan test:*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-bash.mjs\""
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-secrets.mjs\""
+          }
+        ]
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-read.mjs\""
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/context-nudge.mjs\""
+          }
+        ]
+      }
+    ]
+  }
+}
