@@ -3,9 +3,8 @@
 namespace App\Http\Controllers\Api\V1\Customer;
 
 use App\Http\Controllers\Controller;
-use App\Models\Cart;
 use App\Models\User;
-use App\Models\Wishlist;
+use App\Support\GuestSession;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -33,17 +32,7 @@ class CustomerAuthController extends Controller
 
         $token = $user->createToken('customer-token', ['customer'])->plainTextToken;
 
-        // Merge guest cart if session_id provided
-        if ($sessionId = $request->header('X-Session-ID')) {
-            $guestCart = Cart::where('session_id', $sessionId)->first();
-            if ($guestCart) {
-                $guestCart->update(['user_id' => $user->id]);
-            }
-            $guestWishlist = Wishlist::where('session_id', $sessionId)->first();
-            if ($guestWishlist) {
-                $guestWishlist->update(['user_id' => $user->id]);
-            }
-        }
+        GuestSession::mergeInto($user, $request);
 
         return response()->json([
             'success' => true,
@@ -83,17 +72,7 @@ class CustomerAuthController extends Controller
 
         $token = $user->createToken('customer-token', ['customer'])->plainTextToken;
 
-        // Merge guest cart if session_id provided
-        if ($sessionId = $request->header('X-Session-ID')) {
-            $guestCart = Cart::where('session_id', $sessionId)->first();
-            if ($guestCart) {
-                $guestCart->update(['user_id' => $user->id]);
-            }
-            $guestWishlist = Wishlist::where('session_id', $sessionId)->first();
-            if ($guestWishlist) {
-                $guestWishlist->update(['user_id' => $user->id]);
-            }
-        }
+        GuestSession::mergeInto($user, $request);
 
         return response()->json([
             'success' => true,

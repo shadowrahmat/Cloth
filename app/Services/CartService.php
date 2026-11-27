@@ -6,6 +6,7 @@ use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Support\GuestSession;
 use Exception;
 use Illuminate\Http\Request;
 
@@ -14,7 +15,7 @@ class CartService
     public function getOrCreateCart(Request $request): Cart
     {
         $userId = $request->user('sanctum')?->id;
-        $sessionId = $request->header('X-Session-ID') ?: session()->getId();
+        $sessionId = GuestSession::id($request);
 
         if ($userId) {
             $cart = Cart::where('user_id', $userId)->first();

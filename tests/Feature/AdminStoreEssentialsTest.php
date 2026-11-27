@@ -42,7 +42,7 @@ class AdminStoreEssentialsTest extends TestCase
 
     public function test_checkout_rejects_unconnected_online_payment_and_never_marks_orders_paid(): void
     {
-        $session = 'test-' . Str::random(12);
+        $session = (string) Str::uuid();
         $variant = ProductVariant::where('stock', '>', 2)->firstOrFail();
         $this->withHeader('X-Session-ID', $session)
             ->postJson('/api/v1/public/cart/add', ['product_id' => $variant->product_id, 'variant_id' => $variant->id, 'quantity' => 1])

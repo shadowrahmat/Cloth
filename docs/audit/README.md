@@ -14,7 +14,7 @@ Suggested order: আগে H1, H5, M1 (ছোট change, বড় impact), ত�
 
 ### High — [high.md](high.md)
 - [x] **H1** Checkout-এ cart-এর price stale থাকে (fixed)
-- [ ] **H2** Guest session ID predictable, cart/wishlist merge hijack করা যায়
+- [x] **H2** Guest session ID predictable, cart/wishlist merge hijack করা যায় (fixed, commit করা বাকি)
 - [ ] **H3** Sanctum token কখনো expire বা revoke হয় না
 - [x] **H4** RBAC permission কোথাও enforce হয় না (fixed, commit করা বাকি)
 - [ ] **H5** Checkout, track-order, coupon, contact, cart-এ rate limit নেই

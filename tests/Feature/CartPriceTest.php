@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 /** The bag and checkout charge today's price, not the price from the day the item was added (finding H1). */
@@ -18,7 +19,7 @@ class CartPriceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->session = 'test-session-'.uniqid();
+        $this->session = (string) Str::uuid();
     }
 
     private function product(array $attributes = []): Product

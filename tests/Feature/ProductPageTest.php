@@ -30,7 +30,7 @@ class ProductPageTest extends TestCase
 
     private function addToCart(array $payload): array
     {
-        return $this->withHeaders(['X-Session-ID' => 'test-' . Str::random(12)])
+        return $this->withHeaders(['X-Session-ID' => (string) Str::uuid()])
             ->postJson('/api/v1/public/cart/add', $payload)
             ->assertOk()
             ->json('data.items');

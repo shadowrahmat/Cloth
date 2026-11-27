@@ -2,8 +2,10 @@ import axios from 'axios';
 
 // Get or generate session ID for guest carts
 let sessionId = localStorage.getItem('atelier_session_id');
-if (!sessionId) {
-    sessionId = 'sess_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+// An ID made by an older version (Math.random) is replaced; the server only accepts UUIDs.
+if (!sessionId || !UUID.test(sessionId)) {
+    sessionId = crypto.randomUUID();
     localStorage.setItem('atelier_session_id', sessionId);
 }
 

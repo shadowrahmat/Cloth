@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1\Public;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Wishlist;
+use App\Support\GuestSession;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -13,7 +14,7 @@ class WishlistController extends Controller
     protected function getOrCreateWishlist(Request $request): Wishlist
     {
         $userId = $request->user('sanctum')?->id;
-        $sessionId = $request->header('X-Session-ID') ?: session()->getId();
+        $sessionId = GuestSession::id($request);
 
         if ($userId) {
             $wl = Wishlist::where('user_id', $userId)->first();

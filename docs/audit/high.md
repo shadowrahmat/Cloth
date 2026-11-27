@@ -8,6 +8,7 @@
 - **Test:** Item add করো, product-এর price বদলাও, checkout করো; order-এ নতুন price আসছে কিনা assert করো।
 
 ## H2 — Guest session ID predictable; cart/wishlist hijack
+> **Status: fixed।** Browser এখন `crypto.randomUUID()` দিয়ে ID বানায় (পুরোনো ID হলে বদলে নেয়)। `App\Support\GuestSession` header UUID না হলে 422 দেয়; login/register-এ শুধু `user_id`-ছাড়া guest cart/wishlist merge হয়, আর user-এর আগে থেকে cart থাকলে item যোগ হয়। Test: `tests/Feature/GuestSessionTest.php`।
 - **কোথায়:** `resources/js/api.js` (ID বানানো হয় `Math.random()` দিয়ে), `CartService::getOrCreateCart()`, `CustomerAuthController`-এর register/login (`X-Session-ID` ধরে merge)।
 - **সমস্যা:** Client `X-Session-ID` header পাঠায়, server-এ তার format check নেই। Weak ID guess করা যায়, আর কারো ID জানা থাকলে তার cart দেখা যায়। Login/register-এ ওই ID-র cart আর wishlist সরাসরি user-এর account-এ চলে যায়।
 - **Fix:** `crypto.randomUUID()` দিয়ে ID বানাও; server-এ header UUID format-এ validate করো; merge-এর সময় শুধু সেই guest cart নাও যেটার `user_id` নেই; user-এর আগে থেকে cart থাকলে নতুন cart না বানিয়ে item merge করো।
