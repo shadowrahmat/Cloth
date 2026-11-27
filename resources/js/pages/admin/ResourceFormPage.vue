@@ -39,6 +39,8 @@ import { useRoute, useRouter } from 'vue-router';
 import { getResourceConfig } from '../../admin-resources';
 import api from '../../api';
 import DynamicForm from '../../components/admin/DynamicForm.vue';
+import { useAuthStore } from '../../stores/auth';
+import { resourcePermission } from '../../utils/permissions';
 
 const route = useRoute();
 const router = useRouter();
@@ -46,6 +48,13 @@ const router = useRouter();
 const resourceKey = computed(() => route.params.resource);
 const config = computed(() => getResourceConfig(resourceKey.value));
 const isEdit = computed(() => !!route.params.id);
+
+// Opened by URL without permission: back to the list instead of a form that would only fail on save.
+const authStore = useAuthStore();
+if (config.value
+  && !authStore.hasPermission(resourcePermission(config.value, isEdit.value ? 'update' : 'create'))) {
+  router.replace(`/admin/resources/${resourceKey.value}`);
+}
 
 const initialData = ref({});
 const submitting = ref(false);

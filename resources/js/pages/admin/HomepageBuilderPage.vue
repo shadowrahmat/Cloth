@@ -28,13 +28,13 @@
             <span class="block text-[12px] text-admin-muted truncate">{{ meta(section).desc }}</span>
           </button>
           <div class="flex items-center gap-1 shrink-0">
-            <button type="button" class="hb-icon" :disabled="index === 0" @click="move(index, -1)" title="ওপরে নিন" aria-label="ওপরে নিন"><ArrowUp :size="16" /></button>
-            <button type="button" class="hb-icon" :disabled="index === sections.length - 1" @click="move(index, 1)" title="নিচে নিন" aria-label="নিচে নিন"><ArrowDown :size="16" /></button>
+            <button v-can="'update_cms'" type="button" class="hb-icon" :disabled="index === 0" @click="move(index, -1)" title="ওপরে নিন" aria-label="ওপরে নিন"><ArrowUp :size="16" /></button>
+            <button v-can="'update_cms'" type="button" class="hb-icon" :disabled="index === sections.length - 1" @click="move(index, 1)" title="নিচে নিন" aria-label="নিচে নিন"><ArrowDown :size="16" /></button>
             <label class="ml-2 mr-1 flex items-center gap-2 cursor-pointer" :title="section.is_active ? 'সাইটে দেখাচ্ছে — বন্ধ করতে ক্লিক করুন' : 'লুকানো — চালু করতে ক্লিক করুন'">
-              <input type="checkbox" class="hb-switch" :checked="section.is_active" @change="toggleActive(section)" :aria-label="meta(section).name + ' সাইটে দেখান'" />
+              <input v-can="'update_cms'" type="checkbox" class="hb-switch" :checked="section.is_active" @change="toggleActive(section)" :aria-label="meta(section).name + ' সাইটে দেখান'" />
               <span class="hidden sm:inline text-[12px] w-9 text-admin-muted">{{ section.is_active ? 'চালু' : 'বন্ধ' }}</span>
             </label>
-            <button type="button" class="adm-btn" @click="openEdit(section)"><Pencil :size="14" /> এডিট</button>
+            <button v-can="'update_cms'" type="button" class="adm-btn" @click="openEdit(section)"><Pencil :size="14" /> এডিট</button>
           </div>
         </li>
       </ol>
@@ -262,7 +262,7 @@
           </label>
           <div class="flex gap-2">
             <button type="button" class="adm-btn" @click="closeEdit">বাতিল</button>
-            <button type="submit" class="adm-btn adm-btn-primary" :disabled="saving"><Check :size="15" /> {{ saving ? 'সেভ হচ্ছে…' : 'সেভ করুন' }}</button>
+            <button v-can="'update_cms'" type="submit" class="adm-btn adm-btn-primary" :disabled="saving"><Check :size="15" /> {{ saving ? 'সেভ হচ্ছে…' : 'সেভ করুন' }}</button>
           </div>
         </div>
       </form>

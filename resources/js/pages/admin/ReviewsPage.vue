@@ -62,7 +62,7 @@
               <td class="py-3 px-4 text-right space-x-2 whitespace-nowrap">
                 <button
                   type="button"
-                  @click="toggleApproval(r)"
+                  v-can="'update_products'" @click="toggleApproval(r)"
                   :class="[
                     'px-2.5 py-1 text-xs font-semibold rounded-md transition-colors',
                     r.is_approved ? 'bg-amber-50 text-amber-900 hover:bg-amber-100' : 'bg-emerald-50 text-emerald-900 hover:bg-emerald-100'
@@ -72,7 +72,7 @@
                 </button>
                 <button
                   type="button"
-                  @click="deleteReview(r.id)"
+                  v-can="'delete_products'" @click="deleteReview(r.id)"
                   class="px-2 py-1 text-xs text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
                 >
                   Delete

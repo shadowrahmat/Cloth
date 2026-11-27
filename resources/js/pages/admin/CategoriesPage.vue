@@ -43,7 +43,7 @@
 
         <button
           type="button"
-          @click="openCreateModal"
+          v-can="'create_categories'" @click="openCreateModal"
           class="inline-flex items-center gap-1.5 px-4 py-2 bg-[#14382A] text-white text-xs font-semibold rounded-md hover:bg-[#16A36A] transition-colors shadow-xs"
         >
           <span class="text-sm leading-none">+</span>
@@ -268,7 +268,7 @@
               <td class="py-3 px-4 text-center">
                 <button
                   type="button"
-                  @click="toggleFeatured(cat)"
+                  v-can="'update_categories'" @click="toggleFeatured(cat)"
                   class="p-1 rounded hover:bg-slate-100 transition-colors"
                   :title="cat.is_featured ? 'ফিচার্ড বন্ধ করুন' : 'ফিচার্ড চালু করুন'"
                 >
@@ -285,7 +285,7 @@
               <td class="py-3 px-4 text-center">
                 <button
                   type="button"
-                  @click="toggleActive(cat)"
+                  v-can="'update_categories'" @click="toggleActive(cat)"
                   class="transition-transform active:scale-95"
                   :title="cat.is_active ? 'নিষ্ক্রিয় করতে ক্লিক করুন' : 'সক্রিয় করতে ক্লিক করুন'"
                 >
@@ -304,14 +304,14 @@
                 </a>
                 <button
                   type="button"
-                  @click="openEditModal(cat)"
+                  v-can="'update_categories'" @click="openEditModal(cat)"
                   class="px-2.5 py-1 text-xs text-[#14382A] font-semibold hover:bg-slate-100 rounded-md transition-colors"
                 >
                   এডিট
                 </button>
                 <button
                   type="button"
-                  @click="deleteCategory(cat.id)"
+                  v-can="'delete_categories'" @click="deleteCategory(cat.id)"
                   class="px-2.5 py-1 text-xs text-rose-600 font-semibold hover:bg-rose-50 rounded-md transition-colors"
                 >
                   ডিলিট
@@ -412,14 +412,14 @@
               <div class="flex items-center gap-1.5">
                 <button
                   type="button"
-                  @click="openEditModal(cat)"
+                  v-can="'update_categories'" @click="openEditModal(cat)"
                   class="px-2.5 py-1 text-xs text-[#14382A] font-semibold hover:bg-slate-100 rounded-md transition-colors"
                 >
                   এডিট
                 </button>
                 <button
                   type="button"
-                  @click="deleteCategory(cat.id)"
+                  v-can="'delete_categories'" @click="deleteCategory(cat.id)"
                   class="px-2.5 py-1 text-xs text-rose-600 font-semibold hover:bg-rose-50 rounded-md transition-colors"
                 >
                   ডিলিট

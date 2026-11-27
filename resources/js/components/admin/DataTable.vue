@@ -129,14 +129,16 @@
             <td class="px-6 py-4 text-right space-x-2">
               <slot name="row-actions" :item="item">
                 <button
+                  v-if="canEdit"
                   type="button"
                   @click="$emit('edit', item)"
                   class="text-xs text-[#111111] hover:text-[#A89B8A] font-medium"
                 >
                   এডিট
                 </button>
-                <span class="text-[#D8CCBC]">|</span>
+                <span v-if="canEdit && canDelete" class="text-[#D8CCBC]">|</span>
                 <button
+                  v-if="canDelete"
                   type="button"
                   @click="$emit('delete', item)"
                   class="text-xs text-rose-600 hover:text-rose-800 font-medium"
@@ -194,6 +196,8 @@ defineProps({
   searchPlaceholder: { type: String, default: '' },
   sortBy: { type: String, default: '' },
   sortDirection: { type: String, default: 'asc' },
+  canEdit: { type: Boolean, default: true },
+  canDelete: { type: Boolean, default: true },
 });
 
 defineEmits(['update:search', 'sort', 'edit', 'delete', 'page']);

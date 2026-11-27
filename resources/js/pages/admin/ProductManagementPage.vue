@@ -10,10 +10,10 @@
         <button type="button" class="adm-btn" :disabled="exporting" @click="exportCsv">
           <Download :size="15" /> {{ exporting ? 'এক্সপোর্ট হচ্ছে…' : 'CSV এক্সপোর্ট' }}
         </button>
-        <button type="button" class="adm-btn" @click="importModalOpen = true">
+        <button v-can="'create_products'" type="button" class="adm-btn" @click="importModalOpen = true">
           <Upload :size="15" /> ইমপোর্ট
         </button>
-        <button type="button" class="adm-btn adm-btn-primary" @click="openCreate">
+        <button v-can="'create_products'" type="button" class="adm-btn adm-btn-primary" @click="openCreate">
           <Plus :size="16" /> নতুন পণ্য
         </button>
       </div>
@@ -55,10 +55,10 @@
       <!-- ============================================================ bulk bar -->
       <div v-if="selected.length" class="flex flex-wrap items-center gap-2 px-4 py-2.5 bg-[#EEF6F1] border-b border-admin-border text-xs">
         <span class="font-semibold text-admin-sidebar mr-2">{{ bnNumber(selected.length) }}টি বাছাই করা</span>
-        <button type="button" class="adm-btn" @click="bulk('published')"><Eye :size="14" /> প্রকাশ করুন</button>
-        <button type="button" class="adm-btn" @click="bulk('draft')"><EyeOff :size="14" /> ড্রাফট করুন</button>
-        <button type="button" class="adm-btn" @click="bulk('archived')"><Archive :size="14" /> আর্কাইভ</button>
-        <button type="button" class="adm-btn adm-btn-danger" @click="bulk('delete')"><Trash2 :size="14" /> মুছুন</button>
+        <button v-can="'update_products'" type="button" class="adm-btn" @click="bulk('published')"><Eye :size="14" /> প্রকাশ করুন</button>
+        <button v-can="'update_products'" type="button" class="adm-btn" @click="bulk('draft')"><EyeOff :size="14" /> ড্রাফট করুন</button>
+        <button v-can="'update_products'" type="button" class="adm-btn" @click="bulk('archived')"><Archive :size="14" /> আর্কাইভ</button>
+        <button v-can="'delete_products'" type="button" class="adm-btn adm-btn-danger" @click="bulk('delete')"><Trash2 :size="14" /> মুছুন</button>
         <button type="button" class="adm-btn adm-btn-ghost ml-auto" @click="selected = []">বাছাই বাতিল</button>
       </div>
 
@@ -132,10 +132,10 @@
               </td>
               <td class="py-3 px-3 pr-4">
                 <div class="flex items-center justify-end gap-0.5">
-                  <button type="button" class="pm-icon" title="এডিট" @click="openEdit(p)"><Pencil :size="16" /></button>
-                  <button type="button" class="pm-icon" title="কপি করে নতুন পণ্য" @click="duplicate(p)"><Copy :size="16" /></button>
+                  <button v-can="'update_products'" type="button" class="pm-icon" title="এডিট" @click="openEdit(p)"><Pencil :size="16" /></button>
+                  <button v-can="'create_products'" type="button" class="pm-icon" title="কপি করে নতুন পণ্য" @click="duplicate(p)"><Copy :size="16" /></button>
                   <a :href="`/product/${p.slug}`" target="_blank" rel="noopener" class="pm-icon" title="সাইটে দেখুন"><ExternalLink :size="16" /></a>
-                  <button type="button" class="pm-icon hover:!text-rose-600 hover:!bg-rose-50" title="মুছুন" @click="remove(p)"><Trash2 :size="16" /></button>
+                  <button v-can="'delete_products'" type="button" class="pm-icon hover:!text-rose-600 hover:!bg-rose-50" title="মুছুন" @click="remove(p)"><Trash2 :size="16" /></button>
                 </div>
               </td>
             </tr>
@@ -147,7 +147,7 @@
                 <p class="mt-3 text-sm font-semibold text-admin-text">{{ hasFilters ? 'এই ফিল্টারে কোনো পণ্য নেই' : 'এখনো কোনো পণ্য নেই' }}</p>
                 <p class="text-xs text-admin-muted mt-1">
                   <button v-if="hasFilters" type="button" class="text-admin-accent font-semibold hover:underline" @click="clearFilters">ফিল্টার মুছুন</button>
-                  <button v-else type="button" class="text-admin-accent font-semibold hover:underline" @click="openCreate">প্রথম পণ্য যোগ করুন</button>
+                  <button v-can="'create_products'" v-else type="button" class="text-admin-accent font-semibold hover:underline" @click="openCreate">প্রথম পণ্য যোগ করুন</button>
                 </p>
               </td>
             </tr>

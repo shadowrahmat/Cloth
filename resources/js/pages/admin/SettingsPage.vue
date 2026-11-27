@@ -61,7 +61,7 @@
           <textarea id="s-note" v-model="form.invoice_note" rows="2" class="adm-input" placeholder="Thank you for shopping with us. Size or fit not right? Exchange within 7 days of delivery."></textarea>
         </div>
         <div class="sm:col-span-2 flex items-center gap-3 pt-2 border-t border-admin-border">
-          <button type="submit" class="adm-btn adm-btn-primary" :disabled="saving || !dirty"><Check :size="15" /> {{ saving ? 'সেভ হচ্ছে…' : 'সেভ করুন' }}</button>
+          <button v-can="'update_settings'" type="submit" class="adm-btn adm-btn-primary" :disabled="saving || !dirty"><Check :size="15" /> {{ saving ? 'সেভ হচ্ছে…' : 'সেভ করুন' }}</button>
           <span v-if="dirty" class="text-[11.5px] text-amber-700">সেভ হয়নি এমন পরিবর্তন আছে</span>
         </div>
       </div>

@@ -18,7 +18,7 @@
     <div v-if="status && !status.ready" class="flex flex-col sm:flex-row sm:items-center gap-3 p-4 rounded-xl border border-amber-200 bg-amber-50 text-amber-900">
       <AlertTriangle :size="18" class="shrink-0" />
       <p class="text-[13px] flex-1">{{ status.message }}</p>
-      <button v-if="tab !== 'setup'" type="button" class="adm-btn shrink-0" @click="tab = 'setup'">ইমেইল সেটআপ করুন</button>
+      <button v-can="'@admin'" v-if="tab !== 'setup'" type="button" class="adm-btn shrink-0" @click="tab = 'setup'">ইমেইল সেটআপ করুন</button>
     </div>
     <div v-else-if="status" class="flex items-center gap-2.5 px-4 py-2.5 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 text-[13px]">
       <CheckCircle2 :size="16" class="shrink-0" /> {{ status.message }}
@@ -103,11 +103,11 @@
             </div>
 
             <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-admin-border">
-              <button type="button" class="adm-btn adm-btn-primary" :disabled="saving || !dirty" @click="saveTemplate">
+              <button v-can="'update_settings'" type="button" class="adm-btn adm-btn-primary" :disabled="saving || !dirty" @click="saveTemplate">
                 <Check :size="15" /> {{ saving ? 'সেভ হচ্ছে…' : 'সেভ করুন' }}
               </button>
               <button v-if="dirty" type="button" class="adm-btn adm-btn-ghost" @click="discard">পরিবর্তন বাতিল</button>
-              <button v-if="current.is_customized" type="button" class="adm-btn adm-btn-ghost text-admin-muted ml-auto" @click="resetTemplate">
+              <button v-can="'update_settings'" v-if="current.is_customized" type="button" class="adm-btn adm-btn-ghost text-admin-muted ml-auto" @click="resetTemplate">
                 <RotateCcw :size="14" /> আগের লেখায় ফেরান
               </button>
             </div>
@@ -140,7 +140,7 @@
             <p class="text-[11.5px] text-admin-muted mb-2">{{ previewNote }}</p>
             <form class="flex flex-col sm:flex-row gap-2" @submit.prevent="sendTest">
               <input v-model.trim="testEmail" type="email" required class="adm-input" placeholder="আপনার ইমেইল" aria-label="টেস্ট ইমেইল ঠিকানা" />
-              <button type="submit" class="adm-btn shrink-0" :disabled="testing || !testEmail"><Send :size="14" /> {{ testing ? 'পাঠানো হচ্ছে…' : 'টেস্ট ইমেইল পাঠান' }}</button>
+              <button v-can="'update_settings'" type="submit" class="adm-btn shrink-0" :disabled="testing || !testEmail"><Send :size="14" /> {{ testing ? 'পাঠানো হচ্ছে…' : 'টেস্ট ইমেইল পাঠান' }}</button>
             </form>
           </div>
         </section>
@@ -206,7 +206,7 @@
           </div>
 
           <div class="flex flex-wrap items-center gap-2 pt-2">
-            <button type="submit" class="adm-btn adm-btn-primary" :disabled="savingMail"><Check :size="15" /> {{ savingMail ? 'সেভ হচ্ছে…' : 'সেভ করুন' }}</button>
+            <button v-can="'@admin'" type="submit" class="adm-btn adm-btn-primary" :disabled="savingMail"><Check :size="15" /> {{ savingMail ? 'সেভ হচ্ছে…' : 'সেভ করুন' }}</button>
             <span class="text-[11.5px] text-admin-muted">সেভ করার পর “টেমপ্লেট” ট্যাব থেকে টেস্ট ইমেইল পাঠিয়ে দেখে নিন।</span>
           </div>
         </div>

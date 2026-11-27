@@ -68,7 +68,7 @@
             <span v-if="Number(m.free_threshold) > 0"> · ৳{{ Number(m.free_threshold) }}+ অর্ডারে ফ্রি</span>
           </p>
           <button
-            type="submit"
+            v-can="'update_settings'" type="submit"
             :disabled="saving[m.id] || !dirty(m)"
             class="px-4 py-2 rounded-md bg-[#14382A] text-white text-xs font-semibold hover:bg-[#16A36A] transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
           >
@@ -89,7 +89,7 @@
         <ul class="divide-y divide-[#E7EBE8] border-t border-[#E7EBE8]">
           <li v-for="m in inactiveMethods" :key="m.id" class="px-5 py-3 flex items-center justify-between gap-3 text-sm">
             <span class="min-w-0 truncate">{{ m.name }} <span class="text-[11px] text-[#69736E]">· ৳{{ Number(m.rate) }}</span></span>
-            <button type="button" class="text-xs font-semibold text-[#14382A] hover:underline shrink-0" :disabled="saving[m.id]" @click="m.is_active = true; save(m)">
+            <button v-can="'update_settings'" type="button" class="text-xs font-semibold text-[#14382A] hover:underline shrink-0" :disabled="saving[m.id]" @click="m.is_active = true; save(m)">
               চালু করুন
             </button>
           </li>

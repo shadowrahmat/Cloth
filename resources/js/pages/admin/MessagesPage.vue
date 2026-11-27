@@ -76,7 +76,7 @@
                 </button>
                 <button
                   type="button"
-                  @click="deleteMessage(m.id)"
+                  v-can="'delete_customers'" @click="deleteMessage(m.id)"
                   class="px-2 py-1 text-xs text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
                 >
                   Delete
@@ -168,7 +168,7 @@
           </button>
           <button
             type="button"
-            @click="saveMessageStatus"
+            v-can="'update_customers'" @click="saveMessageStatus"
             class="px-4 py-2 bg-[#14382A] hover:bg-[#16A36A] text-white text-xs font-semibold rounded-md shadow-xs transition-colors"
           >
             Save Status & Notes

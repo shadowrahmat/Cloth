@@ -55,7 +55,7 @@
         <template #row-actions="{ item }">
           <button
             type="button"
-            @click="openAdjustModal(item)"
+            v-can="'update_inventory'" @click="openAdjustModal(item)"
             class="px-3 py-1 bg-[#111111] text-white text-[10px] uppercase tracking-wider font-semibold hover:bg-black"
           >
             Adjust Stock

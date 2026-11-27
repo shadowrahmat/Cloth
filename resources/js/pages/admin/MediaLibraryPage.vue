@@ -33,7 +33,7 @@
           ? 'border-[#111111] bg-[#F7F5F0]'
           : 'border-[#D8CCBC] bg-white hover:border-[#111111]/70'
       ]"
-      @click="triggerFileInput"
+      v-can="'create_media'" @click="triggerFileInput"
     >
       <div class="max-w-md mx-auto space-y-2 pointer-events-none">
         <div class="w-10 h-10 mx-auto rounded-full bg-[#F7F5F0] flex items-center justify-center text-[#111111]">
@@ -104,7 +104,7 @@
               <button
                 v-if="file.mime_type && file.mime_type.startsWith('image/')"
                 type="button"
-                @click="optimizeFile(file)"
+                v-can="'update_media'" @click="optimizeFile(file)"
                 class="text-emerald-700 hover:text-emerald-900 font-medium transition-colors"
                 title="Optimize to WebP format"
               >
@@ -112,7 +112,7 @@
               </button>
               <button
                 type="button"
-                @click="deleteFile(file.id)"
+                v-can="'delete_media'" @click="deleteFile(file.id)"
                 class="text-rose-600 hover:text-rose-800 font-medium transition-colors"
               >
                 Delete

@@ -9,10 +9,10 @@
       <div class="flex items-center gap-2">
         <span v-if="dirty" class="hidden sm:inline-flex items-center gap-1.5 text-[12px] text-amber-700"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>সংরক্ষণ করা হয়নি</span>
         <a href="/" target="_blank" rel="noopener" class="h-9 px-3 inline-flex items-center gap-1.5 rounded-lg text-[13px] text-[#4B5450] hover:bg-white"><ExternalLink class="w-4 h-4" /> সাইট দেখুন</a>
-        <button type="button" @click="resetAll" class="h-9 px-3 rounded-lg text-[13px] text-[#4B5450] hover:bg-white">ডিফল্টে ফেরান</button>
+        <button v-can="'update_cms'" type="button" @click="resetAll" class="h-9 px-3 rounded-lg text-[13px] text-[#4B5450] hover:bg-white">ডিফল্টে ফেরান</button>
         <button
           type="button"
-          @click="save"
+          v-can="'update_cms'" @click="save"
           :disabled="saving || !dirty"
           class="h-9 px-4 inline-flex items-center gap-2 rounded-lg bg-[#14382A] hover:bg-[#16A36A] text-white text-[13px] font-semibold disabled:opacity-40 transition-colors"
         >

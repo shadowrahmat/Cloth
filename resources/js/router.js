@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from './stores/auth';
+import { navGroups } from './admin-nav';
 
 // Layouts
 import PublicLayout from './layouts/PublicLayout.vue';
@@ -358,7 +359,19 @@ const router = createRouter({
   }
 });
 
-router.beforeEach((to, from, next) => {
+// The permission an /admin page needs, taken from the sidebar entry that owns the path
+// (longest match wins, so /admin/resources/testimonials beats /admin).
+const adminNavItems = navGroups.flatMap((g) => g.items).filter((i) => i.to !== '/admin');
+const permissionForPath = (path) => {
+  const owner = adminNavItems
+    .filter((i) => path === i.to || path.startsWith(`${i.to}/`))
+    .sort((a, b) => b.to.length - a.to.length)[0];
+  return owner?.permission || null;
+};
+
+let adminPermissionsLoaded = false;
+
+router.beforeEach(async (to, from, next) => {
   // Document title: "<page> | <site name>" (site name/SEO title come from Admin → সাইট কাস্টমাইজ)
   const site = window.__SITE__ || {};
   const siteName = site.branding?.site_name || 'DRAWER CLOTHING';
@@ -375,6 +388,20 @@ router.beforeEach((to, from, next) => {
   if (to.meta.requiresAdmin) {
     if (!authStore.isAdminAuthenticated) {
       return next({ name: 'admin.login', query: { redirect: to.fullPath } });
+    }
+
+    // Pick up role changes made since login, once per page load, before any admin page renders.
+    if (!adminPermissionsLoaded) {
+      adminPermissionsLoaded = true;
+      await authStore.refreshAdmin();
+      if (!authStore.isAdminAuthenticated) {
+        return next({ name: 'admin.login', query: { redirect: to.fullPath } });
+      }
+    }
+
+    const needed = permissionForPath(to.path);
+    if (needed && !authStore.hasPermission(needed)) {
+      return next({ name: 'admin.dashboard' });
     }
   }
 

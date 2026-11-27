@@ -49,7 +49,7 @@
             <h5 class="text-xs font-semibold text-[#171C1A]">কম্পিউটার থেকে আপলোড</h5>
             <p class="text-[11px] text-[#69736E]">একসাথে অনেকগুলো বাছাই করা যায় (.jpg, .png, .webp)। আপলোড হলেই বাছাই হয়ে যাবে।</p>
           </div>
-          <label class="px-4 py-2 rounded-md bg-[#14382A] hover:bg-[#16A36A] text-white text-xs font-semibold cursor-pointer transition-colors inline-flex items-center gap-1.5 shrink-0">
+          <label v-can="'create_media'" class="px-4 py-2 rounded-md bg-[#14382A] hover:bg-[#16A36A] text-white text-xs font-semibold cursor-pointer transition-colors inline-flex items-center gap-1.5 shrink-0">
             <Upload :size="14" />
             <span>{{ uploading ? 'আপলোড হচ্ছে…' : 'ফাইল বাছুন' }}</span>
             <input type="file" multiple @change="handleFileUpload" class="hidden" accept="image/*" />

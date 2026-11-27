@@ -214,7 +214,7 @@ Each product supports multi-variant dimensions (**Size:** XS, S, M, L, XL, XXL |
 - **Media CDN & Asset Library (`/admin/media`):** Drag-and-drop file uploader with copyable URLs, asset dimension inspections, and filterable asset grids.
 - **Store Configuration (`/admin/settings`):** Global store metadata, currency settings, tax rules, delivery thresholds, and social links.
 - **User Management (`/admin/users`):** Administrator, staff manager, and customer access controls.
-- **Role-Based Access Control (`/admin/roles`):** Granular permission matrix by system domain (Products, Orders, CMS, Inventory, Settings, Users).
+- **Role-Based Access Control (`/admin/roles`):** Granular permission matrix by system domain (Products, Orders, CMS, Inventory, Settings, Users). Permissions are enforced on every admin API route (view/create/update/delete follows the HTTP method), and the admin UI hides the buttons a staff member cannot use. Administrators always pass; a manager with no assigned role gets the default "Store Manager" permissions (shop work, content and media, no settings or staff management).
 
 ---
 

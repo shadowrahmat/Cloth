@@ -41,6 +41,21 @@ export const useAuthStore = defineStore('auth', {
             }
         },
 
+        /**
+         * Reload the signed-in staff member's permissions. The login response is a snapshot,
+         * so without this a role edited later would not apply until the next login.
+         */
+        async refreshAdmin() {
+            if (!this.adminToken) return;
+            try {
+                const response = await api.get('/admin/me');
+                this.adminUser = response.data.user;
+                localStorage.setItem('atelier_admin_user', JSON.stringify(this.adminUser));
+            } catch (e) {
+                // 401/403 is handled by the api interceptor; keep the cached user on a network blip
+            }
+        },
+
         async adminLogout() {
             try {
                 if (this.adminToken) {

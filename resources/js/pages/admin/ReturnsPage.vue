@@ -145,7 +145,7 @@
           </button>
           <button
             type="button"
-            @click="saveReturn"
+            v-can="'update_orders'" @click="saveReturn"
             class="px-4 py-2 bg-[#14382A] hover:bg-[#16A36A] text-white text-xs font-semibold rounded-md shadow-xs transition-colors"
           >
             Update RMA Workflow

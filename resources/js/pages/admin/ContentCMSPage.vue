@@ -10,7 +10,7 @@
       <div class="flex items-center gap-3">
         <button
           type="button"
-          @click="openCreateModal"
+          v-can="'create_cms'" @click="openCreateModal"
           class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#14382A] text-white text-xs font-semibold rounded-md hover:bg-[#16A36A] transition-colors shadow-xs"
         >
           <span>+</span>
@@ -53,14 +53,14 @@
               <td class="py-3 px-4 text-right space-x-2 whitespace-nowrap">
                 <button
                   type="button"
-                  @click="openEditModal(page)"
+                  v-can="'update_cms'" @click="openEditModal(page)"
                   class="px-2.5 py-1 text-xs text-[#14382A] hover:bg-slate-100 rounded-md transition-colors font-medium"
                 >
                   Edit Page
                 </button>
                 <button
                   type="button"
-                  @click="deletePage(page.id)"
+                  v-can="'delete_cms'" @click="deletePage(page.id)"
                   class="px-2 py-1 text-xs text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
                 >
                   Delete

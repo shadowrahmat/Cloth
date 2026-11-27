@@ -17,7 +17,7 @@
           <a v-if="isEdit && savedSlug" :href="`/product/${savedSlug}`" target="_blank" rel="noopener" class="adm-btn hidden sm:inline-flex">
             <ExternalLink :size="14" /> সাইটে দেখুন
           </a>
-          <button type="button" class="adm-btn adm-btn-primary" :disabled="saving || loading" @click="save">
+          <button v-can="productId ? 'update_products' : 'create_products'" type="button" class="adm-btn adm-btn-primary" :disabled="saving || loading" @click="save">
             <Loader2 v-if="saving" :size="14" class="animate-spin" />
             <Check v-else :size="15" />
             {{ saving ? 'সেভ হচ্ছে…' : 'সেভ করুন' }}
@@ -358,8 +358,8 @@
           <!-- More -->
           <section v-if="isEdit" class="adm-card">
             <div class="adm-card-body flex flex-col gap-2">
-              <button type="button" class="adm-btn justify-start" @click="$emit('duplicate', { id: productId })"><Copy :size="15" /> কপি করে নতুন পণ্য বানান</button>
-              <button type="button" class="adm-btn adm-btn-danger justify-start" @click="$emit('delete', { id: productId, name: form.name })"><Trash2 :size="15" /> পণ্যটি মুছুন</button>
+              <button v-can="'create_products'" type="button" class="adm-btn justify-start" @click="$emit('duplicate', { id: productId })"><Copy :size="15" /> কপি করে নতুন পণ্য বানান</button>
+              <button v-can="'delete_products'" type="button" class="adm-btn adm-btn-danger justify-start" @click="$emit('delete', { id: productId, name: form.name })"><Trash2 :size="15" /> পণ্যটি মুছুন</button>
             </div>
           </section>
         </aside>

@@ -11,7 +11,7 @@
         <button v-if="config.exportUrl" type="button" class="adm-btn" :disabled="exporting" @click="exportCsv">
           {{ exporting ? 'ডাউনলোড হচ্ছে…' : 'CSV ডাউনলোড' }}
         </button>
-        <router-link v-if="config.canCreate !== false" :to="`/admin/resources/${resourceKey}/create`" class="adm-btn adm-btn-primary">
+        <router-link v-if="config.canCreate !== false && can('create')" :to="`/admin/resources/${resourceKey}/create`" class="adm-btn adm-btn-primary">
           + নতুন {{ config.singular }}
         </router-link>
       </div>
@@ -27,6 +27,8 @@
       :search-placeholder="config.searchPlaceholder"
       :sort-by="sortBy"
       :sort-direction="sortDirection"
+      :can-edit="can('update')"
+      :can-delete="can('delete')"
       @sort="handleSort"
       @page="fetchData"
       @edit="handleEdit"
@@ -74,12 +76,17 @@ import { getResourceConfig } from '../../admin-resources';
 import api from '../../api';
 import DataTable from '../../components/admin/DataTable.vue';
 import BaseModal from '../../components/common/BaseModal.vue';
+import { useAuthStore } from '../../stores/auth';
+import { resourcePermission } from '../../utils/permissions';
 
 const route = useRoute();
 const router = useRouter();
 
 const resourceKey = computed(() => route.params.resource);
 const config = computed(() => getResourceConfig(resourceKey.value));
+
+const authStore = useAuthStore();
+const can = (action) => authStore.hasPermission(resourcePermission(config.value, action));
 
 const items = ref([]);
 const loading = ref(true);

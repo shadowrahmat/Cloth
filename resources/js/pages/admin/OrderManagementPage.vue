@@ -128,7 +128,7 @@
         </div>
 
         <!-- Update -->
-        <form class="rounded-xl bg-admin-bg border border-admin-border p-4 space-y-4 self-start" @submit.prevent="submitStatus">
+        <form v-can="'update_orders'" class="rounded-xl bg-admin-bg border border-admin-border p-4 space-y-4 self-start" @submit.prevent="submitStatus">
           <p class="text-[13px] font-semibold">অবস্থা আপডেট</p>
           <div>
             <label class="adm-label" for="om-status">অর্ডারের অবস্থা</label>
