@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Middleware\EnsurePermission;
 use App\Models\ActivityLog;
 use App\Support\ResourceRegistry;
 use Exception;
@@ -14,18 +15,51 @@ use Illuminate\Support\Str;
 
 class ResourceController extends Controller
 {
-    protected function getResourceConfig(string $resource): array
+    /**
+     * Registry resources are guarded by the module their `permission` belongs to.
+     * A resource whose permission is not listed here is admin-only.
+     */
+    private const PERMISSION_MODULES = [
+        'manage_categories' => 'categories',
+        'manage_brands' => 'products',
+        'manage_collections' => 'products',
+        'manage_coupons' => 'orders',
+        'manage_orders' => 'orders',
+        'manage_shipping' => 'settings',
+        'manage_settings' => 'settings',
+        'manage_testimonials' => 'cms',
+        'manage_cms' => 'cms',
+        'manage_pages' => 'cms',
+        'manage_inquiries' => 'customers',
+        'manage_newsletter' => 'customers',
+    ];
+
+    protected function getResourceConfig(string $resource, Request $request): array
     {
         $config = ResourceRegistry::get($resource);
         if (!$config) {
             abort(404, "Resource '{$resource}' is not registered.");
         }
+
+        $this->authorizeResource($request, $config);
+
         return $config;
+    }
+
+    private function authorizeResource(Request $request, array $config): void
+    {
+        $user = $request->user();
+        $module = self::PERMISSION_MODULES[$config['permission'] ?? ''] ?? null;
+        $allowed = $user && ($user->isAdmin() || ($module && $user->hasPermission(EnsurePermission::slugFor($module, $request->method()))));
+
+        if (!$allowed) {
+            abort(403, 'Access denied. You do not have permission to do this.');
+        }
     }
 
     public function index(Request $request, string $resource): JsonResponse
     {
-        $config = $this->getResourceConfig($resource);
+        $config = $this->getResourceConfig($resource, $request);
         $modelClass = $config['model'];
         $query = $modelClass::query();
 
@@ -110,7 +144,7 @@ class ResourceController extends Controller
 
     public function store(Request $request, string $resource): JsonResponse
     {
-        $config = $this->getResourceConfig($resource);
+        $config = $this->getResourceConfig($resource, $request);
         $rules = $config['rules'] ?? [];
 
         $validator = Validator::make($request->all(), $rules);
@@ -181,7 +215,7 @@ class ResourceController extends Controller
 
     public function show(Request $request, string $resource, string|int $id): JsonResponse
     {
-        $config = $this->getResourceConfig($resource);
+        $config = $this->getResourceConfig($resource, $request);
         $modelClass = $config['model'];
 
         $query = $modelClass::where('id', $id);
@@ -205,7 +239,7 @@ class ResourceController extends Controller
 
     public function update(Request $request, string $resource, string|int $id): JsonResponse
     {
-        $config = $this->getResourceConfig($resource);
+        $config = $this->getResourceConfig($resource, $request);
         $modelClass = $config['model'];
 
         $record = $modelClass::find($id);
@@ -276,7 +310,7 @@ class ResourceController extends Controller
 
     public function destroy(Request $request, string $resource, string|int $id): JsonResponse
     {
-        $config = $this->getResourceConfig($resource);
+        $config = $this->getResourceConfig($resource, $request);
         $modelClass = $config['model'];
 
         $record = $modelClass::find($id);

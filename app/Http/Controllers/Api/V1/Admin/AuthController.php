@@ -61,7 +61,7 @@ class AuthController extends Controller
                 'email' => $user->email,
                 'role' => $user->role,
                 'avatar' => $user->avatar,
-                'permissions' => $user->roles()->with('permissions')->get()->pluck('permissions')->flatten()->pluck('slug')->unique()->values(),
+                'permissions' => $user->permissionSlugs(),
             ],
         ]);
     }
@@ -77,7 +77,7 @@ class AuthController extends Controller
                 'email' => $user->email,
                 'role' => $user->role,
                 'avatar' => $user->avatar,
-                'permissions' => $user->roles()->with('permissions')->get()->pluck('permissions')->flatten()->pluck('slug')->unique()->values(),
+                'permissions' => $user->permissionSlugs(),
             ],
         ]);
     }

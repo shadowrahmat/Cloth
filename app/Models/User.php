@@ -8,11 +8,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Collection;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
+
+    /** Permission slugs, loaded once per request. */
+    protected ?Collection $permissionSlugCache = null;
 
     protected $fillable = [
         'name',
@@ -73,9 +77,30 @@ class User extends Authenticatable
             return true;
         }
 
-        return $this->roles()->whereHas('permissions', function ($q) use ($permission) {
-            $q->where('slug', $permission);
-        })->exists();
+        return $this->permissionSlugs()->contains($permission);
+    }
+
+    /**
+     * Every permission slug this user holds, from their assigned roles.
+     * A manager with no role assigned falls back to the default "manager" role,
+     * so accounts created before roles were enforced keep working.
+     *
+     * @return Collection<int, string>
+     */
+    public function permissionSlugs(): Collection
+    {
+        if ($this->permissionSlugCache !== null) {
+            return $this->permissionSlugCache;
+        }
+
+        $roles = $this->roles()->with('permissions')->get();
+
+        if ($roles->isEmpty() && $this->role === 'manager') {
+            $default = Role::with('permissions')->where('slug', 'manager')->first();
+            $roles = $default ? collect([$default]) : $roles;
+        }
+
+        return $this->permissionSlugCache = $roles->pluck('permissions')->flatten()->pluck('slug')->unique()->values();
     }
 
     public function isAdmin(): bool

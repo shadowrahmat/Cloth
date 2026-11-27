@@ -56,7 +56,10 @@ class DatabaseSeeder extends Seeder
             }
         }
         $adminRole->permissions()->sync($permissionsList);
-        $managerRole->permissions()->sync(array_slice($permissionsList, 0, 24));
+        // Same default as the 2026_11_28 migration: shop work, content and media, but no settings or staff management.
+        $managerSlugs = Permission::whereIn('module', ['products', 'orders', 'inventory', 'customers', 'categories', 'cms'])->pluck('id')
+            ->merge(Permission::whereIn('slug', ['view_media', 'create_media', 'update_media'])->pluck('id'));
+        $managerRole->permissions()->sync($managerSlugs->all());
 
         // 2. Initial Users
         $admin = User::firstOrCreate(['email' => 'admin@cloth.test'], [

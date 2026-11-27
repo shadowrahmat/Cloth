@@ -369,6 +369,11 @@ class ProductController extends Controller
             'action' => 'required|in:published,draft,archived,delete',
         ]);
 
+        $needed = $data['action'] === 'delete' ? 'delete_products' : 'update_products';
+        if (! $request->user()->isAdmin() && ! $request->user()->hasPermission($needed)) {
+            return response()->json(['success' => false, 'message' => 'Access denied. You do not have permission to do this.'], 403);
+        }
+
         $query = Product::whereIn('id', $data['ids']);
         $count = $data['action'] === 'delete' ? $query->get()->each->delete()->count() : $query->update(['status' => $data['action']]);
 
