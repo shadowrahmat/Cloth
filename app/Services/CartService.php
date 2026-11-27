@@ -37,6 +37,24 @@ class CartService
         return $cart;
     }
 
+    /**
+     * What one unit costs right now. The cart row keeps the price from the day the item was
+     * added, so the cart page and checkout ask this instead; otherwise a finished sale or a
+     * price change would never reach a bag that was filled earlier.
+     */
+    public function currentPrice(Product $product, ?ProductVariant $variant = null): float
+    {
+        $price = $product->effective_price;
+
+        // A variant price only wins when it is a genuinely different price for that variant.
+        // Variants that just repeat the product's regular price must not cancel its sale price.
+        if ($variant && $variant->price && $variant->price > 0 && abs((float) $variant->price - (float) $product->price) > 0.009) {
+            $price = (float) $variant->price;
+        }
+
+        return $price;
+    }
+
     public function getCartDetails(Cart $cart): array
     {
         $cart->load(['items.product.category', 'items.variant']);
@@ -44,6 +62,8 @@ class CartService
         $items = $cart->items->map(function ($item) {
             $product = $item->product;
             $variant = $item->variant;
+            $price = $product ? $this->currentPrice($product, $variant) : (float) $item->price;
+
             return [
                 'id' => $item->id,
                 'product_id' => $item->product_id,
@@ -51,12 +71,12 @@ class CartService
                 'name' => $product?->name ?? 'Unknown item',
                 'slug' => $product?->slug ?? '',
                 'sku' => $variant?->sku ?? $product?->sku ?? '',
-                'price' => (float) $item->price,
+                'price' => $price,
                 'quantity' => (int) $item->quantity,
                 'color' => $item->color,
                 'size' => $item->size,
                 'image' => $variant?->image ?: $product?->featured_image,
-                'subtotal' => round($item->price * $item->quantity, 2),
+                'subtotal' => round($price * $item->quantity, 2),
                 'stock' => $variant ? $variant->stock : ($product ? $product->stock : 0),
             ];
         });
@@ -76,16 +96,10 @@ class CartService
     {
         $product = Product::findOrFail($productId);
 
-        $price = $product->effective_price;
         $variant = null;
 
         if ($variantId) {
             $variant = ProductVariant::where('product_id', $productId)->findOrFail($variantId);
-            // A variant price only wins when it is a genuinely different price for that variant.
-            // Variants that just repeat the product's regular price must not cancel its sale price.
-            if ($variant->price && $variant->price > 0 && abs((float) $variant->price - (float) $product->price) > 0.009) {
-                $price = (float) $variant->price;
-            }
             if (!$color && $variant->color) {
                 $color = $variant->color;
             }
@@ -93,6 +107,8 @@ class CartService
                 $size = $variant->size;
             }
         }
+
+        $price = $this->currentPrice($product, $variant);
 
         // Check if item already in cart with same variant or color/size
         $existing = $cart->items()

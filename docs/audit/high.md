@@ -1,6 +1,7 @@
 # High Severity
 
 ## H1 — Checkout-এ cart-এর price stale থাকে
+> **Status: fixed।** `CartService::currentPrice()` এক জায়গায় দামের নিয়ম রাখে; cart দেখানো আর checkout দুটোই এখনকার দাম ধরে। Test: `tests/Feature/CartPriceTest.php`।
 - **কোথায়:** `app/Services/CartService.php`-এর `addItem()` item add করার সময় `price` save করে রাখে; `app/Services/CheckoutService.php` subtotal আর order item-এ সেই `$item->price`-ই ব্যবহার করে।
 - **সমস্যা:** Item add করার মুহূর্তের price আটকে থাকে। Sale শেষ হয়ে গেলে বা price বাড়লেও customer পুরোনো price-এই order করতে পারে।
 - **Fix:** Checkout-এর সময় product/variant থেকে unit price আবার calculate করো (`addItem`-এর logic-টাই) আর সেটা ব্যবহার করো। চাইলে cart পড়ার সময়ও item-এর price refresh করতে পারো।

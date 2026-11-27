@@ -18,6 +18,8 @@ use Illuminate\Support\Str;
 
 class CheckoutService
 {
+    public function __construct(protected CartService $cartService) {}
+
     public function processCheckout(Cart $cart, array $data, ?int $userId = null): Order
     {
         $cart->load(['items.product', 'items.variant']);
@@ -28,6 +30,7 @@ class CheckoutService
 
         return DB::transaction(function () use ($cart, $data, $userId) {
             $subtotal = 0.0;
+            $unitPrices = []; // cart item id => price today, not the price when it was added to the bag
 
             // 1. Validate items & stock availability atomically
             foreach ($cart->items as $item) {
@@ -51,7 +54,8 @@ class CheckoutService
                     throw new Exception("Insufficient stock for '{$product->name}' (Requested: {$item->quantity}, Available: {$availableStock}).");
                 }
 
-                $subtotal += ($item->price * $item->quantity);
+                $unitPrices[$item->id] = $this->cartService->currentPrice($product, $variant);
+                $subtotal += ($unitPrices[$item->id] * $item->quantity);
             }
 
             // 2. Shipping calculation
@@ -128,9 +132,9 @@ class CheckoutService
                     'variant_id' => $item->variant_id,
                     'product_name' => $product->name,
                     'sku' => $variant?->sku ?? $product->sku,
-                    'price' => $item->price,
+                    'price' => $unitPrices[$item->id],
                     'quantity' => $item->quantity,
-                    'subtotal' => round($item->price * $item->quantity, 2),
+                    'subtotal' => round($unitPrices[$item->id] * $item->quantity, 2),
                     'color' => $item->color,
                     'size' => $item->size,
                     'image' => $variant?->image ?: $product->featured_image,
