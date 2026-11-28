@@ -29,6 +29,7 @@
 - **Test:** Permission ছাড়া manager ওই module-এ 403 পায়।
 
 ## H5 — Rate limit নেই
+> **Status: fixed।** `AppServiceProvider`-এ named limiter: track-order ৫, coupon ১০, contact ৫, checkout ১০, cart ৬০ (প্রতি মিনিটে, IP+session ধরে) আর তার সাথে IP-প্রতি ৫ গুণ সীমা, যাতে নতুন session ID বানিয়ে ফাঁকি দেওয়া না যায়। Test: `tests/Feature/RateLimitTest.php`। Production-এ `TrustProxies` শুধু `127.0.0.1` বিশ্বাস করে (nginx একই machine-এ থাকলে ঠিক আছে)।
 - **কোথায়:** `routes/api.php`-এর public group।
 - **সমস্যা:** `/checkout`, `/track-order` (order number + email brute-force করা যায়), `/cart/coupon` (coupon code guess করা যায়), `/contact` (spam), `/cart/*`-এ কোনো `throttle` নেই।
 - **Fix:** `throttle` middleware বসাও: track-order 5/min, coupon 10/min, contact 5/min, checkout ~10/min, cart ~60/min। IP + session দিয়ে named limiter বানানোর কথাও ভাবতে পারো।

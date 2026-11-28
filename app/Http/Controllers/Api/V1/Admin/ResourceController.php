@@ -10,6 +10,7 @@ use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
@@ -37,7 +38,7 @@ class ResourceController extends Controller
     protected function getResourceConfig(string $resource, Request $request): array
     {
         $config = ResourceRegistry::get($resource);
-        if (!$config) {
+        if (! $config) {
             abort(404, "Resource '{$resource}' is not registered.");
         }
 
@@ -52,7 +53,7 @@ class ResourceController extends Controller
         $module = self::PERMISSION_MODULES[$config['permission'] ?? ''] ?? null;
         $allowed = $user && ($user->isAdmin() || ($module && $user->hasPermission(EnsurePermission::slugFor($module, $request->method()))));
 
-        if (!$allowed) {
+        if (! $allowed) {
             abort(403, 'Access denied. You do not have permission to do this.');
         }
     }
@@ -64,19 +65,19 @@ class ResourceController extends Controller
         $query = $modelClass::query();
 
         // Eager loading
-        if (!empty($config['with'])) {
+        if (! empty($config['with'])) {
             $query->with($config['with']);
         }
 
         // Relationship counts
-        if (!empty($config['with_count'])) {
+        if (! empty($config['with_count'])) {
             $query->withCount($config['with_count']);
         }
 
         // Search
         if ($search = $request->input('search')) {
             $searchable = $config['searchable'] ?? [];
-            if (!empty($searchable)) {
+            if (! empty($searchable)) {
                 $query->where(function ($q) use ($searchable, $search) {
                     foreach ($searchable as $field) {
                         $q->orWhere($field, 'like', "%{$search}%");
@@ -86,7 +87,7 @@ class ResourceController extends Controller
         }
 
         // Filters
-        if (!empty($config['filters'])) {
+        if (! empty($config['filters'])) {
             foreach ($config['filters'] as $filterKey => $filterConfig) {
                 if ($request->has($filterKey) && $request->input($filterKey) !== '' && $request->input($filterKey) !== null) {
                     $val = $request->input($filterKey);
@@ -103,7 +104,7 @@ class ResourceController extends Controller
         $sortDirection = strtolower($request->input('sort_direction', 'asc')) === 'desc' ? 'desc' : 'asc';
         if ($sortBy) {
             $query->orderBy($sortBy, $sortDirection);
-        } elseif (!empty($config['order_by'])) {
+        } elseif (! empty($config['order_by'])) {
             foreach ($config['order_by'] as $col => $dir) {
                 $query->orderBy($col, $dir);
             }
@@ -114,6 +115,7 @@ class ResourceController extends Controller
         $perPage = (int) $request->input('per_page', 15);
         if ($perPage === -1) {
             $items = $query->get();
+
             return response()->json([
                 'success' => true,
                 'data' => $items,
@@ -160,10 +162,10 @@ class ResourceController extends Controller
         $modelClass = $config['model'];
 
         // Auto-slug handling
-        if (!empty($config['slug_field']) && !empty($config['slug_source'])) {
+        if (! empty($config['slug_field']) && ! empty($config['slug_source'])) {
             $slugField = $config['slug_field'];
             $slugSource = $config['slug_source'];
-            if (empty($data[$slugField]) && !empty($data[$slugSource])) {
+            if (empty($data[$slugField]) && ! empty($data[$slugSource])) {
                 $data[$slugField] = Str::slug($data[$slugSource]);
             }
         }
@@ -179,7 +181,7 @@ class ResourceController extends Controller
 
             $record = $modelClass::create($data);
 
-            if (!empty($relationSync['products'])) {
+            if (! empty($relationSync['products'])) {
                 $record->products()->sync($relationSync['products']);
             }
 
@@ -195,7 +197,7 @@ class ResourceController extends Controller
 
             DB::commit();
 
-            if (!empty($config['with'])) {
+            if (! empty($config['with'])) {
                 $record->load($config['with']);
             }
 
@@ -206,9 +208,15 @@ class ResourceController extends Controller
             ], 201);
         } catch (Exception $e) {
             DB::rollBack();
+            Log::error("Failed to create {$config['singular']}: ".$e->getMessage(), [
+                'exception' => $e,
+                'resource' => $resource,
+                'user_id' => $request->user()?->id,
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to create record: ' . $e->getMessage(),
+                'message' => 'Failed to create record. Please try again.',
             ], 500);
         }
     }
@@ -219,12 +227,12 @@ class ResourceController extends Controller
         $modelClass = $config['model'];
 
         $query = $modelClass::where('id', $id);
-        if (!empty($config['with'])) {
+        if (! empty($config['with'])) {
             $query->with($config['with']);
         }
 
         $record = $query->first();
-        if (!$record) {
+        if (! $record) {
             return response()->json([
                 'success' => false,
                 'message' => "{$config['singular']} not found.",
@@ -243,7 +251,7 @@ class ResourceController extends Controller
         $modelClass = $config['model'];
 
         $record = $modelClass::find($id);
-        if (!$record) {
+        if (! $record) {
             return response()->json([
                 'success' => false,
                 'message' => "{$config['singular']} not found.",
@@ -254,7 +262,7 @@ class ResourceController extends Controller
         // Adjust unique rules for current ID
         foreach ($rules as $field => $fieldRules) {
             if (is_string($fieldRules) && str_contains($fieldRules, 'unique:')) {
-                $rules[$field] = $fieldRules . ',' . $id;
+                $rules[$field] = $fieldRules.','.$id;
             }
         }
 
@@ -290,7 +298,7 @@ class ResourceController extends Controller
 
             DB::commit();
 
-            if (!empty($config['with'])) {
+            if (! empty($config['with'])) {
                 $record->load($config['with']);
             }
 
@@ -301,9 +309,16 @@ class ResourceController extends Controller
             ]);
         } catch (Exception $e) {
             DB::rollBack();
+            Log::error("Failed to update {$config['singular']} #{$record->id}: ".$e->getMessage(), [
+                'exception' => $e,
+                'resource' => $resource,
+                'id' => $record->id,
+                'user_id' => $request->user()?->id,
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update record: ' . $e->getMessage(),
+                'message' => 'Failed to update record. Please try again.',
             ], 500);
         }
     }
@@ -314,7 +329,7 @@ class ResourceController extends Controller
         $modelClass = $config['model'];
 
         $record = $modelClass::find($id);
-        if (!$record) {
+        if (! $record) {
             return response()->json([
                 'success' => false,
                 'message' => "{$config['singular']} not found.",
@@ -343,9 +358,16 @@ class ResourceController extends Controller
             ]);
         } catch (Exception $e) {
             DB::rollBack();
+            Log::error("Failed to delete {$config['singular']} #{$id}: ".$e->getMessage(), [
+                'exception' => $e,
+                'resource' => $resource,
+                'id' => $id,
+                'user_id' => $request->user()?->id,
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to delete record: ' . $e->getMessage(),
+                'message' => 'Failed to delete record. Please try again.',
             ], 500);
         }
     }

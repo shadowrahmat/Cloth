@@ -8,9 +8,12 @@ use App\Models\MediaFile;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\Encoders\WebpEncoder;
 use Intervention\Image\ImageManager;
 
 class MediaController extends Controller
@@ -22,8 +25,8 @@ class MediaController extends Controller
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('file_name', 'like', "%{$search}%")
-                  ->orWhere('alt_text', 'like', "%{$search}%");
+                    ->orWhere('file_name', 'like', "%{$search}%")
+                    ->orWhere('alt_text', 'like', "%{$search}%");
             });
         }
 
@@ -61,7 +64,7 @@ class MediaController extends Controller
 
     public function upload(Request $request): JsonResponse
     {
-        $rule = ['file', 'max:' . self::MAX_KB, 'mimes:' . self::ALLOWED_EXTENSIONS, 'extensions:' . self::ALLOWED_EXTENSIONS];
+        $rule = ['file', 'max:'.self::MAX_KB, 'mimes:'.self::ALLOWED_EXTENSIONS, 'extensions:'.self::ALLOWED_EXTENSIONS];
         $messages = [
             '*.mimes' => 'শুধু ছবি (JPG, PNG, WebP, GIF, AVIF), PDF বা Word ফাইল আপলোড করা যাবে।',
             '*.extensions' => 'শুধু ছবি (JPG, PNG, WebP, GIF, AVIF), PDF বা Word ফাইল আপলোড করা যাবে।',
@@ -70,7 +73,7 @@ class MediaController extends Controller
 
         // Check for multiple files
         $multipleFiles = $request->file('files');
-        if (!$multipleFiles && is_array($request->file('file'))) {
+        if (! $multipleFiles && is_array($request->file('file'))) {
             $multipleFiles = $request->file('file');
         }
 
@@ -87,7 +90,9 @@ class MediaController extends Controller
 
             $created = [];
             foreach ($multipleFiles as $file) {
-                if (!$file || !$file->isValid()) continue;
+                if (! $file || ! $file->isValid()) {
+                    continue;
+                }
 
                 $created[] = $this->storeFile($request, $file, pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME));
             }
@@ -97,14 +102,14 @@ class MediaController extends Controller
                 'action' => 'upload_media_bulk',
                 'model_type' => MediaFile::class,
                 'model_id' => null,
-                'description' => 'Uploaded ' . count($created) . ' media files',
+                'description' => 'Uploaded '.count($created).' media files',
                 'ip_address' => $request->ip(),
                 'user_agent' => $request->userAgent(),
             ]);
 
             return response()->json([
                 'success' => true,
-                'message' => count($created) . ' media files uploaded successfully',
+                'message' => count($created).' media files uploaded successfully',
                 'data' => $created,
             ], 201);
         }
@@ -140,12 +145,12 @@ class MediaController extends Controller
     }
 
     /** Save a validated upload under uploads/ with a safe name and an extension taken from its real content. */
-    private function storeFile(Request $request, \Illuminate\Http\UploadedFile $file, string $altText): MediaFile
+    private function storeFile(Request $request, UploadedFile $file, string $altText): MediaFile
     {
         $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
         $extension = strtolower($file->guessExtension() ?: $file->getClientOriginalExtension());
         $slug = Str::slug($originalName) ?: 'file';
-        $fileName = $slug . '-' . time() . '-' . Str::random(4) . '.' . $extension;
+        $fileName = $slug.'-'.time().'-'.Str::random(4).'.'.$extension;
 
         $path = $file->storeAs('uploads', $fileName, 'public');
 
@@ -164,7 +169,7 @@ class MediaController extends Controller
     public function destroy(Request $request, int $id): JsonResponse
     {
         $media = MediaFile::find($id);
-        if (!$media) {
+        if (! $media) {
             return response()->json(['success' => false, 'message' => 'File not found'], 404);
         }
 
@@ -193,21 +198,21 @@ class MediaController extends Controller
     public function optimize(Request $request, int $id): JsonResponse
     {
         $media = MediaFile::find($id);
-        if (!$media) {
+        if (! $media) {
             return response()->json(['success' => false, 'message' => 'Media file not found'], 404);
         }
 
-        if (!str_starts_with($media->mime_type, 'image/')) {
+        if (! str_starts_with($media->mime_type, 'image/')) {
             return response()->json(['success' => false, 'message' => 'File is not an image'], 422);
         }
 
         $fullPath = Storage::disk($media->disk)->path($media->path);
-        if (!file_exists($fullPath)) {
+        if (! file_exists($fullPath)) {
             return response()->json(['success' => false, 'message' => 'Image file not found on disk'], 404);
         }
 
         try {
-            $manager = new ImageManager(new Driver());
+            $manager = new ImageManager(new Driver);
             $image = $manager->decodePath($fullPath);
 
             $width = (int) $request->input('width', 1200);
@@ -215,15 +220,15 @@ class MediaController extends Controller
                 $image->scale(width: $width);
             }
 
-            $webpName = pathinfo($media->file_name, PATHINFO_FILENAME) . '-opt.webp';
-            $webpRelativePath = 'uploads/optimized/' . $webpName;
+            $webpName = pathinfo($media->file_name, PATHINFO_FILENAME).'-opt.webp';
+            $webpRelativePath = 'uploads/optimized/'.$webpName;
             $webpFullPath = Storage::disk($media->disk)->path($webpRelativePath);
 
-            if (!file_exists(dirname($webpFullPath))) {
+            if (! file_exists(dirname($webpFullPath))) {
                 mkdir(dirname($webpFullPath), 0755, true);
             }
 
-            $image->encode(new \Intervention\Image\Encoders\WebpEncoder(quality: 85))->save($webpFullPath);
+            $image->encode(new WebpEncoder(quality: 85))->save($webpFullPath);
 
             return response()->json([
                 'success' => true,
@@ -236,9 +241,14 @@ class MediaController extends Controller
                 ],
             ]);
         } catch (Exception $e) {
+            Log::error('Media optimization error: '.$e->getMessage(), [
+                'exception' => $e,
+                'media_id' => $id,
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Optimization failed: ' . $e->getMessage(),
+                'message' => 'Image optimization failed. Please check server logs.',
             ], 500);
         }
     }

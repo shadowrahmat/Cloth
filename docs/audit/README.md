@@ -17,11 +17,11 @@ Suggested order: আগে H1, H5, M1 (ছোট change, বড় impact), ত�
 - [x] **H2** Guest session ID predictable, cart/wishlist merge hijack করা যায় (fixed, commit করা বাকি)
 - [x] **H3** Sanctum token কখনো expire বা revoke হয় না (fixed, localStorage থেকে HttpOnly cookie বাকি)
 - [x] **H4** RBAC permission কোথাও enforce হয় না (fixed, commit করা বাকি)
-- [ ] **H5** Checkout, track-order, coupon, contact, cart-এ rate limit নেই
+- [x] **H5** Checkout, track-order, coupon, contact, cart-এ rate limit নেই (fixed)
 - [ ] **H6** Steadfast courier integration আসলে fake
 
 ### Medium — [medium.md](medium.md)
-- [ ] **M1** Exception message client-এ leak হয়
+- [x] **M1** Exception message client-এ leak হয় (fixed)
 - [ ] **M2** Coupon usage-এ race condition, per-user limit নেই
 - [ ] **M3** ResourceController-এ `sort_by`, `per_page`, LIKE wildcard validate হয় না
 - [ ] **M4** Password policy দুর্বল, login throttle শুধু IP-based

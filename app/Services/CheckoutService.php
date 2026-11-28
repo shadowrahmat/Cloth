@@ -2,11 +2,11 @@
 
 namespace App\Services;
 
+use App\Exceptions\BusinessException;
 use App\Models\Cart;
 use App\Models\Coupon;
 use App\Models\InventoryMovement;
 use App\Models\Order;
-use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Models\Product;
 use App\Models\ProductVariant;
@@ -25,7 +25,7 @@ class CheckoutService
         $cart->load(['items.product', 'items.variant']);
 
         if ($cart->items->isEmpty()) {
-            throw new Exception("Your shopping cart is empty.");
+            throw new Exception('Your shopping cart is empty.');
         }
 
         return DB::transaction(function () use ($cart, $data, $userId) {
@@ -35,8 +35,8 @@ class CheckoutService
             // 1. Validate items & stock availability atomically
             foreach ($cart->items as $item) {
                 $product = Product::lockForUpdate()->find($item->product_id);
-                if (!$product || $product->status !== 'published') {
-                    throw new Exception("Product '{$item->product?->name}' is no longer available.");
+                if (! $product || $product->status !== 'published') {
+                    throw new BusinessException("Product '{$item->product?->name}' is no longer available.");
                 }
 
                 $availableStock = $product->stock;
@@ -44,14 +44,14 @@ class CheckoutService
 
                 if ($item->variant_id) {
                     $variant = ProductVariant::lockForUpdate()->find($item->variant_id);
-                    if (!$variant || !$variant->is_active) {
-                        throw new Exception("Selected option for '{$product->name}' is no longer available.");
+                    if (! $variant || ! $variant->is_active) {
+                        throw new BusinessException("Selected option for '{$product->name}' is no longer available.");
                     }
                     $availableStock = $variant->stock;
                 }
 
                 if ($product->track_inventory && $availableStock < $item->quantity) {
-                    throw new Exception("Insufficient stock for '{$product->name}' (Requested: {$item->quantity}, Available: {$availableStock}).");
+                    throw new BusinessException("Insufficient stock for '{$product->name}' (Requested: {$item->quantity}, Available: {$availableStock}).");
                 }
 
                 $unitPrices[$item->id] = $this->cartService->currentPrice($product, $variant);
@@ -70,7 +70,7 @@ class CheckoutService
             // 3. Coupon discount
             $discountAmount = 0.0;
             $couponCode = null;
-            if (!empty($data['coupon_code'])) {
+            if (! empty($data['coupon_code'])) {
                 $coupon = Coupon::where('code', strtoupper($data['coupon_code']))->first();
                 if ($coupon && $coupon->isValidFor($subtotal)) {
                     $discountAmount = $coupon->calculateDiscount($subtotal);
@@ -87,12 +87,12 @@ class CheckoutService
             $total = round($taxableSubtotal + $shippingAmount + $taxAmount, 2);
 
             // 5. Create Order
-            $orderNumber = 'ORD-' . date('Ymd') . '-' . strtoupper(Str::random(5));
+            $orderNumber = 'ORD-'.date('Ymd').'-'.strtoupper(Str::random(5));
 
             $order = Order::create([
                 'order_number' => $orderNumber,
                 'user_id' => $userId,
-                'customer_name' => trim(($data['first_name'] ?? '') . ' ' . ($data['last_name'] ?? '')),
+                'customer_name' => trim(($data['first_name'] ?? '').' '.($data['last_name'] ?? '')),
                 'customer_email' => $data['email'],
                 'customer_phone' => $data['phone'] ?? null,
                 'shipping_address' => [
@@ -107,7 +107,7 @@ class CheckoutService
                     'country' => $data['country'] ?? 'US',
                     'phone' => $data['phone'] ?? '',
                 ],
-                'billing_address' => !empty($data['billing_same_as_shipping']) ? null : ($data['billing_address'] ?? null),
+                'billing_address' => ! empty($data['billing_same_as_shipping']) ? null : ($data['billing_address'] ?? null),
                 'subtotal' => $subtotal,
                 'discount_amount' => $discountAmount,
                 'coupon_code' => $couponCode,
@@ -168,7 +168,7 @@ class CheckoutService
             Payment::create([
                 'order_id' => $order->id,
                 'payment_method' => $order->payment_method,
-                'transaction_id' => $order->payment_id ?: 'TXN-' . strtoupper(Str::random(10)),
+                'transaction_id' => $order->payment_id ?: 'TXN-'.strtoupper(Str::random(10)),
                 'amount' => $order->total,
                 'currency' => 'USD',
                 'status' => $order->payment_status === 'paid' ? 'successful' : 'pending',

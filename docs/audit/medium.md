@@ -4,6 +4,7 @@
 - **কোথায়:** `ResourceController`-এর 500 handler, `MediaController::optimize`, `CheckoutController::process` (সব `Exception`-কে message সহ 422 বানায়)।
 - **সমস্যা:** DB বা internal error-এর লেখা browser পর্যন্ত পৌঁছে যেতে পারে।
 - **Fix:** User-কে দেখানোর মতো error-এর (cart empty, stock নেই ইত্যাদি) জন্য ছোট একটা business exception class বানাও। শুধু সেগুলোর message দেখাও; বাকি সব log করো আর generic message ফেরত দাও।
+- **Status:** Fixed. `BusinessException` তৈরি করা হয়েছে, `CheckoutService` তা throw করে এবং controller শুধু `BusinessException`-এর মেসেজ দেখায়। অন্যান্য internal failure 500-এ generic message দেয় এবং server log-এ context সহ trace জমা রাখে।
 
 ## M2 — Coupon usage-এ race condition, per-user limit নেই
 - **কোথায়:** `app/Services/CheckoutService.php`-এর step 3, `app/Models/Coupon.php::isValidFor`।

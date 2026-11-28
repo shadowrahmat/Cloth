@@ -2,14 +2,17 @@
 
 namespace App\Http\Controllers\Api\V1\Public;
 
+use App\Exceptions\BusinessException;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\ShippingMethod;
 use App\Services\CartService;
 use App\Services\CheckoutService;
+use App\Services\StoreMailer;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class CheckoutController extends Controller
 {
@@ -21,6 +24,7 @@ class CheckoutController extends Controller
     public function getShippingMethods(): JsonResponse
     {
         $methods = ShippingMethod::where('is_active', true)->orderBy('rate')->get();
+
         return response()->json([
             'success' => true,
             'data' => $methods,
@@ -53,8 +57,8 @@ class CheckoutController extends Controller
             $order = $this->checkoutService->processCheckout($cart, $request->all(), $userId);
 
             // Confirmation to the buyer and a heads-up to the shop, sent after the response.
-            \App\Services\StoreMailer::afterResponse('order_placed', $order->id);
-            \App\Services\StoreMailer::afterResponse('admin_new_order', $order->id);
+            StoreMailer::afterResponse('order_placed', $order->id);
+            StoreMailer::afterResponse('admin_new_order', $order->id);
 
             return response()->json([
                 'success' => true,
@@ -68,11 +72,22 @@ class CheckoutController extends Controller
                     'order_status' => $order->order_status,
                 ],
             ], 201);
-        } catch (Exception $e) {
+        } catch (BusinessException $e) {
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage(),
             ], 422);
+        } catch (Exception $e) {
+            Log::error('Checkout processing error: '.$e->getMessage(), [
+                'exception' => $e,
+                'cart_id' => $cart->id ?? null,
+                'user_id' => $userId,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Unable to complete checkout at this time. Please try again.',
+            ], 500);
         }
     }
 
@@ -88,7 +103,7 @@ class CheckoutController extends Controller
             ->where('customer_email', trim($request->email))
             ->first();
 
-        if (!$order) {
+        if (! $order) {
             return response()->json([
                 'success' => false,
                 'message' => 'No order found matching these details.',

@@ -30,6 +30,8 @@ use App\Http\Controllers\Api\V1\Public\CartController;
 use App\Http\Controllers\Api\V1\Public\CheckoutController;
 use App\Http\Controllers\Api\V1\Public\PublicController;
 use App\Http\Controllers\Api\V1\Public\WishlistController;
+use App\Models\NewsletterSubscriber;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -56,26 +58,28 @@ Route::prefix('v1')->group(function () {
         Route::get('/pages/{slug}', [PublicController::class, 'page']);
         Route::get('/blog', [PublicBlogController::class, 'index']);
         Route::get('/blog/{slug}', [PublicBlogController::class, 'show']);
-        Route::post('/contact', [PublicController::class, 'submitContact']);
+        Route::post('/contact', [PublicController::class, 'submitContact'])->middleware('throttle:contact');
         Route::post('/newsletter/subscribe', [PublicController::class, 'subscribeNewsletter'])->middleware('throttle:5,1');
         Route::get('/settings', [PublicController::class, 'settings']);
         Route::get('/site', [PublicController::class, 'site']);
         Route::get('/shipping-methods', [CheckoutController::class, 'getShippingMethods']);
-        Route::post('/track-order', [CheckoutController::class, 'trackOrder']);
+        Route::post('/track-order', [CheckoutController::class, 'trackOrder'])->middleware('throttle:track-order');
 
         // Shopping Cart
-        Route::get('/cart', [CartController::class, 'get']);
-        Route::post('/cart/add', [CartController::class, 'add']);
-        Route::put('/cart/items/{id}', [CartController::class, 'updateQuantity']);
-        Route::delete('/cart/items/{id}', [CartController::class, 'remove']);
-        Route::post('/cart/coupon', [CartController::class, 'validateCoupon']);
+        Route::middleware('throttle:cart')->group(function () {
+            Route::get('/cart', [CartController::class, 'get']);
+            Route::post('/cart/add', [CartController::class, 'add']);
+            Route::put('/cart/items/{id}', [CartController::class, 'updateQuantity']);
+            Route::delete('/cart/items/{id}', [CartController::class, 'remove']);
+        });
+        Route::post('/cart/coupon', [CartController::class, 'validateCoupon'])->middleware('throttle:coupon');
 
         // Wishlist
         Route::get('/wishlist', [WishlistController::class, 'index']);
         Route::post('/wishlist/toggle', [WishlistController::class, 'toggle']);
 
         // Checkout
-        Route::post('/checkout', [CheckoutController::class, 'process']);
+        Route::post('/checkout', [CheckoutController::class, 'process'])->middleware('throttle:checkout');
     });
 
     // -------------------------------------------------------------
@@ -139,7 +143,7 @@ Route::prefix('v1')->group(function () {
 
                 // Newsletter subscribers as a CSV (for Mailchimp etc.)
                 Route::get('/newsletter-subscribers/export', function () {
-                    $rows = \App\Models\NewsletterSubscriber::orderByDesc('subscribed_at')->get(['email', 'is_active', 'subscribed_at']);
+                    $rows = NewsletterSubscriber::orderByDesc('subscribed_at')->get(['email', 'is_active', 'subscribed_at']);
 
                     return response()->streamDownload(function () use ($rows) {
                         $out = fopen('php://output', 'w');
@@ -148,7 +152,7 @@ Route::prefix('v1')->group(function () {
                             fputcsv($out, [$r->email, $r->is_active ? 'subscribed' : 'unsubscribed', optional($r->subscribed_at)->toDateTimeString()]);
                         }
                         fclose($out);
-                    }, 'newsletter-subscribers-' . date('Y-m-d') . '.csv', ['Content-Type' => 'text/csv']);
+                    }, 'newsletter-subscribers-'.date('Y-m-d').'.csv', ['Content-Type' => 'text/csv']);
                 });
             });
 
@@ -186,19 +190,19 @@ Route::prefix('v1')->group(function () {
             Route::post('/products/bulk', [ProductController::class, 'bulk']);
 
             // Categories Management (ResourceController checks the `categories` permission itself)
-            Route::get('/categories', function (\Illuminate\Http\Request $request) {
+            Route::get('/categories', function (Request $request) {
                 return app(ResourceController::class)->index($request, 'categories');
             });
-            Route::post('/categories', function (\Illuminate\Http\Request $request) {
+            Route::post('/categories', function (Request $request) {
                 return app(ResourceController::class)->store($request, 'categories');
             });
-            Route::get('/categories/{id}', function (\Illuminate\Http\Request $request, $id) {
+            Route::get('/categories/{id}', function (Request $request, $id) {
                 return app(ResourceController::class)->show($request, 'categories', $id);
             });
-            Route::put('/categories/{id}', function (\Illuminate\Http\Request $request, $id) {
+            Route::put('/categories/{id}', function (Request $request, $id) {
                 return app(ResourceController::class)->update($request, 'categories', $id);
             });
-            Route::delete('/categories/{id}', function (\Illuminate\Http\Request $request, $id) {
+            Route::delete('/categories/{id}', function (Request $request, $id) {
                 return app(ResourceController::class)->destroy($request, 'categories', $id);
             });
 
