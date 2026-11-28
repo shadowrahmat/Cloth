@@ -12,7 +12,6 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\ShippingMethod;
 use App\Models\SiteSetting;
-use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -25,7 +24,7 @@ class CheckoutService
         $cart->load(['items.product', 'items.variant']);
 
         if ($cart->items->isEmpty()) {
-            throw new Exception('Your shopping cart is empty.');
+            throw new BusinessException('Your shopping cart is empty.');
         }
 
         return DB::transaction(function () use ($cart, $data, $userId) {
@@ -71,12 +70,27 @@ class CheckoutService
             $discountAmount = 0.0;
             $couponCode = null;
             if (! empty($data['coupon_code'])) {
-                $coupon = Coupon::where('code', strtoupper($data['coupon_code']))->first();
-                if ($coupon && $coupon->isValidFor($subtotal)) {
-                    $discountAmount = $coupon->calculateDiscount($subtotal);
-                    $couponCode = $coupon->code;
-                    $coupon->increment('used_count');
+                $couponCodeInput = strtoupper($data['coupon_code']);
+                $coupon = Coupon::where('code', $couponCodeInput)->first();
+
+                if (! $coupon || ! $coupon->isValidFor($subtotal, $userId, $data['email'] ?? null)) {
+                    throw new BusinessException('The applied coupon is invalid, expired, or has reached its usage limit.');
                 }
+
+                // Atomic usage increment to prevent race condition
+                $updated = Coupon::where('id', $coupon->id)
+                    ->where(function ($query) {
+                        $query->whereNull('usage_limit')
+                            ->orWhereColumn('used_count', '<', 'usage_limit');
+                    })
+                    ->increment('used_count');
+
+                if (! $updated) {
+                    throw new BusinessException('The coupon has just reached its maximum usage limit.');
+                }
+
+                $discountAmount = $coupon->calculateDiscount($subtotal, $userId, $data['email'] ?? null);
+                $couponCode = $coupon->code;
             }
 
             // 4. Tax calculation (e.g. from site settings or default 5%)

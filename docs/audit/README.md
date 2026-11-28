@@ -22,7 +22,7 @@ Suggested order: আগে H1, H5, M1 (ছোট change, বড় impact), ত�
 
 ### Medium — [medium.md](medium.md)
 - [x] **M1** Exception message client-এ leak হয় (fixed)
-- [ ] **M2** Coupon usage-এ race condition, per-user limit নেই
+- [x] **M2** Coupon usage-এ race condition, per-user limit নেই (fixed)
 - [ ] **M3** ResourceController-এ `sort_by`, `per_page`, LIKE wildcard validate হয় না
 - [ ] **M4** Password policy দুর্বল, login throttle শুধু IP-based
 - [ ] **M5** Cart-এ unpublished product আর যেকোনো quantity add করা যায়

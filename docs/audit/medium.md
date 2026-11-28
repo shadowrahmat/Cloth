@@ -10,6 +10,7 @@
 - **কোথায়:** `app/Services/CheckoutService.php`-এর step 3, `app/Models/Coupon.php::isValidFor`।
 - **সমস্যা:** Limit check আর `increment('used_count')` atomic না, তাই একসাথে অনেক order এলে `usage_limit` পার হয়ে যায়। Customer-wise limit-ও নেই।
 - **Fix:** Atomic query ব্যবহার করো: `UPDATE coupons SET used_count = used_count + 1 WHERE id = ? AND (usage_limit IS NULL OR used_count < usage_limit)`, তারপর affected rows check করো। Business-এ লাগলে per-user/email limit যোগ করো।
+- **Status:** Fixed. মাইগ্রেশনে `per_user_limit` যোগ করা হয়েছে। `Coupon::isValidFor()` এখন user/email ধরে আগের অর্ডারের সংখ্যা চেক করে। `CheckoutService`-এ atomic conditional increment (`whereNull('usage_limit')->orWhereColumn('used_count', '<', 'usage_limit')`) ব্যবহার করা হয়েছে। Test: `tests/Feature/CouponUsageTest.php`।
 
 ## M3 — ResourceController-এর input handling
 - **কোথায়:** `app/Http/Controllers/Api/V1/Admin/ResourceController.php::index`।

@@ -105,25 +105,30 @@ class CartController extends Controller
 
         $coupon = Coupon::where('code', strtoupper($request->code))->first();
 
-        if (!$coupon) {
+        if (! $coupon) {
             return response()->json([
                 'success' => false,
                 'message' => 'Coupon code not found.',
             ], 404);
         }
 
-        if (!$coupon->isValidFor($subtotal)) {
-            $msg = 'Coupon is expired or inactive.';
+        $userId = $request->user('sanctum')?->id;
+
+        if (! $coupon->isValidFor($subtotal, $userId)) {
+            $msg = 'Coupon is expired, inactive, or has reached its usage limit.';
             if ($coupon->min_order_amount > 0 && $subtotal < $coupon->min_order_amount) {
                 $msg = "Minimum order value of \${$coupon->min_order_amount} required for this coupon.";
+            } elseif ($coupon->per_user_limit !== null && $userId && $coupon->getUserUsageCount($userId) >= $coupon->per_user_limit) {
+                $msg = 'You have reached the maximum usage limit for this coupon.';
             }
+
             return response()->json([
                 'success' => false,
                 'message' => $msg,
             ], 422);
         }
 
-        $discount = $coupon->calculateDiscount($subtotal);
+        $discount = $coupon->calculateDiscount($subtotal, $userId);
 
         return response()->json([
             'success' => true,

@@ -2,6 +2,8 @@
 
 namespace App\Support;
 
+use App\Models\BlogCategory;
+use App\Models\BlogPost;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Collection;
@@ -9,10 +11,12 @@ use App\Models\ContactMessage;
 use App\Models\Coupon;
 use App\Models\NewsletterSubscriber;
 use App\Models\Page;
+use App\Models\ReturnRequest;
+use App\Models\Shipment;
 use App\Models\ShippingMethod;
+use App\Models\ShippingZone;
 use App\Models\SocialGalleryItem;
 use App\Models\Testimonial;
-use Exception;
 
 class ResourceRegistry
 {
@@ -20,7 +24,7 @@ class ResourceRegistry
 
     public static function boot(): void
     {
-        if (!empty(static::$resources)) {
+        if (! empty(static::$resources)) {
             return;
         }
 
@@ -133,6 +137,7 @@ class ResourceRegistry
                 'max_discount_amount' => 'nullable|numeric|min:0',
                 'expires_at' => 'nullable|date',
                 'usage_limit' => 'nullable|integer|min:1',
+                'per_user_limit' => 'nullable|integer|min:1',
                 'is_active' => 'nullable|boolean',
             ],
             'permission' => 'manage_coupons',
@@ -276,7 +281,7 @@ class ResourceRegistry
         ]);
 
         static::register('returns', [
-            'model' => \App\Models\ReturnRequest::class,
+            'model' => ReturnRequest::class,
             'label' => 'Returns & Exchanges',
             'singular' => 'Return Request',
             'icon' => 'RotateCcw',
@@ -296,7 +301,7 @@ class ResourceRegistry
         ]);
 
         static::register('shipments', [
-            'model' => \App\Models\Shipment::class,
+            'model' => Shipment::class,
             'label' => 'Logistics & Consignments',
             'singular' => 'Shipment',
             'icon' => 'Truck',
@@ -315,7 +320,7 @@ class ResourceRegistry
         ]);
 
         static::register('blog-posts', [
-            'model' => \App\Models\BlogPost::class,
+            'model' => BlogPost::class,
             'label' => 'Blog Posts',
             'singular' => 'Post',
             'icon' => 'BookOpen',
@@ -339,7 +344,7 @@ class ResourceRegistry
         ]);
 
         static::register('blog-categories', [
-            'model' => \App\Models\BlogCategory::class,
+            'model' => BlogCategory::class,
             'label' => 'Blog Categories',
             'singular' => 'Category',
             'icon' => 'Tag',
@@ -360,7 +365,7 @@ class ResourceRegistry
         ]);
 
         static::register('shipping-zones', [
-            'model' => \App\Models\ShippingZone::class,
+            'model' => ShippingZone::class,
             'label' => 'Shipping Zones',
             'singular' => 'Zone',
             'icon' => 'MapPin',
@@ -387,18 +392,21 @@ class ResourceRegistry
     public static function get(string $key): ?array
     {
         static::boot();
+
         return static::$resources[$key] ?? null;
     }
 
     public static function has(string $key): bool
     {
         static::boot();
+
         return isset(static::$resources[$key]);
     }
 
     public static function all(): array
     {
         static::boot();
+
         return static::$resources;
     }
 }

@@ -17,6 +17,7 @@ class Coupon extends Model
         'max_discount_amount',
         'expires_at',
         'usage_limit',
+        'per_user_limit',
         'used_count',
         'is_active',
     ];
@@ -27,13 +28,14 @@ class Coupon extends Model
         'max_discount_amount' => 'decimal:2',
         'expires_at' => 'datetime',
         'usage_limit' => 'integer',
+        'per_user_limit' => 'integer',
         'used_count' => 'integer',
         'is_active' => 'boolean',
     ];
 
-    public function isValidFor(float $subtotal): bool
+    public function isValidFor(float $subtotal, ?int $userId = null, ?string $email = null): bool
     {
-        if (!$this->is_active) {
+        if (! $this->is_active) {
             return false;
         }
 
@@ -49,12 +51,40 @@ class Coupon extends Model
             return false;
         }
 
+        if ($this->per_user_limit !== null && $this->per_user_limit > 0) {
+            if ($this->getUserUsageCount($userId, $email) >= $this->per_user_limit) {
+                return false;
+            }
+        }
+
         return true;
     }
 
-    public function calculateDiscount(float $subtotal): float
+    public function getUserUsageCount(?int $userId = null, ?string $email = null): int
     {
-        if (!$this->isValidFor($subtotal)) {
+        if (! $userId && ! $email) {
+            return 0;
+        }
+
+        return Order::where('coupon_code', $this->code)
+            ->where(function ($query) use ($userId, $email) {
+                if ($userId) {
+                    $query->where('user_id', $userId);
+                }
+                if ($email) {
+                    if ($userId) {
+                        $query->orWhere('customer_email', $email);
+                    } else {
+                        $query->where('customer_email', $email);
+                    }
+                }
+            })
+            ->count();
+    }
+
+    public function calculateDiscount(float $subtotal, ?int $userId = null, ?string $email = null): float
+    {
+        if (! $this->isValidFor($subtotal, $userId, $email)) {
             return 0.0;
         }
 
